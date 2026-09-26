@@ -98,4 +98,4 @@ cd ../miniprogram && npm test && npm run check
 - REST：`https://api.playmatespace.cloud/avalon/api/...`
 - WebSocket：`wss://api.playmatespace.cloud/avalon/ws/avalon`
 
-服务器配置文件是 `/opt/avalon-game/deploy/.env.prod`，不得提交到 Git。Nginx 路由模板位于 `deploy/nginx-avalon.conf.fragment`。
+服务器配置文件是 `/opt/avalon-game/deploy/.env.prod`，不得提交到 Git。Nginx 路由模板位于 `deploy/nginx-avalon.conf.fragment`，当前完整网关配置保存在 `deploy/nginx/api.playmatespace.cloud.conf`。
