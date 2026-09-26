@@ -28,13 +28,13 @@ public class AvalonWebSocketHandler extends TextWebSocketHandler {
             String authorization = session.getHandshakeHeaders().getFirst("Authorization");
             String token = authorization != null && authorization.startsWith("Bearer ") ? authorization.substring(7).trim() : queryParameter(session, "token");
             long userId = jwtService.parse(token);
-            var room = repository.activeRoomForUser(userId).orElse(null);
-            if (room == null) { session.close(CloseStatus.POLICY_VIOLATION.withReason("no active room")); return; }
-            var player = repository.player(room.id(), userId).orElseThrow();
-            clients.put(session.getId(), new Client(session, userId, room.id(), player.id()));
+            var game = repository.activeGameForUser(userId).orElse(null);
+            if (game == null) { session.close(CloseStatus.POLICY_VIOLATION.withReason("no active game")); return; }
+            var player = repository.player(game.id(), userId).orElseThrow();
+            clients.put(session.getId(), new Client(session, userId, game.id(), player.id()));
             repository.setPlayerOnline(player.id(), true);
-            send(session, room.id(), "CONNECTED");
-            broadcast(room.id(), "PLAYER_RECONNECTED");
+            send(session, game.id(), "CONNECTED");
+            broadcast(game.id(), "PLAYER_RECONNECTED");
         } catch (RuntimeException e) { session.close(CloseStatus.POLICY_VIOLATION.withReason("invalid token")); }
     }
     @Override public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
@@ -47,7 +47,14 @@ public class AvalonWebSocketHandler extends TextWebSocketHandler {
     @Override public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
         if (session.isOpen()) session.close(CloseStatus.SERVER_ERROR);
     }
-    @EventListener public void onRoomEvent(RoomEventPublisher.RoomEvent event) { broadcast(event.roomId(), event.type()); }
+    @EventListener public void onRoomEvent(RoomEventPublisher.RoomEvent event) {
+        broadcast(event.roomId(), event.type());
+        if ("GAME_RESTARTED".equals(event.type())) {
+            clients.values().stream().filter(c -> c.roomId == event.roomId() && c.session.isOpen()).forEach(c -> {
+                try { c.session.close(CloseStatus.NORMAL); } catch (Exception ignored) { }
+            });
+        }
+    }
     private void broadcast(long roomId, String type) {
         clients.values().stream().filter(c -> c.roomId == roomId && c.session.isOpen()).forEach(c -> {
             try { send(c.session, roomId, type); } catch (Exception ignored) { }

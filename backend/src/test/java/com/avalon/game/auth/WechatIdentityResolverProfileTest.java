@@ -9,8 +9,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class WechatIdentityResolverProfileTest {
     @Test void localProfileKeepsAllTenMockUsersAvailable() {
         MockWechatIdentityResolver resolver = new MockWechatIdentityResolver();
-        for (int i = 1; i <= 10; i++)
-            assertEquals("avalon_mock_" + i, resolver.resolve(null, "avalon_mock_" + i));
+        for (int i = 1; i <= 10; i++) {
+            ResolvedIdentity identity = resolver.resolve(null, "avalon_mock_" + i);
+            assertEquals("LOCAL", identity.provider());
+            assertEquals("avalon_mock_" + i, identity.providerUserId());
+        }
         assertArrayEquals(new String[]{"local"}, MockWechatIdentityResolver.class.getAnnotation(Profile.class).value());
     }
 

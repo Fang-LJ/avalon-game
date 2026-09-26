@@ -13,7 +13,7 @@ Page({
   onPullDownRefresh() { this.refresh().finally(() => wx.stopPullDownRefresh()); },
   refresh() {
     return api.room(this.data.roomId).then(room => {
-      this.setData({ room });
+      this.setData({ room, roomId: room.roomId });
       if (!room.currentGameId) { this.decoratePlayers(room, null); return null; }
       return api.game(room.currentGameId).then(game => {
         const draftKey = `${game.missionNo}-${game.proposalNo}`;
@@ -48,7 +48,7 @@ Page({
       this.setData({ ladyTarget: id, selectedIds: [id] }); this.decoratePlayers(this.data.room, { selectedPlayerIds: [id] });
     }
   },
-  run(task) { if (this.data.busy) return Promise.resolve(null); this.setData({ busy: true }); return task().then(result => { if (result && result.gameId) this.setData({ game: result }); return this.refresh(); }).catch(() => null).finally(() => this.setData({ busy: false })); },
+  run(task) { if (this.data.busy) return Promise.resolve(null); this.setData({ busy: true }); return task().then(result => { if (result && result.gameId) this.setData({ game: result, roomId: result.roomId }); return this.refresh(); }).catch(() => null).finally(() => this.setData({ busy: false })); },
   startGame() { this.run(() => api.start(this.data.roomId)); },
   confirmRole() { this.run(() => api.confirmRole(this.data.game.gameId)); },
   submitTeam() { this.run(() => api.submitTeam(this.data.game.gameId, this.data.selectedIds)).then(() => this.setData({ selectedIds: [] })); },

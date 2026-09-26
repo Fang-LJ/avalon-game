@@ -6,8 +6,9 @@
 
 - `backend/`：Java 21、Spring Boot 3.3.7、MySQL、JWT、原生 WebSocket
 - `miniprogram/`：原生微信小程序（无第三方前端依赖）
-- `docs/sql/001_avalon_init.sql`：完整 MySQL 初始化脚本
-- `docs/sql/002_lady_of_the_lake.sql`：阶段一湖中仙女增量迁移
+- `docs/sql/001_avalon_init.sql`：全新安装直接使用的 V2 最终八表 schema
+- `docs/sql/002_lady_of_the_lake.sql`：仅保留作 V1 历史记录，V2 禁止执行
+- `docs/sql/003_avalon_v2_schema.sql`：已有 V1 开发库备份后的破坏性 V2 重建脚本
 - `docs/reference-stack.md`：对 playmate-space 的只读技术栈审计
 
 项目参考了同级 `playmate-space` 的 Spring Boot/JWT/MySQL/API 响应与原生小程序请求封装，但代码和数据库业务表完全独立，没有修改或依赖其源代码。
@@ -33,20 +34,18 @@ WebSocket 事件只广播事件名、房间号和时间戳，客户端收到后�
 
 ## 数据库
 
-新库先执行 `docs/sql/001_avalon_init.sql`；已有库再执行 `docs/sql/002_lady_of_the_lake.sql`。迁移只给 Avalon 对局增加当前持有者字段，并新建湖中仙女检查表，不修改 playmate-space 业务表。
-
-阶段一收尾没有执行任何 migration；5/8/10 人及湖中仙女流程使用规则单元测试和 mock repository/service 测试验证。真实数据库联调待阶段二数据库设计与迁移完成后进行。
+全新安装只执行 `docs/sql/001_avalon_init.sql`。不要在 V2 的 001 后执行历史脚本 002。已有 V1 开发环境必须先导出全部 `t_avalon_*` 表，确认数据可删除，再单独执行 `docs/sql/003_avalon_v2_schema.sql` 重建；003 不迁移旧数据，也不会处理任何非 Avalon 表。
 
 - `t_avalon_user`
-- `t_avalon_user_identity`
-- `t_avalon_room`
-- `t_avalon_player`
 - `t_avalon_game`
 - `t_avalon_game_player`
-- `t_avalon_mission`
+- `t_avalon_proposal`
 - `t_avalon_vote`
+- `t_avalon_mission`
 - `t_avalon_mission_action`
-- `t_avalon_lady_inspection`（由 002 创建）
+- `t_avalon_lady_action`
+
+`game` 同时承载等待大厅、进行中对局和已结束历史，`game_player` 保存当局座位、昵称、身份及阵营快照。每次发车、公开投票、任务及具体任务出票、湖中仙女操作都会分别持久化；公开 GameState 仍不会泄露任务出票者或 Lady 私有结果。“再来一局”会复用房间号但创建新的 game/game_player 记录，上一局保持不变。
 
 数据库连接位于 `backend/src/main/resources/application.yml`，通过 `AVALON_DB_HOST/PORT/NAME/USERNAME/PASSWORD` 覆盖。默认本地端口和 schema 与 playmate-space 的本地 Docker 配置一致。
 
@@ -54,7 +53,6 @@ WebSocket 事件只广播事件名、房间号和时间戳，客户端收到后�
 
 ```bash
 mysql -h 127.0.0.1 -P 13306 -u playmate -p playmate_space < docs/sql/001_avalon_init.sql
-mysql -h 127.0.0.1 -P 13306 -u playmate -p playmate_space < docs/sql/002_lady_of_the_lake.sql
 cd backend
 SPRING_PROFILES_ACTIVE=local mvn spring-boot:run
 ```

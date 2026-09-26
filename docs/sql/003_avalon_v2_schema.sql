@@ -1,6 +1,21 @@
--- Avalon Game V2 final schema for fresh installations.
--- Fresh installations run ONLY this 001 file. Do not run the historical V1 002 migration.
--- Existing V1 development databases must be backed up and rebuilt with 003_avalon_v2_schema.sql.
+-- Avalon Game V1 -> V2 destructive rebuild for existing development databases.
+-- BACK UP every t_avalon_* table and verify the data is disposable before running.
+-- This script never touches non-Avalon tables. It intentionally does not preserve V1 rows.
+
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS t_avalon_lady_action;
+DROP TABLE IF EXISTS t_avalon_lady_inspection;
+DROP TABLE IF EXISTS t_avalon_mission_action;
+DROP TABLE IF EXISTS t_avalon_vote;
+DROP TABLE IF EXISTS t_avalon_mission;
+DROP TABLE IF EXISTS t_avalon_proposal;
+DROP TABLE IF EXISTS t_avalon_game_player;
+DROP TABLE IF EXISTS t_avalon_player;
+DROP TABLE IF EXISTS t_avalon_game;
+DROP TABLE IF EXISTS t_avalon_room;
+DROP TABLE IF EXISTS t_avalon_user_identity;
+DROP TABLE IF EXISTS t_avalon_user;
+SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE IF NOT EXISTS t_avalon_user (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -12,6 +27,7 @@ CREATE TABLE IF NOT EXISTS t_avalon_user (
   updated_at DATETIME NOT NULL,
   UNIQUE KEY uk_avalon_user_provider_identity (provider, provider_user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS t_avalon_game (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   room_code CHAR(6) NOT NULL,

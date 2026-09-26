@@ -4,16 +4,49 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class DatabaseSchemaContractTest {
-    @Test void allTablesAreNamespacedAndDuplicateSecretActionsArePrevented() throws Exception {
+    private static final Set<String> V2_TABLES = Set.of(
+            "t_avalon_user", "t_avalon_game", "t_avalon_game_player", "t_avalon_proposal",
+            "t_avalon_vote", "t_avalon_mission", "t_avalon_mission_action", "t_avalon_lady_action");
+
+    @Test void freshSchemaCreatesExactlyTheEightV2Tables() throws Exception {
         String sql = Files.readString(Path.of("../docs/sql/001_avalon_init.sql"));
-        assertEquals(9, sql.split("CREATE TABLE IF NOT EXISTS t_avalon_", -1).length - 1);
-        assertTrue(sql.contains("UNIQUE KEY uk_avalon_vote_once (mission_id, player_id)"));
-        assertTrue(sql.contains("UNIQUE KEY uk_avalon_mission_action_once (mission_id, player_id)"));
+        assertEquals(V2_TABLES, createdTables(sql));
+        assertTrue(sql.contains("UNIQUE KEY uk_avalon_vote_once (proposal_id, game_player_id)"));
+        assertTrue(sql.contains("UNIQUE KEY uk_avalon_mission_round (game_id, mission_no)"));
+        assertTrue(sql.contains("UNIQUE KEY uk_avalon_mission_action_once (mission_id, game_player_id)"));
+        assertTrue(sql.contains("UNIQUE KEY uk_avalon_lady_sequence (game_id, sequence_no)"));
+        assertTrue(sql.contains("UNIQUE KEY uk_avalon_lady_holder (game_id, holder_game_player_id)"));
+        assertTrue(sql.contains("UNIQUE KEY uk_avalon_lady_target (game_id, target_game_player_id)"));
+        assertTrue(sql.contains("team_player_ids JSON NOT NULL"));
+        assertTrue(sql.contains("assassination_target_game_player_id BIGINT NULL"));
+        assertFalse(sql.contains("CREATE TABLE IF NOT EXISTS t_avalon_room"));
+        assertFalse(sql.contains("CREATE TABLE IF NOT EXISTS t_avalon_player"));
+        assertFalse(sql.contains("CREATE TABLE IF NOT EXISTS t_avalon_user_identity"));
         assertFalse(sql.matches("(?s).*CREATE TABLE IF NOT EXISTS (?!t_avalon_).*"));
+    }
+
+    @Test void destructiveV2MigrationDropsLegacyTablesAndRecreatesExactlyV2() throws Exception {
+        String sql = Files.readString(Path.of("../docs/sql/003_avalon_v2_schema.sql"));
+        assertEquals(V2_TABLES, createdTables(sql));
+        assertTrue(sql.contains("DROP TABLE IF EXISTS t_avalon_user_identity"));
+        assertTrue(sql.contains("DROP TABLE IF EXISTS t_avalon_room"));
+        assertTrue(sql.contains("DROP TABLE IF EXISTS t_avalon_player"));
+        assertTrue(sql.contains("SET FOREIGN_KEY_CHECKS = 0"));
+        assertTrue(sql.contains("SET FOREIGN_KEY_CHECKS = 1"));
+    }
+
+    private Set<String> createdTables(String sql) {
+        Matcher matcher = Pattern.compile("CREATE TABLE IF NOT EXISTS (t_avalon_[a-z_]+)").matcher(sql);
+        java.util.HashSet<String> tables = new java.util.HashSet<>();
+        while (matcher.find()) tables.add(matcher.group(1));
+        return Set.copyOf(tables);
     }
     @Test void continueEndpointAndClientActionHaveBeenRemoved() throws Exception {
         String controller = Files.readString(Path.of("src/main/java/com/avalon/game/game/GameController.java"));

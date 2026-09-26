@@ -1,4 +1,6 @@
--- Phase-one additive migration. Apply after 001_avalon_init.sql.
+-- HISTORICAL V1-ONLY additive migration.
+-- Never run this file after the V2 docs/sql/001_avalon_init.sql.
+-- Existing V1 development databases should be backed up and rebuilt with 003_avalon_v2_schema.sql.
 -- Stores only the current public holder on the game row. Inspection results remain private.
 ALTER TABLE t_avalon_game
   ADD COLUMN lady_holder_player_id BIGINT NULL AFTER leader_player_id,
