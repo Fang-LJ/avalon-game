@@ -1,4 +1,5 @@
 FROM maven:3.9.9-eclipse-temurin-21 AS build
+ARG MAVEN_OPTS
 WORKDIR /src
 COPY pom.xml .
 RUN mvn -q -DskipTests dependency:go-offline
