@@ -10,11 +10,20 @@ Page({
   },
   onShow() {
     this.setData({ currentMockKey: auth.currentMockUser().key });
-    auth.ensureLogin().then(() => api.currentRoom()).then(currentRoom => this.setData({ currentRoom })).catch(() => {});
+    this.loadCurrentRoom();
+  },
+  loadCurrentRoom() {
+    auth.ensureLogin().then(() => api.currentRoom()).then(currentRoom => this.setData({ currentRoom })).catch(error => {
+      if (!this.data.mockLogin || !error || error.code !== 'UNAUTHORIZED') return;
+      auth.selectMockUser(this.data.currentMockKey)
+        .then(() => api.currentRoom())
+        .then(currentRoom => this.setData({ currentRoom }))
+        .catch(() => {});
+    });
   },
   selectMockUser(event) {
     const key = String(event.currentTarget.dataset.key);
-    if (this.data.switchingMock || key === this.data.currentMockKey) return;
+    if (this.data.switchingMock) return;
     this.setData({ switchingMock: true, currentRoom: null });
     auth.selectMockUser(key)
       .then(() => api.currentRoom())
