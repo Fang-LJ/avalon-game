@@ -9,5 +9,16 @@
     <button class="btn btn-secondary" bindtap="join">加入房间</button>
     <button wx:if="{{currentRoom}}" class="btn return" bindtap="returnRoom">返回游戏 · {{currentRoom.roomCode}}</button>
   </view>
+  <view wx:if="{{mockLogin}}" class="card mock-login">
+    <view class="mock-heading">
+      <text class="mock-title">测试身份</text>
+      <text class="mock-status">当前：玩家{{currentMockKey}}</text>
+    </view>
+    <view class="mock-users">
+      <button wx:for="{{mockUsers}}" wx:key="key" data-key="{{item.key}}" disabled="{{switchingMock}}"
+        class="mock-user {{item.key === currentMockKey ? 'active' : ''}}" bindtap="selectMockUser">{{item.nickname}}</button>
+    </view>
+    <view class="mock-note">切换身份后会自动重新登录，可用于多窗口联调。</view>
+  </view>
   <view class="rule-note">6–8 人 · 服务端裁判 · 隐藏身份</view>
 </view>
