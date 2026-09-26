@@ -1,5 +1,6 @@
 package com.avalon.game.game;
 
+import com.avalon.game.common.BusinessException;
 import com.avalon.game.game.AvalonRepository.GamePlayerRow;
 import com.avalon.game.game.AvalonRepository.GameRow;
 import com.avalon.game.game.AvalonRepository.PlayerRow;
@@ -52,6 +53,18 @@ class GameServiceLadyTest {
         order.verify(repository).updateLadyHolder(50, 105);
         order.verify(repository).setPhase(50, Phase.ASSASSINATION);
         verify(repository, never()).advanceRound(anyLong(), anyInt(), anyLong());
+    }
+
+    @Test void nonHolderCannotInspectOrTransferTheToken() {
+        prepareLadyGame(2);
+        when(roomService.requirePlayer(1, 203)).thenReturn(player(103, 203, 3));
+
+        BusinessException error = assertThrows(BusinessException.class,
+                () -> service.inspectWithLady(203, 50, 105));
+
+        assertEquals("FORBIDDEN", error.getCode());
+        verify(repository, never()).insertLadyInspection(anyLong(), anyInt(), anyLong(), anyLong(), any());
+        verify(repository, never()).updateLadyHolder(anyLong(), anyLong());
     }
 
     private void prepareLadyGame(int goodScore) {

@@ -2,6 +2,7 @@ package com.avalon.game.game;
 
 import com.avalon.game.common.BusinessException;
 import com.avalon.game.game.GameTypes.*;
+import com.avalon.game.realtime.RoomEventPublisher;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -21,6 +22,7 @@ class GameActionPolicyTest {
         assertThrows(BusinessException.class, () -> GameActionPolicy.requireMissionChoice(Role.MERLIN, MissionChoice.FAIL));
         assertDoesNotThrow(() -> GameActionPolicy.requireMissionChoice(Role.MERLIN, MissionChoice.SUCCESS));
         assertDoesNotThrow(() -> GameActionPolicy.requireMissionChoice(Role.MORGANA, MissionChoice.FAIL));
+        assertDoesNotThrow(() -> GameActionPolicy.requireMissionChoice(Role.MORGANA, MissionChoice.SUCCESS));
     }
     @Test void operationsAfterGameEndAreRejectedByPhaseGuard() {
         assertThrows(BusinessException.class, () -> GameActionPolicy.requirePhase(Phase.FINISHED, Phase.TEAM_VOTING));
@@ -49,5 +51,15 @@ class GameActionPolicyTest {
         assertEquals(List.of("targetPlayerId", "targetSeatNo", "targetNickname", "alignment"), privateFields);
         var publicFields = Arrays.stream(GameService.GameState.class.getRecordComponents()).map(c -> c.getName().toLowerCase()).toList();
         assertFalse(publicFields.stream().anyMatch(name -> name.contains("ladyresult") || name.contains("inspectionresult")));
+    }
+    @Test void publicMissionAndWebSocketContractsCannotExposeSecretActorsOrLadyResults() {
+        var missionFields = Arrays.stream(GameService.MissionResult.class.getRecordComponents()).map(c -> c.getName()).toList();
+        assertEquals(List.of("missionNo", "successCount", "failCount", "status"), missionFields);
+        var eventFields = Arrays.stream(RoomEventPublisher.RoomEvent.class.getRecordComponents()).map(c -> c.getName()).toList();
+        assertEquals(List.of("roomId", "type"), eventFields);
+        var stateFields = Arrays.stream(GameService.GameState.class.getRecordComponents()).map(c -> c.getName()).toList();
+        assertFalse(stateFields.contains("roleCode"));
+        assertFalse(stateFields.contains("missionActions"));
+        assertFalse(stateFields.contains("ladyInspectionResult"));
     }
 }

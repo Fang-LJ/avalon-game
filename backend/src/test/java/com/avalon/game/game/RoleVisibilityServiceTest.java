@@ -19,8 +19,14 @@ class RoleVisibilityServiceTest {
         assertEquals(List.of(1L,4L), ids(view)); assertEquals(1, view.stream().map(RoleVisibilityService.VisiblePlayer::hint).distinct().count());
     }
     @Test void ordinaryEvilSeesOtherOrdinaryEvilButNeverOberonOrSpecificRoles() {
-        var view = service.visiblePlayers(4, Role.MORGANA, players);
-        assertEquals(List.of(5L,6L,7L), ids(view)); assertTrue(view.stream().allMatch(v -> v.hint().equals("邪恶同伴")));
+        for (long viewerId : List.of(4L, 5L, 6L, 7L)) {
+            Role role = players.stream().filter(player -> player.playerId() == viewerId).findFirst().orElseThrow().role();
+            var view = service.visiblePlayers(viewerId, role, players);
+            assertFalse(ids(view).contains(8L));
+            assertFalse(ids(view).contains(viewerId));
+            assertTrue(view.stream().allMatch(v -> v.hint().equals("邪恶同伴")));
+        }
+        assertEquals(List.of(4L,5L,7L), ids(service.visiblePlayers(6, Role.MINION, players)));
     }
     @Test void oberonAndGoodPlayersWithoutInformationSeeNobody() {
         assertTrue(service.visiblePlayers(8, Role.OBERON, players).isEmpty()); assertTrue(service.visiblePlayers(3, Role.LOYAL_SERVANT, players).isEmpty());

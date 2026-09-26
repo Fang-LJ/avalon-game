@@ -1,37 +1,51 @@
 package com.avalon.game.config;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.env.MockEnvironment;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class ProductionConfigurationValidatorTest {
-    @Test void productionFailsClosedWhenRequiredConfigurationIsMissing() {
+    private static final Map<String, String> COMPLETE = new LinkedHashMap<>();
+    static {
+        COMPLETE.put("AVALON_DB_HOST", "db.internal");
+        COMPLETE.put("AVALON_DB_PORT", "3306");
+        COMPLETE.put("AVALON_DB_NAME", "avalon");
+        COMPLETE.put("AVALON_DB_USERNAME", "avalon");
+        COMPLETE.put("AVALON_DB_PASSWORD", "test-only-password");
+        COMPLETE.put("AVALON_JWT_SECRET", "test-only-production-secret-with-more-than-32-bytes");
+        COMPLETE.put("AVALON_WECHAT_APP_ID", "test-app-id");
+        COMPLETE.put("AVALON_WECHAT_APP_SECRET", "test-app-secret");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"AVALON_DB_HOST", "AVALON_DB_PORT", "AVALON_DB_NAME", "AVALON_DB_USERNAME",
+            "AVALON_DB_PASSWORD", "AVALON_JWT_SECRET", "AVALON_WECHAT_APP_ID", "AVALON_WECHAT_APP_SECRET"})
+    void productionFailsClosedWhenAnyRequiredConfigurationIsMissing(String missingName) {
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> new ProductionConfigurationValidator(new MockEnvironment()));
-        assertTrue(error.getMessage().contains("AVALON_JWT_SECRET"));
-        assertTrue(error.getMessage().contains("AVALON_DB_HOST"));
+                () -> new ProductionConfigurationValidator(environmentWithout(missingName)));
+        assertTrue(error.getMessage().contains(missingName));
     }
 
     @Test void productionRejectsTheLocalJwtSecret() {
-        MockEnvironment environment = completeEnvironment()
-                .withProperty("AVALON_JWT_SECRET", ProductionConfigurationValidator.LOCAL_JWT_SECRET);
+        MockEnvironment environment = completeEnvironment();
+        environment.setProperty("AVALON_JWT_SECRET", ProductionConfigurationValidator.LOCAL_JWT_SECRET);
         assertThrows(IllegalStateException.class, () -> new ProductionConfigurationValidator(environment));
     }
 
-    @Test void productionAcceptsExplicitNonLocalConfiguration() {
+    @Test void productionAcceptsExplicitCompleteConfiguration() {
         assertDoesNotThrow(() -> new ProductionConfigurationValidator(completeEnvironment()));
     }
 
-    private MockEnvironment completeEnvironment() {
-        return new MockEnvironment()
-                .withProperty("AVALON_DB_HOST", "db.internal")
-                .withProperty("AVALON_DB_PORT", "3306")
-                .withProperty("AVALON_DB_NAME", "avalon")
-                .withProperty("AVALON_DB_USERNAME", "avalon")
-                .withProperty("AVALON_DB_PASSWORD", "test-only-password")
-                .withProperty("AVALON_JWT_SECRET", "test-only-production-secret-with-more-than-32-bytes")
-                .withProperty("AVALON_WECHAT_APP_ID", "test-app-id")
-                .withProperty("AVALON_WECHAT_APP_SECRET", "test-app-secret");
+    private MockEnvironment completeEnvironment() { return environmentWithout(null); }
+    private MockEnvironment environmentWithout(String excluded) {
+        MockEnvironment environment = new MockEnvironment();
+        COMPLETE.forEach((name, value) -> { if (!name.equals(excluded)) environment.setProperty(name, value); });
+        return environment;
     }
 }

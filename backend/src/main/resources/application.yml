@@ -15,4 +15,3 @@ avalon:
   wechat:
     app-id: ${AVALON_WECHAT_APP_ID:}
     app-secret: ${AVALON_WECHAT_APP_SECRET:}
-    mock-login-enabled: ${AVALON_MOCK_LOGIN_ENABLED:false}

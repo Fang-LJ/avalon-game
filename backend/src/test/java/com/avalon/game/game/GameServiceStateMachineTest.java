@@ -1,5 +1,6 @@
 package com.avalon.game.game;
 
+import com.avalon.game.common.BusinessException;
 import com.avalon.game.game.AvalonRepository.GamePlayerRow;
 import com.avalon.game.game.AvalonRepository.GameRow;
 import com.avalon.game.game.AvalonRepository.MissionRow;
@@ -9,11 +10,14 @@ import com.avalon.game.realtime.RoomEventPublisher;
 import com.avalon.game.room.RoomService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DuplicateKeyException;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class GameServiceStateMachineTest {
     private AvalonRepository repository;
@@ -74,6 +78,36 @@ class GameServiceStateMachineTest {
 
         verify(repository).finish(50, Winner.EVIL, "FIVE_REJECTED_TEAMS");
         verify(repository, never()).updateAfterRejectedTeam(anyLong(), anyInt(), anyInt(), anyLong());
+    }
+
+    @Test void duplicateTeamVoteIsRejected() {
+        GameRow game = new GameRow(50, 1, 2, 101, null, 1, 0, 0, 0, Phase.TEAM_VOTING, null);
+        MissionRow mission = new MissionRow(70, 50, 2, 1, 101, "101,102,103", 3, 1, "VOTING", null, null);
+        when(repository.game(50, true)).thenReturn(Optional.of(game));
+        when(roomService.requirePlayer(1, 202)).thenReturn(players.get(1));
+        when(repository.currentMission(50, 2, 1)).thenReturn(Optional.of(mission));
+        doThrow(new DuplicateKeyException("duplicate")).when(repository)
+                .insertVote(50, 70, 2, 1, 102, VoteChoice.APPROVE);
+
+        BusinessException error = assertThrows(BusinessException.class,
+                () -> service.vote(202, 50, VoteChoice.APPROVE));
+        assertEquals("DUPLICATE_ACTION", error.getCode());
+    }
+
+    @Test void duplicateMissionActionIsRejected() {
+        GameRow game = new GameRow(50, 1, 1, 101, null, 1, 0, 0, 0, Phase.MISSION_EXECUTING, null);
+        MissionRow mission = new MissionRow(70, 50, 1, 1, 101, "102", 1, 1, "EXECUTING", null, null);
+        when(repository.game(50, true)).thenReturn(Optional.of(game));
+        when(roomService.requirePlayer(1, 202)).thenReturn(players.get(1));
+        when(repository.currentMission(50, 1, 1)).thenReturn(Optional.of(mission));
+        when(repository.gamePlayer(50, 102)).thenReturn(Optional.of(
+                new GamePlayerRow(1, 50, 102, Role.LOYAL_SERVANT, Alignment.GOOD, true)));
+        doThrow(new DuplicateKeyException("duplicate")).when(repository)
+                .insertMissionAction(70, 102, MissionChoice.SUCCESS);
+
+        BusinessException error = assertThrows(BusinessException.class,
+                () -> service.mission(202, 50, MissionChoice.SUCCESS));
+        assertEquals("DUPLICATE_ACTION", error.getCode());
     }
 
     private void prepareMission(GameRow game, int failCount) {

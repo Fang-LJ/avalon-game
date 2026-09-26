@@ -35,6 +35,8 @@ WebSocket 事件只广播事件名、房间号和时间戳，客户端收到后�
 
 新库先执行 `docs/sql/001_avalon_init.sql`；已有库再执行 `docs/sql/002_lady_of_the_lake.sql`。迁移只给 Avalon 对局增加当前持有者字段，并新建湖中仙女检查表，不修改 playmate-space 业务表。
 
+阶段一收尾没有执行任何 migration；5/8/10 人及湖中仙女流程使用规则单元测试和 mock repository/service 测试验证。真实数据库联调待阶段二数据库设计与迁移完成后进行。
+
 - `t_avalon_user`
 - `t_avalon_user_identity`
 - `t_avalon_room`
@@ -69,7 +71,7 @@ SPRING_PROFILES_ACTIVE=local mvn spring-boot:run
 
 ## 多人流程测试
 
-本地 profile 内置 10 个测试身份。远程联调时可将小程序 `utils/config.js` 切换到 `mock`，并在后端明确设置 `AVALON_MOCK_LOGIN_ENABLED=true`；首页会显示玩家1至玩家10的切换入口。该开关只接受 `avalon_mock_1` 到 `avalon_mock_10`，正式接入微信登录后应关闭并把小程序切回 `prod`。第一个用户创建房间，其余用户输入六位房间号加入；满员后房主开始。刷新或重开小程序时，首页“返回游戏”会从服务端恢复当前房间与阶段。
+`local` profile 支持玩家1至玩家10的模拟身份，配合小程序 `utils/config.js` 临时切换到 `local` 使用。`prod` profile 只接受 `wx.login` 产生的 code 并通过微信 `jscode2session` 换取 openid；生产环境不存在重新开启 `mockOpenid` 的配置开关。第一个用户创建房间，其余用户输入六位房间号加入；满员后房主开始。刷新或重开小程序时，首页“返回游戏”会从服务端恢复当前房间与阶段。
 
 自动化检查：
 

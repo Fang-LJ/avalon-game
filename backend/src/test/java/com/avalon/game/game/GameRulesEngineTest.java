@@ -18,6 +18,22 @@ class GameRulesEngineTest {
     @Test void eightPlayersUseMinionAndNeverOberon() {
         assertTrue(GameRuleConfig.forPlayers(8).roles().contains(Role.MINION));
         assertFalse(GameRuleConfig.forPlayers(8).roles().contains(Role.OBERON));
+        assertFalse(GameRuleConfig.forPlayers(8).roles().contains(Role.MORDRED));
+    }
+    @Test void fivePlayersContainNoOptionalEvilRolesAndHaveThreeGoodTwoEvil() {
+        GameRuleConfig five = GameRuleConfig.forPlayers(5);
+        assertFalse(five.roles().contains(Role.MINION));
+        assertFalse(five.roles().contains(Role.MORDRED));
+        assertFalse(five.roles().contains(Role.OBERON));
+        assertEquals(3, five.roles().stream().filter(role -> role.alignment() == Alignment.GOOD).count());
+        assertEquals(2, five.roles().stream().filter(role -> role.alignment() == Alignment.EVIL).count());
+    }
+    @Test void tenPlayersHaveSixGoodFourEvilAndOnlyTenPlayersEnableLady() {
+        GameRuleConfig ten = GameRuleConfig.forPlayers(10);
+        assertEquals(6, ten.roles().stream().filter(role -> role.alignment() == Alignment.GOOD).count());
+        assertEquals(4, ten.roles().stream().filter(role -> role.alignment() == Alignment.EVIL).count());
+        for (int players = 5; players <= 9; players++) assertFalse(GameRuleConfig.forPlayers(players).ladyOfLake());
+        assertTrue(ten.ladyOfLake());
     }
     @Test void shuffleNeverAddsOrDropsRolesAndVariesByGame() {
         GameRuleConfig c = GameRuleConfig.forPlayers(10);
@@ -31,9 +47,16 @@ class GameRulesEngineTest {
         for (int players = 5; players <= 10; players++) assertEquals(5, GameRuleConfig.forPlayers(players).rejectedTeamsToEvilWin());
     }
     @Test void missionCompletionAutomaticallyAdvancesAndRotatesLeader() {
-        var transition = GameRulesEngine.transitionAfterMission(GameRuleConfig.forPlayers(8), 1, 1, 0);
-        assertEquals(Phase.TEAM_BUILDING, transition.phase()); assertTrue(transition.advanceRound());
+        for (int players : List.of(5, 8, 10)) {
+            var transition = GameRulesEngine.transitionAfterMission(GameRuleConfig.forPlayers(players), 1, 1, 0);
+            assertEquals(Phase.TEAM_BUILDING, transition.phase()); assertTrue(transition.advanceRound());
+        }
         assertEquals(4, GameRulesEngine.nextSeat(3, 8)); assertEquals(1, GameRulesEngine.nextSeat(8, 8));
+    }
+    @Test void fourthQuestAtEightPlayersNeedsTwoFails() {
+        GameRuleConfig eight = GameRuleConfig.forPlayers(8);
+        assertFalse(GameRulesEngine.missionFailed(1, eight, 4));
+        assertTrue(GameRulesEngine.missionFailed(2, eight, 4));
     }
     @Test void scoreEndStatesHaveCorrectPrecedence() {
         assertEquals(Phase.FINISHED, GameRulesEngine.transitionAfterMission(GameRuleConfig.forPlayers(10), 3, 1, 3).phase());

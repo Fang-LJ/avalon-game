@@ -60,19 +60,14 @@ class MockWechatIdentityResolver implements WechatIdentityResolver {
 }
 
 @Service
-@Profile("!local")
+@Profile("prod")
 class ProductionWechatIdentityResolver implements WechatIdentityResolver {
     private final WechatProperties properties;
     private final RestClient client = RestClient.create("https://api.weixin.qq.com");
     ProductionWechatIdentityResolver(WechatProperties properties) { this.properties = properties; }
     @SuppressWarnings("unchecked")
     public String resolve(String code, String mockOpenid) {
-        if (StringUtils.hasText(mockOpenid)) {
-            if (!properties.isMockLoginEnabled()) throw new BusinessException("FORBIDDEN", "模拟登录未开启");
-            String value = mockOpenid.trim();
-            if (!value.matches("avalon_mock_(?:[1-9]|10)")) throw new BusinessException("PARAM_ERROR", "模拟用户必须是玩家1至玩家10");
-            return value;
-        }
+        if (mockOpenid != null) throw new BusinessException("FORBIDDEN", "生产环境禁止模拟登录");
         if (!StringUtils.hasText(code)) throw new BusinessException("PARAM_ERROR", "微信登录 code 不能为空");
         if (!StringUtils.hasText(properties.getAppId()) || !StringUtils.hasText(properties.getAppSecret())) throw new BusinessException("微信登录未配置");
         Map<String,Object> body;
