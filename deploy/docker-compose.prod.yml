@@ -1,3 +1,5 @@
+name: avalon-game
+
 services:
   avalon-server:
     build:
