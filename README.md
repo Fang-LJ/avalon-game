@@ -7,13 +7,14 @@
 - `backend/`：Java 21、Spring Boot 3.3.7、MySQL、JWT、原生 WebSocket
 - `miniprogram/`：原生微信小程序（无第三方前端依赖）
 - `docs/sql/001_avalon_init.sql`：完整 MySQL 初始化脚本
+- `docs/sql/002_lady_of_the_lake.sql`：阶段一湖中仙女增量迁移
 - `docs/reference-stack.md`：对 playmate-space 的只读技术栈审计
 
 项目参考了同级 `playmate-space` 的 Spring Boot/JWT/MySQL/API 响应与原生小程序请求封装，但代码和数据库业务表完全独立，没有修改或依赖其源代码。
 
 ## 已实现流程
 
-创建/加入 6、7、8 人房间 → 等待大厅 → 服务端安全随机分配身份 → 私有角色视野 → 全员确认 → 队长选人 → 公开组队投票 → 匿名任务提交 → 任务结算/队长轮换 → 三次失败或连续五次否决判负 → 三次成功进入刺杀 → 公开最终身份 → 房主再来一局。
+创建/加入 5–10 人房间 → 等待大厅 → 服务端安全随机分配身份 → 私有角色视野 → 全员确认 → 队长选人 → 公开组队投票 → 匿名任务提交 → 自动结算及队长轮换 → 10 人局第 2/3/4 轮湖中仙女 → 三次失败或连续五次否决判负 → 三次成功进入刺杀 → 公开最终身份 → 满员时房主再来一局。
 
 WebSocket 事件只广播事件名、房间号和时间戳，客户端收到后通过带 JWT 的 REST API 拉取自己有权查看的状态。任务失败提交者和未结束对局的其他玩家角色不会出现在公开响应里。WebSocket 断开与重连会更新在线状态，小程序另有 5 秒低频兜底同步。
 
@@ -21,15 +22,18 @@ WebSocket 事件只广播事件名、房间号和时间戳，客户端收到后�
 
 | 人数 | 第 1 轮 | 第 2 轮 | 第 3 轮 | 第 4 轮 | 第 5 轮 |
 |---|---:|---:|---:|---:|---:|
+| 5 | 2 | 3 | 2 | 3 | 3 |
 | 6 | 2 | 3 | 4 | 3 | 4 |
 | 7 | 2 | 3 | 3 | 4（需 2 张失败） | 4 |
 | 8 | 3 | 4 | 4 | 5（需 2 张失败） | 5 |
+| 9 | 3 | 4 | 4 | 5（需 2 张失败） | 5 |
+| 10 | 3 | 4 | 4 | 5（需 2 张失败） | 5 |
 
-配置集中在 `backend/src/main/java/com/avalon/game/game/GameRuleConfig.java`。规则依据为 The Resistance: Avalon rulebook：7 人及以上仅第 4 个任务需要至少两张失败牌；连续五支队伍被否决时邪恶获胜。
+配置集中在 `backend/src/main/java/com/avalon/game/game/GameRuleConfig.java`，业务基线是仓库根目录的 `avalon_v1_game_rules.txt`。10 人局启用湖中仙女，第一任持有者是第一任队长右手相邻玩家；第 2、3、4 个任务结算后各使用一次，结果仅当前持有者可见。
 
 ## 数据库
 
-先将 `docs/sql/001_avalon_init.sql` 执行到 playmate-space 所使用的同一个 MySQL schema。脚本只创建以下独立表，不修改已有业务表：
+新库先执行 `docs/sql/001_avalon_init.sql`；已有库再执行 `docs/sql/002_lady_of_the_lake.sql`。迁移只给 Avalon 对局增加当前持有者字段，并新建湖中仙女检查表，不修改 playmate-space 业务表。
 
 - `t_avalon_user`
 - `t_avalon_user_identity`
@@ -40,6 +44,7 @@ WebSocket 事件只广播事件名、房间号和时间戳，客户端收到后�
 - `t_avalon_mission`
 - `t_avalon_vote`
 - `t_avalon_mission_action`
+- `t_avalon_lady_inspection`（由 002 创建）
 
 数据库连接位于 `backend/src/main/resources/application.yml`，通过 `AVALON_DB_HOST/PORT/NAME/USERNAME/PASSWORD` 覆盖。默认本地端口和 schema 与 playmate-space 的本地 Docker 配置一致。
 
@@ -47,11 +52,12 @@ WebSocket 事件只广播事件名、房间号和时间戳，客户端收到后�
 
 ```bash
 mysql -h 127.0.0.1 -P 13306 -u playmate -p playmate_space < docs/sql/001_avalon_init.sql
+mysql -h 127.0.0.1 -P 13306 -u playmate -p playmate_space < docs/sql/002_lady_of_the_lake.sql
 cd backend
-mvn spring-boot:run
+SPRING_PROFILES_ACTIVE=local mvn spring-boot:run
 ```
 
-默认地址为 `http://127.0.0.1:8081`，健康检查是 `GET /api/health`。本地 profile 接受 `mockOpenid`；非 local profile 使用微信 `jscode2session`，必须配置 `AVALON_WECHAT_APP_ID` 和 `AVALON_WECHAT_APP_SECRET`。生产环境示例见 `.env.example`。
+默认地址为 `http://127.0.0.1:8081`，健康检查是 `GET /api/health`。本地必须显式启用 `local` profile 才接受 `mockOpenid`。生产必须显式启用 `prod`，并完整提供数据库、JWT 与微信环境变量；任何必要配置缺失或继续使用本地 JWT 密钥都会直接启动失败。生产环境示例见 `deploy/.env.prod.example`。
 
 ## 打开小程序
 
@@ -63,7 +69,7 @@ mvn spring-boot:run
 
 ## 多人流程测试
 
-本地 profile 内置 8 个测试身份。远程联调时可将小程序 `utils/config.js` 切换到 `mock`，并在后端明确设置 `AVALON_MOCK_LOGIN_ENABLED=true`；首页会显示玩家1至玩家8的切换入口。该开关只接受 `avalon_mock_1` 到 `avalon_mock_8`，正式接入微信登录后应关闭并把小程序切回 `prod`。第一个用户创建房间，其余用户输入六位房间号加入；满员后房主开始。刷新或重开小程序时，首页“返回游戏”会从服务端恢复当前房间与阶段。
+本地 profile 内置 10 个测试身份。远程联调时可将小程序 `utils/config.js` 切换到 `mock`，并在后端明确设置 `AVALON_MOCK_LOGIN_ENABLED=true`；首页会显示玩家1至玩家10的切换入口。该开关只接受 `avalon_mock_1` 到 `avalon_mock_10`，正式接入微信登录后应关闭并把小程序切回 `prod`。第一个用户创建房间，其余用户输入六位房间号加入；满员后房主开始。刷新或重开小程序时，首页“返回游戏”会从服务端恢复当前房间与阶段。
 
 自动化检查：
 
@@ -80,7 +86,7 @@ cd ../miniprogram && npm test && npm run check
 - `POST /api/avalon/room/{roomId}/leave`
 - `POST /api/avalon/game/start?roomId=...`
 - `GET /api/avalon/game/{gameId}` 与 `.../my-role`
-- `POST .../role-confirm|team|vote|mission|continue|assassinate|restart`
+- `POST .../role-confirm|team|vote|mission|lady-of-lake|assassinate|restart`
 - `GET /ws/avalon`（WebSocket upgrade，推荐用 `Authorization: Bearer <JWT>` 握手头；浏览器客户端也可使用 `token` 查询参数）
 
 所有 `/api/avalon/**` 接口需要 `Authorization: Bearer <JWT>`。写操作在事务内锁定对局行，并结合唯一约束阻止重复投票和重复任务提交。
@@ -88,8 +94,6 @@ cd ../miniprogram && npm test && npm run check
 ## 当前边界与扩展
 
 首版没有头像、美术卡牌、聊天、匹配、观战、战绩、商城、音视频以及后台管理。网络断线可恢复，但暂未实现多节点 WebSocket 广播；如果部署多个后端实例，需要在事件层接入 Redis Pub/Sub。
-
-增加 5/9/10 人时，只需在 `GameRuleConfig.CONFIGS` 中增加人数、角色、五轮人数和失败阈值配置，并开放创建页人数选项；核心状态机无需改写。新增莫德雷德、兰斯洛特等角色时，扩展 `GameTypes.Role`、配置和 `RoleVisibilityService`。
 
 ## 生产部署
 

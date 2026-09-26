@@ -19,10 +19,15 @@ public final class GameRulesEngine {
         if (evilScore >= 3) return Winner.EVIL;
         return null; // Three good quests enter assassination rather than directly producing a winner.
     }
-    public static Phase phaseAfterMission(int goodScore, int evilScore) {
-        if (evilScore >= 3) return Phase.FINISHED;
-        if (goodScore >= 3) return Phase.ASSASSINATION;
-        return Phase.MISSION_RESULT;
+    public static MissionTransition transitionAfterMission(GameRuleConfig config, int missionNo, int goodScore, int evilScore) {
+        if (evilScore >= 3) return new MissionTransition(Phase.FINISHED, false);
+        if (config.ladyOfLake() && missionNo >= 2 && missionNo <= 4)
+            return new MissionTransition(Phase.LADY_OF_LAKE, false);
+        if (goodScore >= 3) return new MissionTransition(Phase.ASSASSINATION, false);
+        return new MissionTransition(Phase.TEAM_BUILDING, true);
     }
+    public static Phase phaseAfterLady(int goodScore) { return goodScore >= 3 ? Phase.ASSASSINATION : Phase.TEAM_BUILDING; }
+    public static int initialLadyHolderSeat(int leaderSeat, int playerCount) { return leaderSeat == 1 ? playerCount : leaderSeat - 1; }
     public static Winner assassinationWinner(Role target) { return target == Role.MERLIN ? Winner.EVIL : Winner.GOOD; }
+    public record MissionTransition(Phase phase, boolean advanceRound) {}
 }

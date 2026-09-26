@@ -1,6 +1,6 @@
 const api = require('../../services/avalon');
 Page({
-  data: { counts: [6, 7, 8], maxPlayers: 6, nickname: '', loading: false },
+  data: { counts: [5, 6, 7, 8, 9, 10], maxPlayers: 5, nickname: '', loading: false },
   selectCount(e) { this.setData({ maxPlayers: Number(e.currentTarget.dataset.count) }); },
   nicknameInput(e) { this.setData({ nickname: e.detail.value }); },
   submit() {

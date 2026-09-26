@@ -12,7 +12,7 @@ module.exports = {
   submitTeam: (id, playerIds) => request({ url: `/api/avalon/game/${id}/team`, method: 'POST', data: { playerIds } }),
   vote: (id, choice) => request({ url: `/api/avalon/game/${id}/vote`, method: 'POST', data: { choice } }),
   mission: (id, choice) => request({ url: `/api/avalon/game/${id}/mission`, method: 'POST', data: { choice } }),
-  continueRound: id => request({ url: `/api/avalon/game/${id}/continue`, method: 'POST' }),
+  inspectLady: (id, targetPlayerId) => request({ url: `/api/avalon/game/${id}/lady-of-lake`, method: 'POST', data: { targetPlayerId } }),
   assassinate: (id, targetPlayerId) => request({ url: `/api/avalon/game/${id}/assassinate`, method: 'POST', data: { targetPlayerId } }),
   restart: id => request({ url: `/api/avalon/game/${id}/restart`, method: 'POST' })
 };

@@ -5,3 +5,8 @@ backend/target/
 miniprogram/node_modules/
 miniprogram/project.private.config.json
 .env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.*.example

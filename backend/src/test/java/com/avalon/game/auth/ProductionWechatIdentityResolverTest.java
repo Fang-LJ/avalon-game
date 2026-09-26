@@ -8,12 +8,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ProductionWechatIdentityResolverTest {
     @Test
-    void enabledMockLoginAllowsExactlyEightKnownUsers() {
+    void enabledMockLoginAllowsExactlyTenKnownUsers() {
         WechatProperties properties = new WechatProperties();
         properties.setMockLoginEnabled(true);
         ProductionWechatIdentityResolver resolver = new ProductionWechatIdentityResolver(properties);
 
-        for (int i = 1; i <= 8; i++) {
+        for (int i = 1; i <= 10; i++) {
             assertEquals("avalon_mock_" + i, resolver.resolve(null, "avalon_mock_" + i));
         }
     }
@@ -25,7 +25,7 @@ class ProductionWechatIdentityResolverTest {
         ProductionWechatIdentityResolver resolver = new ProductionWechatIdentityResolver(properties);
 
         BusinessException error = assertThrows(BusinessException.class,
-                () -> resolver.resolve(null, "avalon_mock_9"));
+                () -> resolver.resolve(null, "avalon_mock_11"));
         assertEquals("PARAM_ERROR", error.getCode());
     }
 

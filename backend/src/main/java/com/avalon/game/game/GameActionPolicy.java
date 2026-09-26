@@ -4,6 +4,7 @@ import com.avalon.game.common.BusinessException;
 import com.avalon.game.game.GameTypes.*;
 
 import java.util.Collection;
+import java.util.Set;
 
 public final class GameActionPolicy {
     private GameActionPolicy() {}
@@ -23,5 +24,18 @@ public final class GameActionPolicy {
     public static void requireMissionChoice(Role role, MissionChoice choice) {
         if (role.alignment() == Alignment.GOOD && choice == MissionChoice.FAIL)
             throw new BusinessException("FORBIDDEN", "正义阵营只能选择任务成功");
+    }
+    public static void requireLadyHolder(long actorPlayerId, Long holderPlayerId) {
+        if (holderPlayerId == null || actorPlayerId != holderPlayerId)
+            throw new BusinessException("FORBIDDEN", "只有当前湖中仙女持有者可以检查阵营");
+    }
+    public static void requireLadyTarget(long actorPlayerId, long targetPlayerId, Collection<Long> gamePlayerIds,
+                                         Set<Long> previousHolderIds) {
+        if (actorPlayerId == targetPlayerId) throw new BusinessException("PARAM_ERROR", "湖中仙女不能检查自己");
+        if (!gamePlayerIds.contains(targetPlayerId)) throw new BusinessException("PARAM_ERROR", "目标玩家不在当前游戏");
+        if (previousHolderIds.contains(targetPlayerId)) throw new BusinessException("PARAM_ERROR", "不能检查曾经持有湖中仙女的玩家");
+    }
+    public static void requireRestartPlayerCount(int activePlayers, int requiredPlayers) {
+        if (activePlayers != requiredPlayers) throw new BusinessException("人数不足，无法开始下一局");
     }
 }

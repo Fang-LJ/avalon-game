@@ -70,7 +70,7 @@ class ProductionWechatIdentityResolver implements WechatIdentityResolver {
         if (StringUtils.hasText(mockOpenid)) {
             if (!properties.isMockLoginEnabled()) throw new BusinessException("FORBIDDEN", "模拟登录未开启");
             String value = mockOpenid.trim();
-            if (!value.matches("avalon_mock_[1-8]")) throw new BusinessException("PARAM_ERROR", "模拟用户必须是玩家1至玩家8");
+            if (!value.matches("avalon_mock_(?:[1-9]|10)")) throw new BusinessException("PARAM_ERROR", "模拟用户必须是玩家1至玩家10");
             return value;
         }
         if (!StringUtils.hasText(code)) throw new BusinessException("PARAM_ERROR", "微信登录 code 不能为空");

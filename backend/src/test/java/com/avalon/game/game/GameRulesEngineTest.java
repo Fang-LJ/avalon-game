@@ -3,58 +3,67 @@ package com.avalon.game.game;
 import com.avalon.game.common.BusinessException;
 import com.avalon.game.game.GameTypes.*;
 import org.junit.jupiter.api.Test;
-
 import java.util.*;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class GameRulesEngineTest {
-    @Test void sixPlayerRolesAndQuestsAreCorrect() {
-        GameRuleConfig c = GameRuleConfig.forPlayers(6);
-        assertEquals(6, c.roles().size()); assertEquals(List.of(2,3,4,3,4), c.teamSizes());
-        assertEquals(4, c.roles().stream().filter(r -> r.alignment() == Alignment.GOOD).count());
-        assertEquals(2, c.roles().stream().filter(r -> r.alignment() == Alignment.EVIL).count());
+    @Test void allFiveToTenPlayerConfigurationsMatchTheV1Rules() {
+        assertConfig(5, List.of(Role.MERLIN, Role.PERCIVAL, Role.LOYAL_SERVANT, Role.MORGANA, Role.ASSASSIN), List.of(2,3,2,3,3), List.of(1,1,1,1,1), false);
+        assertConfig(6, List.of(Role.MERLIN, Role.PERCIVAL, Role.LOYAL_SERVANT, Role.LOYAL_SERVANT, Role.MORGANA, Role.ASSASSIN), List.of(2,3,4,3,4), List.of(1,1,1,1,1), false);
+        assertConfig(7, List.of(Role.MERLIN, Role.PERCIVAL, Role.LOYAL_SERVANT, Role.LOYAL_SERVANT, Role.MORGANA, Role.ASSASSIN, Role.OBERON), List.of(2,3,3,4,4), List.of(1,1,1,2,1), false);
+        assertConfig(8, List.of(Role.MERLIN, Role.PERCIVAL, Role.LOYAL_SERVANT, Role.LOYAL_SERVANT, Role.LOYAL_SERVANT, Role.MORGANA, Role.ASSASSIN, Role.MINION), List.of(3,4,4,5,5), List.of(1,1,1,2,1), false);
+        assertConfig(9, List.of(Role.MERLIN, Role.PERCIVAL, Role.LOYAL_SERVANT, Role.LOYAL_SERVANT, Role.LOYAL_SERVANT, Role.LOYAL_SERVANT, Role.MORGANA, Role.ASSASSIN, Role.MORDRED), List.of(3,4,4,5,5), List.of(1,1,1,2,1), false);
+        assertConfig(10, List.of(Role.MERLIN, Role.PERCIVAL, Role.LOYAL_SERVANT, Role.LOYAL_SERVANT, Role.LOYAL_SERVANT, Role.LOYAL_SERVANT, Role.MORGANA, Role.ASSASSIN, Role.MORDRED, Role.OBERON), List.of(3,4,4,5,5), List.of(1,1,1,2,1), true);
     }
-    @Test void sevenPlayerRolesAndQuestsAreCorrect() {
-        GameRuleConfig c = GameRuleConfig.forPlayers(7);
-        assertEquals(List.of(2,3,3,4,4), c.teamSizes()); assertEquals(List.of(1,1,1,2,1), c.failThresholds());
-        assertTrue(c.roles().contains(Role.OBERON));
-    }
-    @Test void eightPlayerRolesAndQuestsAreCorrect() {
-        GameRuleConfig c = GameRuleConfig.forPlayers(8);
-        assertEquals(List.of(3,4,4,5,5), c.teamSizes()); assertEquals(5, c.roles().stream().filter(r -> r.alignment() == Alignment.GOOD).count());
+    @Test void eightPlayersUseMinionAndNeverOberon() {
+        assertTrue(GameRuleConfig.forPlayers(8).roles().contains(Role.MINION));
+        assertFalse(GameRuleConfig.forPlayers(8).roles().contains(Role.OBERON));
     }
     @Test void shuffleNeverAddsOrDropsRolesAndVariesByGame() {
-        GameRuleConfig c = GameRuleConfig.forPlayers(8);
+        GameRuleConfig c = GameRuleConfig.forPlayers(10);
         List<Role> first = GameRulesEngine.shuffledRoles(c, new Random(1));
         List<Role> second = GameRulesEngine.shuffledRoles(c, new Random(2));
-        assertNotEquals(first, second);
-        assertEquals(frequencies(c.roles()), frequencies(first)); assertEquals(frequencies(c.roles()), frequencies(second));
+        assertNotEquals(first, second); assertEquals(frequencies(c.roles()), frequencies(first)); assertEquals(frequencies(c.roles()), frequencies(second));
     }
-    @Test void voteNeedsStrictMajority() {
+    @Test void voteNeedsStrictMajorityAndFiveRejectionsAreConfigured() {
         assertFalse(GameRulesEngine.teamApproved(3, 6)); assertTrue(GameRulesEngine.teamApproved(4, 6));
         assertFalse(GameRulesEngine.teamApproved(3, 7)); assertTrue(GameRulesEngine.teamApproved(4, 7));
+        for (int players = 5; players <= 10; players++) assertEquals(5, GameRuleConfig.forPlayers(players).rejectedTeamsToEvilWin());
     }
-    @Test void onlyFourthQuestAtSevenPlusNeedsTwoFails() {
-        GameRuleConfig c = GameRuleConfig.forPlayers(7);
-        assertFalse(GameRulesEngine.missionFailed(1, c, 4)); assertTrue(GameRulesEngine.missionFailed(2, c, 4));
-        assertTrue(GameRulesEngine.missionFailed(1, c, 5));
+    @Test void missionCompletionAutomaticallyAdvancesAndRotatesLeader() {
+        var transition = GameRulesEngine.transitionAfterMission(GameRuleConfig.forPlayers(8), 1, 1, 0);
+        assertEquals(Phase.TEAM_BUILDING, transition.phase()); assertTrue(transition.advanceRound());
+        assertEquals(4, GameRulesEngine.nextSeat(3, 8)); assertEquals(1, GameRulesEngine.nextSeat(8, 8));
     }
-    @Test void leaderRotationWrapsAround() {
-        assertEquals(4, GameRulesEngine.nextSeat(3, 7)); assertEquals(1, GameRulesEngine.nextSeat(7, 7));
-    }
-    @Test void threeFailedMissionsProduceEvilWinnerButThreeSuccessesNeedAssassination() {
+    @Test void scoreEndStatesHaveCorrectPrecedence() {
+        assertEquals(Phase.FINISHED, GameRulesEngine.transitionAfterMission(GameRuleConfig.forPlayers(10), 3, 1, 3).phase());
+        assertEquals(Phase.ASSASSINATION, GameRulesEngine.transitionAfterMission(GameRuleConfig.forPlayers(9), 3, 3, 0).phase());
         assertEquals(Winner.EVIL, GameRulesEngine.missionWinner(1, 3)); assertNull(GameRulesEngine.missionWinner(3, 1));
-        assertEquals(Phase.FINISHED, GameRulesEngine.phaseAfterMission(1, 3));
-        assertEquals(Phase.ASSASSINATION, GameRulesEngine.phaseAfterMission(3, 1));
+    }
+    @Test void ladyRunsOnlyAfterQuestsTwoThreeAndFourInTenPlayerGames() {
+        GameRuleConfig ten = GameRuleConfig.forPlayers(10);
+        assertEquals(Phase.TEAM_BUILDING, GameRulesEngine.transitionAfterMission(ten, 1, 1, 0).phase());
+        for (int mission : List.of(2, 3, 4)) assertEquals(Phase.LADY_OF_LAKE, GameRulesEngine.transitionAfterMission(ten, mission, 2, 0).phase());
+        assertEquals(Phase.TEAM_BUILDING, GameRulesEngine.transitionAfterMission(ten, 5, 2, 2).phase());
+    }
+    @Test void thirdGoodQuestCompletesLadyBeforeAssassinationButThirdEvilBypassesIt() {
+        GameRuleConfig ten = GameRuleConfig.forPlayers(10);
+        assertEquals(Phase.LADY_OF_LAKE, GameRulesEngine.transitionAfterMission(ten, 3, 3, 0).phase());
+        assertEquals(Phase.ASSASSINATION, GameRulesEngine.phaseAfterLady(3));
+        assertEquals(Phase.FINISHED, GameRulesEngine.transitionAfterMission(ten, 3, 1, 3).phase());
+    }
+    @Test void initialLadyHolderIsImmediatelyRightOfFirstLeader() {
+        assertEquals(4, GameRulesEngine.initialLadyHolderSeat(5, 10)); assertEquals(10, GameRulesEngine.initialLadyHolderSeat(1, 10));
     }
     @Test void assassinWinsOnlyWhenTargetingMerlin() {
-        assertEquals(Winner.EVIL, GameRulesEngine.assassinationWinner(Role.MERLIN));
-        assertEquals(Winner.GOOD, GameRulesEngine.assassinationWinner(Role.PERCIVAL));
+        assertEquals(Winner.EVIL, GameRulesEngine.assassinationWinner(Role.MERLIN)); assertEquals(Winner.GOOD, GameRulesEngine.assassinationWinner(Role.PERCIVAL));
     }
-    @Test void fiveRejectedTeamsIsConfigured() { assertEquals(5, GameRuleConfig.forPlayers(6).rejectedTeamsToEvilWin()); }
-    @Test void unsupportedPlayerCountsAreRejected() { assertThrows(BusinessException.class, () -> GameRuleConfig.forPlayers(5)); }
-    private Map<Role,Long> frequencies(List<Role> roles) {
-        Map<Role,Long> result = new EnumMap<>(Role.class); roles.forEach(r -> result.merge(r, 1L, Long::sum)); return result;
+    @Test void unsupportedPlayerCountsAreRejected() {
+        assertThrows(BusinessException.class, () -> GameRuleConfig.forPlayers(4)); assertThrows(BusinessException.class, () -> GameRuleConfig.forPlayers(11));
     }
+    private void assertConfig(int players, List<Role> roles, List<Integer> teams, List<Integer> fails, boolean lady) {
+        GameRuleConfig actual = GameRuleConfig.forPlayers(players);
+        assertEquals(roles, actual.roles()); assertEquals(teams, actual.teamSizes()); assertEquals(fails, actual.failThresholds()); assertEquals(lady, actual.ladyOfLake());
+    }
+    private Map<Role,Long> frequencies(List<Role> roles) { Map<Role,Long> result = new EnumMap<>(Role.class); roles.forEach(r -> result.merge(r, 1L, Long::sum)); return result; }
 }

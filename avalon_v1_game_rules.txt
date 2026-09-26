@@ -1,0 +1,420 @@
+Avalon Game V1 核心玩法规则基线
+版本：V1 / 阶段一
+用途：供 Codex 修改 Fang-LJ/avalon-game 的规则、状态机和 5~10 人配置时作为唯一业务规则参考。
+
+重要说明
+========
+1. 官方固定：5~10 人善恶人数、五轮任务人数、组队投票、任务出票、胜负、角色能力、湖中仙女规则。
+2. 本项目默认角色组合是产品约定，不是官方唯一固定组合。
+3. 第一版只做本文列出的角色和 10 人局湖中仙女。
+4. 后端是唯一可信数据源，客户端不能决定身份、视野、投票结果、任务结果、队长轮换或胜负。
+
+一、5~10 人阵营人数
+==================
+5 人：3 好 / 2 坏
+6 人：4 好 / 2 坏
+7 人：4 好 / 3 坏
+8 人：5 好 / 3 坏
+9 人：6 好 / 3 坏
+10 人：6 好 / 4 坏
+
+二、本项目 V1 默认角色配置
+==========================
+5 人：
+好人：梅林、派西维尔、忠臣
+坏人：莫甘娜、刺客
+
+6 人：
+好人：梅林、派西维尔、忠臣、忠臣
+坏人：莫甘娜、刺客
+
+7 人：
+好人：梅林、派西维尔、忠臣、忠臣
+坏人：莫甘娜、刺客、奥伯伦
+
+8 人：
+好人：梅林、派西维尔、忠臣、忠臣、忠臣
+坏人：莫甘娜、刺客、爪牙（Minion of Mordred）
+注意：8 人局不用奥伯伦。
+
+9 人：
+好人：梅林、派西维尔、忠臣、忠臣、忠臣、忠臣
+坏人：莫甘娜、刺客、莫德雷德
+
+10 人：
+好人：梅林、派西维尔、忠臣、忠臣、忠臣、忠臣
+坏人：莫甘娜、刺客、莫德雷德、奥伯伦
+扩展：启用湖中仙女（Lady of the Lake）
+
+三、角色定义与视野
+==================
+MERLIN / 梅林
+- 阵营：GOOD
+- 能看到所有邪恶玩家，但看不到莫德雷德。
+- 能看到奥伯伦。
+- 只知道“这些玩家属于邪恶阵营”，不能知道具体坏人角色。
+后端视野：alignment == EVIL && role != MORDRED
+
+PERCIVAL / 派西维尔
+- 阵营：GOOD
+- 看到梅林和莫甘娜两名玩家。
+- 两人必须显示成完全相同的“梅林候选人”，不能区分。
+后端视野：role == MERLIN || role == MORGANA
+
+LOYAL_SERVANT / 忠臣
+- 阵营：GOOD
+- 无特殊视野。
+- 执行任务时只能提交 SUCCESS。
+
+MORGANA / 莫甘娜
+- 阵营：EVIL
+- 能看到除奥伯伦之外的其他邪恶玩家。
+- 不显示队友具体角色，只显示“邪恶同伴”。
+- 在派西维尔视野里伪装成梅林。
+
+ASSASSIN / 刺客
+- 阵营：EVIL
+- 能看到除奥伯伦之外的其他邪恶玩家。
+- 不显示队友具体角色。
+- 好人先完成 3 个成功任务后，由刺客选择目标刺杀。
+- 刺中梅林：EVIL 获胜；刺错：GOOD 获胜。
+
+MINION / 爪牙
+- 阵营：EVIL
+- 能看到除奥伯伦之外的其他邪恶玩家。
+- 无额外特殊能力。
+
+MORDRED / 莫德雷德
+- 阵营：EVIL
+- 能看到除奥伯伦之外的其他邪恶玩家。
+- 梅林看不到莫德雷德。
+
+OBERON / 奥伯伦
+- 阵营：EVIL
+- 看不到任何其他邪恶玩家。
+- 其他邪恶玩家也看不到奥伯伦。
+- 梅林可以看到奥伯伦属于邪恶阵营。
+
+邪恶普通视野统一规则：
+MORGANA / ASSASSIN / MINION / MORDRED：
+alignment == EVIL && role != OBERON && player != self
+只暴露“邪恶同伴”，不暴露具体角色。
+
+OBERON：
+空视野。
+
+四、每轮任务人数
+================
+5  -> [2,3,2,3,3]
+6  -> [2,3,4,3,4]
+7  -> [2,3,3,4,4]
+8  -> [3,4,4,5,5]
+9  -> [3,4,4,5,5]
+10 -> [3,4,4,5,5]
+
+五、任务失败阈值
+================
+5、6 人：
+failThresholds = [1,1,1,1,1]
+
+7、8、9、10 人：
+failThresholds = [1,1,1,2,1]
+
+也就是 7 人及以上只有第 4 个任务需要至少 2 张 FAIL 才失败。
+第 4 轮：0 FAIL 成功；1 FAIL 仍成功；2+ FAIL 失败。
+其他轮次 1 张 FAIL 即失败。
+
+六、状态机
+==========
+建议核心状态：
+
+WAITING
+ROLE_CONFIRM
+TEAM_BUILDING
+TEAM_VOTING
+MISSION_EXECUTING
+LADY_OF_LAKE（仅 10 人局指定时机）
+ASSASSINATION
+FINISHED
+
+MISSION_RESULT 不再作为必须人工确认后才能继续的阻塞阶段。
+任务结算后服务端自动推进。
+前端仍可通过 latestMissionResult 展示 2~3 秒结果，但不阻塞状态机。
+
+七、开局
+========
+1. 房间满员后房主开始。
+2. 服务端读取人数配置。
+3. 使用安全随机数打乱角色。
+4. 每名玩家得到唯一角色。
+5. 随机确定第一任队长。
+6. 每名玩家只能获取自己的角色及合法视野。
+7. 所有人确认后进入 TEAM_BUILDING。
+8. 10 人局初始化湖中仙女持有者。
+
+八、队长与选人
+==============
+1. 当前队长选择本轮任务成员。
+2. 队长可以选自己，也可以不选自己。
+3. 必须恰好选择本轮规定人数。
+4. 不允许重复玩家。
+5. 不能选择其他房间玩家。
+6. 只有当前队长能提交队伍。
+7. 队长按座位顺序循环轮换。
+8. 组队被否决时任务轮次不变，只换下一任队长。
+9. 任务执行结束后，下一轮队长从本轮最终通过提案的队长继续顺延一位。
+
+九、组队投票
+============
+1. 所有人都投票，包括队长。
+2. 每人只能投一次：APPROVE / REJECT。
+3. 全员提交前，不能看到他人投票。
+4. 全员提交后，一次性公开每人的组队票。
+5. 必须严格过半才通过：approvals > playerCount / 2。
+6. 平票算否决。
+
+十、连续组队否决
+================
+组队被否决：
+- missionNo 不变
+- proposalNo + 1
+- consecutiveRejections + 1
+- 队长顺延
+- 回到 TEAM_BUILDING
+
+某支队伍一旦通过：
+- consecutiveRejections 清零
+
+连续第 5 次组队仍被否决：
+- EVIL 立即获胜
+- phase = FINISHED
+- 不执行任务
+
+十一、任务出票
+==============
+只有本轮任务成员能提交。
+
+GOOD：
+只能 SUCCESS。
+后端必须阻止 GOOD 提交 FAIL。
+
+EVIL：
+可以 SUCCESS 或 FAIL。
+坏人不是必须出 FAIL。
+
+每名任务成员只能提交一次。
+
+十二、任务匿名
+==============
+公开内容只能是：
+- SUCCESS 数量
+- FAIL 数量
+- 本轮任务 SUCCESS / FAILED
+
+普通客户端绝不能收到：
+- 哪个玩家提交了 FAIL
+- 哪个玩家提交了 SUCCESS
+
+API 和 WebSocket 都不能广播“玩家 -> 任务牌”的映射。
+
+本阶段先不重构数据库，但后续数据库设计应优先考虑不要永久保存可直接反查“谁出了 FAIL”的映射。
+
+十三、任务结算与自动推进
+========================
+最后一名任务成员提交后，服务端立即：
+
+1. 统计 fails。
+2. 根据 failThreshold 判定任务成功/失败。
+3. 更新 goodScore / evilScore。
+4. 保存 latestMissionResult 供前端展示。
+
+然后按顺序推进：
+
+A. evilScore >= 3
+-> winner = EVIL
+-> FINISHED
+-> 不进入湖中仙女。
+
+B. 否则，如果是 10 人局，并且刚结算的是第 2 / 3 / 4 个任务
+-> 进入 LADY_OF_LAKE。
+即使第 3 或第 4 个任务让 goodScore 达到 3，也先完成这一轮湖中仙女，再进入刺杀。
+
+C. 否则，如果 goodScore >= 3
+-> ASSASSINATION
+
+D. 否则
+-> missionNo + 1
+-> proposalNo = 1
+-> consecutiveRejections = 0
+-> 队长顺延
+-> TEAM_BUILDING
+
+删除“必须由房主点击继续下一轮”的业务流程。
+可以保留历史兼容接口一段时间，但前端不再调用；最终建议移除 continueRound API。
+
+十四、胜负
+==========
+EVIL 胜利：
+1. 3 个任务失败；或
+2. 连续 5 次组队被否决；或
+3. 好人完成 3 个成功任务后刺客刺中梅林。
+
+GOOD 胜利：
+1. 先完成 3 个成功任务；
+2. 刺客最终没有刺中梅林。
+
+好人完成 3 个成功任务不能直接 FINISHED。
+
+十五、刺杀
+==========
+1. 只有 ASSASSIN 能提交刺杀。
+2. 刺客选择一个其他玩家。
+3. 目标角色 == MERLIN -> EVIL
+4. 否则 -> GOOD
+5. FINISHED
+6. 只有 FINISHED 后允许公开所有真实角色。
+
+十六、10 人局湖中仙女
+=====================
+本项目 V1 只在 10 人局启用 Lady of the Lake。
+
+1. 湖中仙女当前持有者是公开信息。
+2. 开局给“第一任队长右手边的玩家”。
+3. 为避免数字座位方向歧义，本项目定义：
+   seatNo 递增方向为顺时针；
+   队长右手相邻座位 = 前一个 seatNo；
+   holderSeat = leaderSeat == 1 ? playerCount : leaderSeat - 1。
+4. 只使用 3 次：
+   - 第 2 个任务结算后
+   - 第 3 个任务结算后
+   - 第 4 个任务结算后
+5. 进入 LADY_OF_LAKE 后，只有当前 holder 能选择目标。
+6. 目标必须：
+   - 不是自己
+   - 从未持有/使用过湖中仙女
+7. 系统只私下告诉 holder 目标阵营：GOOD 或 EVIL。
+8. 不能告诉具体角色。
+9. 检查莫德雷德时也显示 EVIL；湖中仙女不受“梅林看不到莫德雷德”限制。
+10. holder 可以在线下讨论中撒谎；APP 不能自动公开检查结果。
+11. 检查完成后，token 传给被检查玩家。
+12. 被检查玩家成为新的公开 holder。
+13. 历史 holder 以后不能成为检查目标。
+14. 第 5 个任务后不再使用湖中仙女。
+15. 湖中仙女完成后：
+   - goodScore >= 3 -> ASSASSINATION
+   - 否则 -> 自动下一轮 TEAM_BUILDING
+16. 如果 evilScore 已达到 3，游戏直接结束，不再执行湖中仙女。
+
+建议状态字段（本阶段可先按现有数据库最小增量实现，数据库整体重构后再优化）：
+- ladyEnabled
+- ladyHolderPlayerId
+- ladyUsedCount
+- ladyIneligibleTargetIds / 历史 holder
+- 本轮是否已检查
+- 私有检查结果（禁止广播）
+
+建议事件：
+LADY_OF_LAKE_STARTED
+LADY_OF_LAKE_COMPLETED
+
+可以广播新的 holderPlayerId，因为 holder 是公开信息。
+绝不能广播目标 GOOD / EVIL 的检查结果。
+
+十七、FINISHED / 退出 / 再来一局
+================================
+1. FINISHED 后公开身份。
+2. 任意普通玩家退出时，只退出自己，不能直接把整个房间 CLOSED。
+3. 如果所有玩家都退出，才自动关闭房间。
+4. 房主退出且仍有人时，可将房主转移给剩余玩家中座位最靠前者。
+5. 再来一局前必须重新检查人数是否等于房间目标人数。
+6. 如果有人已退出导致人数不足，禁止直接 restart，并明确提示人数不足。
+7. 本阶段不实现复杂补位系统。
+
+十八、前端最小适配
+==================
+本阶段不是 UI 重设计，只做规则所需改动：
+1. 创建房间支持 5 / 6 / 7 / 8 / 9 / 10 人。
+2. 删除人工“进入下一轮”按钮和 continueRound 调用。
+3. 最近任务结果仍可显示，但不阻塞状态。
+4. 新增 MINION、MORDRED 文案。
+5. 10 人局新增最简单可用的湖中仙女交互：
+   - 展示公开 holder
+   - holder 选择合法目标
+   - 私有展示 GOOD / EVIL
+   - 确认后传递 token
+6. 完整 UI 重做留到后续阶段。
+
+十九、后端必须验证
+==================
+- 用户属于当前房间
+- phase 正确
+- 当前用户是否队长
+- 队伍人数正确且不重复
+- 玩家属于当前房间
+- 每人只能投一次
+- 只有任务成员能出票
+- 每人任务只能提交一次
+- GOOD 不能 FAIL
+- 只有 ASSASSIN 能刺杀
+- 只有 Lady holder 能检查
+- Lady 不能检查自己
+- Lady 不能检查历史 holder
+- FINISHED 后拒绝继续游戏操作
+
+二十、人数配置总表
+==================
+5:
+roles = [MERLIN,PERCIVAL,LOYAL_SERVANT,MORGANA,ASSASSIN]
+teamSizes = [2,3,2,3,3]
+failThresholds = [1,1,1,1,1]
+ladyOfLake = false
+
+6:
+roles = [MERLIN,PERCIVAL,LOYAL_SERVANT,LOYAL_SERVANT,MORGANA,ASSASSIN]
+teamSizes = [2,3,4,3,4]
+failThresholds = [1,1,1,1,1]
+ladyOfLake = false
+
+7:
+roles = [MERLIN,PERCIVAL,LOYAL_SERVANT,LOYAL_SERVANT,MORGANA,ASSASSIN,OBERON]
+teamSizes = [2,3,3,4,4]
+failThresholds = [1,1,1,2,1]
+ladyOfLake = false
+
+8:
+roles = [MERLIN,PERCIVAL,LOYAL_SERVANT,LOYAL_SERVANT,LOYAL_SERVANT,MORGANA,ASSASSIN,MINION]
+teamSizes = [3,4,4,5,5]
+failThresholds = [1,1,1,2,1]
+ladyOfLake = false
+
+9:
+roles = [MERLIN,PERCIVAL,LOYAL_SERVANT,LOYAL_SERVANT,LOYAL_SERVANT,LOYAL_SERVANT,MORGANA,ASSASSIN,MORDRED]
+teamSizes = [3,4,4,5,5]
+failThresholds = [1,1,1,2,1]
+ladyOfLake = false
+
+10:
+roles = [MERLIN,PERCIVAL,LOYAL_SERVANT,LOYAL_SERVANT,LOYAL_SERVANT,LOYAL_SERVANT,MORGANA,ASSASSIN,MORDRED,OBERON]
+teamSizes = [3,4,4,5,5]
+failThresholds = [1,1,1,2,1]
+ladyOfLake = true
+
+二十一、本阶段明确不做
+====================
+- 不整体重构数据库表
+- 不完整重做 UI
+- 不加头像和角色卡美术
+- 不加兰斯洛特
+- 不加神剑
+- 不加聊天、匹配、战绩、排行榜
+- 不改变“后端权威状态”的基本架构
+
+规则来源说明
+============
+核心任务规则、角色能力和湖中仙女规则依据 The Resistance: Avalon 原版规则：
+- 湖中仙女开局给第一任 Leader 右侧玩家。
+- 第 2、3、4 个 Quest 结算后使用。
+- 只检查阵营，不检查具体角色。
+- 被检查玩家成为新 holder。
+- 已经持有/使用过 Lady 的玩家不能再被检查。
+- Lady 的私有检查结果可以被持有者口头撒谎，系统不能公开。

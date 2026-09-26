@@ -39,7 +39,12 @@ public class GameService {
         GameRuleConfig config = GameRuleConfig.forPlayers(players.size());
         int leaderSeat = random.nextInt(players.size()) + 1;
         long leaderId = players.stream().filter(p -> p.seatNo() == leaderSeat).findFirst().orElseThrow().id();
-        long gameId = repository.insertGame(room.id(), leaderId);
+        Long ladyHolderId = null;
+        if (config.ladyOfLake()) {
+            int holderSeat = GameRulesEngine.initialLadyHolderSeat(leaderSeat, players.size());
+            ladyHolderId = players.stream().filter(p -> p.seatNo() == holderSeat).findFirst().orElseThrow().id();
+        }
+        long gameId = repository.insertGame(room.id(), leaderId, ladyHolderId);
         List<Role> roles = GameRulesEngine.shuffledRoles(config, random);
         for (int i = 0; i < players.size(); i++) repository.insertGamePlayer(gameId, players.get(i).id(), roles.get(i));
         repository.setRoomGame(room.id(), gameId);
@@ -60,10 +65,12 @@ public class GameService {
             case LOYAL_SERVANT -> "找出邪恶阵营，并让三个任务成功。";
             case MORGANA -> "伪装成梅林，误导派西维尔。";
             case ASSASSIN -> "阻止任务；若正义完成三个任务，找出并刺杀梅林。";
+            case MINION -> "与邪恶同伴合作，让三个任务失败。";
+            case MORDRED -> "梅林看不到你；与邪恶同伴合作让三个任务失败。";
             case OBERON -> "你属于邪恶阵营，但你与其他邪恶玩家互不可见。";
         };
         return new MyRoleView(mine.role().name(), mine.role().label(), mine.alignment().name(), mine.alignment() == Alignment.GOOD ? "正义阵营" : "邪恶阵营",
-                mine.confirmed(), instruction, visibilityService.visiblePlayers(mine.role(), all));
+                mine.confirmed(), instruction, visibilityService.visiblePlayers(mine.playerId(), mine.role(), all));
     }
 
     @Transactional
@@ -148,27 +155,55 @@ public class GameService {
             repository.completeMission(mission.id(), successes, fails, failed);
             int goodScore = c.game.goodScore() + (failed ? 0 : 1);
             int evilScore = c.game.evilScore() + (failed ? 1 : 0);
-            Phase nextPhase = GameRulesEngine.phaseAfterMission(goodScore, evilScore);
-            if (nextPhase == Phase.FINISHED) {
+            GameRuleConfig config = GameRuleConfig.forPlayers(repository.players(c.game.roomId()).size());
+            GameRulesEngine.MissionTransition transition = GameRulesEngine.transitionAfterMission(
+                    config, c.game.missionNo(), goodScore, evilScore);
+            if (transition.phase() == Phase.FINISHED) {
                 repository.applyMissionScore(gameId, goodScore, evilScore, Phase.FINISHED);
                 repository.finish(gameId, Winner.EVIL, "THREE_FAILED_MISSIONS");
                 events.publish(c.game.roomId(), "GAME_FINISHED");
-            } else if (nextPhase == Phase.ASSASSINATION) {
+            } else if (transition.phase() == Phase.LADY_OF_LAKE) {
+                repository.applyMissionScore(gameId, goodScore, evilScore, Phase.LADY_OF_LAKE);
+                events.publish(c.game.roomId(), "LADY_OF_LAKE_STARTED");
+            } else if (transition.phase() == Phase.ASSASSINATION) {
                 repository.applyMissionScore(gameId, goodScore, evilScore, Phase.ASSASSINATION);
                 events.publish(c.game.roomId(), "ASSASSINATION_STARTED");
-            } else repository.applyMissionScore(gameId, goodScore, evilScore, Phase.MISSION_RESULT);
+            } else {
+                repository.advanceAfterMission(gameId, goodScore, evilScore, c.game.missionNo() + 1, nextLeader(c.game));
+                events.publish(c.game.roomId(), "ROUND_CHANGED");
+            }
             events.publish(c.game.roomId(), "MISSION_COMPLETED");
         }
         return state(userId, gameId);
     }
 
     @Transactional
-    public GameState continueRound(long userId, long gameId) {
+    public LadyInspectionResult inspectWithLady(long userId, long gameId, long targetPlayerId) {
         Context c = context(userId, gameId, true);
-        GameActionPolicy.requirePhase(c.game.phase(), Phase.MISSION_RESULT);
-        repository.advanceRound(gameId, c.game.missionNo() + 1, nextLeader(c.game));
-        events.publish(c.game.roomId(), "ROUND_CHANGED");
-        return state(userId, gameId);
+        GameActionPolicy.requirePhase(c.game.phase(), Phase.LADY_OF_LAKE);
+        GameActionPolicy.requireLadyHolder(c.player.id(), c.game.ladyHolderPlayerId());
+        int used = repository.ladyInspectionCount(gameId);
+        if (used >= 3) throw new BusinessException("INVALID_PHASE", "湖中仙女本局已经使用三次");
+        List<GamePlayerRow> gamePlayers = repository.gamePlayers(gameId);
+        Set<Long> playerIds = gamePlayers.stream().map(GamePlayerRow::playerId).collect(java.util.stream.Collectors.toSet());
+        Set<Long> holderHistory = repository.ladyHolderHistory(gameId);
+        GameActionPolicy.requireLadyTarget(c.player.id(), targetPlayerId, playerIds, holderHistory);
+        GamePlayerRow targetRole = gamePlayers.stream().filter(p -> p.playerId() == targetPlayerId).findFirst()
+                .orElseThrow(() -> new BusinessException("PARAM_ERROR", "目标玩家不在当前游戏"));
+        PlayerRow target = repository.playerById(targetPlayerId)
+                .orElseThrow(() -> new BusinessException("PARAM_ERROR", "目标玩家不存在"));
+        repository.insertLadyInspection(gameId, used + 1, c.player.id(), targetPlayerId, targetRole.alignment());
+        repository.updateLadyHolder(gameId, targetPlayerId);
+        Phase next = GameRulesEngine.phaseAfterLady(c.game.goodScore());
+        if (next == Phase.ASSASSINATION) {
+            repository.setPhase(gameId, Phase.ASSASSINATION);
+            events.publish(c.game.roomId(), "ASSASSINATION_STARTED");
+        } else {
+            repository.advanceRound(gameId, c.game.missionNo() + 1, nextLeader(c.game));
+            events.publish(c.game.roomId(), "ROUND_CHANGED");
+        }
+        events.publish(c.game.roomId(), "LADY_OF_LAKE_COMPLETED");
+        return new LadyInspectionResult(target.id(), target.seatNo(), target.nickname(), targetRole.alignment().name());
     }
 
     @Transactional
@@ -195,6 +230,7 @@ public class GameService {
         if (room.ownerUserId() != userId) throw new BusinessException("FORBIDDEN", "只有房主可以再来一局");
         if (!"FINISHED".equals(room.status())) throw new BusinessException("房间已经关闭，不能再来一局");
         List<PlayerRow> players = repository.players(room.id());
+        GameActionPolicy.requireRestartPlayerCount(players.size(), room.maxPlayers());
         long newGameId = createGame(room, players);
         events.publish(room.id(), "GAME_STARTED");
         return state(userId, newGameId);
@@ -204,7 +240,8 @@ public class GameService {
     public GameState state(long userId, long gameId) {
         Context c = context(userId, gameId, false);
         List<PlayerRow> players = repository.players(c.game.roomId());
-        GameRuleConfig config = GameRuleConfig.forPlayers(players.size());
+        RoomRow room = roomService.requireRoom(c.game.roomId(), false);
+        GameRuleConfig config = GameRuleConfig.forPlayers(room.maxPlayers());
         PlayerRow leader = repository.playerById(c.game.leaderPlayerId()).orElseThrow();
         MissionRow current = repository.currentMission(gameId, c.game.missionNo(), c.game.proposalNo()).orElse(null);
         MissionRow latest = repository.latestCompletedMission(gameId).orElse(null);
@@ -225,11 +262,22 @@ public class GameService {
             return new PublicIdentity(p.id(), p.seatNo(), p.nickname(), gp.role().label(), gp.alignment().name());
         }).sorted(Comparator.comparingInt(PublicIdentity::seatNo)).toList() : List.of();
         MissionResult result = latest == null ? null : new MissionResult(latest.missionNo(), latest.successCount(), latest.failCount(), latest.status());
+        PlayerRow ladyHolder = c.game.ladyHolderPlayerId() == null ? null : repository.playerById(c.game.ladyHolderPlayerId()).orElse(null);
+        int ladyUsedCount = config.ladyOfLake() ? repository.ladyInspectionCount(gameId) : 0;
+        boolean isLadyHolder = c.game.phase() == Phase.LADY_OF_LAKE && Objects.equals(c.game.ladyHolderPlayerId(), c.player.id());
+        List<Long> ladyEligibleTargetIds = List.of();
+        if (isLadyHolder) {
+            Set<Long> previousHolders = repository.ladyHolderHistory(gameId);
+            ladyEligibleTargetIds = repository.gamePlayers(gameId).stream().map(GamePlayerRow::playerId)
+                    .filter(id -> id != c.player.id() && !previousHolders.contains(id)).toList();
+        }
         return new GameState(gameId, c.game.roomId(), c.game.phase().name(), c.game.missionNo(), c.game.proposalNo(), c.game.rejections(),
                 c.game.goodScore(), c.game.evilScore(), leader.id(), leader.seatNo(), leader.nickname(),
                 c.game.missionNo() <= 5 ? config.teamSize(c.game.missionNo()) : 0, config.rejectedTeamsToEvilWin(),
                 repository.confirmedCount(gameId), players.size(), team, voteCount, votes, hasVoted, hasSubmittedMission, onMission, latestVoteResult,
                 mine.alignment() == Alignment.EVIL, mine.role() == Role.ASSASSIN, result,
+                config.ladyOfLake(), c.game.ladyHolderPlayerId(), ladyHolder == null ? null : ladyHolder.seatNo(),
+                ladyHolder == null ? null : ladyHolder.nickname(), isLadyHolder, ladyUsedCount, ladyEligibleTargetIds,
                 c.game.winner() == null ? null : c.game.winner().name(), identities);
     }
 
@@ -254,15 +302,19 @@ public class GameService {
     public record MissionResult(int missionNo, Integer successCount, Integer failCount, String status) {}
     public record TeamVoteResult(int missionNo, int proposalNo, boolean approved, List<VoteView> votes) {}
     public record PublicIdentity(long playerId, int seatNo, String nickname, String roleName, String alignment) {}
+    public record LadyInspectionResult(long targetPlayerId, int targetSeatNo, String targetNickname, String alignment) {}
     public record GameState(long gameId, long roomId, String phase, int missionNo, int proposalNo, int consecutiveRejections,
                             int goodScore, int evilScore, long leaderPlayerId, int leaderSeatNo, String leaderNickname,
                             int requiredTeamSize, int maxRejections, int confirmedCount, int playerCount,
                             List<Long> selectedPlayerIds, int voteCount, List<VoteView> votes, boolean hasVoted,
                             boolean hasSubmittedMission, boolean onMission, TeamVoteResult latestVoteResult,
-                            boolean evil, boolean assassin, MissionResult latestMissionResult, String winner,
+                            boolean evil, boolean assassin, MissionResult latestMissionResult,
+                            boolean ladyEnabled, Long ladyHolderPlayerId, Integer ladyHolderSeatNo, String ladyHolderNickname,
+                            boolean ladyHolder, int ladyUsedCount, List<Long> ladyEligibleTargetIds, String winner,
                             List<PublicIdentity> identities) {}
     public record TeamRequest(List<Long> playerIds) {}
     public record VoteRequest(VoteChoice choice) {}
     public record MissionRequest(MissionChoice choice) {}
+    public record LadyInspectionRequest(long targetPlayerId) {}
     public record AssassinateRequest(long targetPlayerId) {}
 }

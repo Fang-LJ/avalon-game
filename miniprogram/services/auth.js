@@ -2,7 +2,7 @@ const { request } = require('../utils/request');
 const tokenStore = require('../utils/token');
 const { getConfig } = require('../utils/config');
 const MOCK_KEY = 'AVALON_MOCK_USER';
-const MOCK_USERS = Array.from({ length: 8 }, (_, i) => ({ key: String(i + 1), mockOpenid: `avalon_mock_${i + 1}`, nickname: `玩家${i + 1}` }));
+const MOCK_USERS = Array.from({ length: 10 }, (_, i) => ({ key: String(i + 1), mockOpenid: `avalon_mock_${i + 1}`, nickname: `玩家${i + 1}` }));
 let loginPromise = null;
 let loginGeneration = 0;
 function currentMockUser() { const key = wx.getStorageSync(MOCK_KEY) || '1'; return MOCK_USERS.find(u => u.key === key) || MOCK_USERS[0]; }

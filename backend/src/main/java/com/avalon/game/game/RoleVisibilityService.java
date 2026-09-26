@@ -7,13 +7,14 @@ import java.util.List;
 
 @Service
 public class RoleVisibilityService {
-    public List<VisiblePlayer> visiblePlayers(Role viewer, List<RolePlayer> all) {
+    public List<VisiblePlayer> visiblePlayers(long viewerPlayerId, Role viewer, List<RolePlayer> all) {
         return switch (viewer) {
-            case MERLIN -> all.stream().filter(p -> p.role().alignment() == Alignment.EVIL)
+            case MERLIN -> all.stream().filter(p -> p.role().alignment() == Alignment.EVIL && p.role() != Role.MORDRED)
                     .map(p -> new VisiblePlayer(p.playerId(), p.seatNo(), p.nickname(), "邪恶阵营")).toList();
             case PERCIVAL -> all.stream().filter(p -> p.role() == Role.MERLIN || p.role() == Role.MORGANA)
                     .map(p -> new VisiblePlayer(p.playerId(), p.seatNo(), p.nickname(), "梅林候选人")).toList();
-            case MORGANA, ASSASSIN -> all.stream().filter(p -> p.role().alignment() == Alignment.EVIL && p.role() != Role.OBERON && p.role() != viewer)
+            case MORGANA, ASSASSIN, MINION, MORDRED -> all.stream()
+                    .filter(p -> p.playerId() != viewerPlayerId && p.role().alignment() == Alignment.EVIL && p.role() != Role.OBERON)
                     .map(p -> new VisiblePlayer(p.playerId(), p.seatNo(), p.nickname(), "邪恶同伴")).toList();
             default -> List.of();
         };

@@ -20,5 +20,5 @@
     </view>
     <view class="mock-note">切换身份后会自动重新登录，可用于多窗口联调。</view>
   </view>
-  <view class="rule-note">6–8 人 · 服务端裁判 · 隐藏身份</view>
+  <view class="rule-note">5–10 人 · 服务端裁判 · 隐藏身份</view>
 </view>

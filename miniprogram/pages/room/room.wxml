@@ -8,6 +8,7 @@
     <view class="row"><text class="section-title compact">第 {{game.missionNo}} 轮 · {{phaseTitle}}</text><text class="pill">提案 {{game.proposalNo}}</text></view>
     <view class="score"><text class="good">正义 {{game.goodScore}}</text><text>:</text><text class="evil">{{game.evilScore}} 邪恶</text></view>
     <view class="muted">当前队长：{{game.leaderSeatNo}}号 {{game.leaderNickname}} · 连续否决 {{game.consecutiveRejections}}/{{game.maxRejections}}</view>
+    <view class="muted" wx:if="{{game.ladyEnabled}}">湖中仙女：{{game.ladyHolderSeatNo}}号 {{game.ladyHolderNickname}} · 已使用 {{game.ladyUsedCount}}/3</view>
   </view>
 
   <view class="card" wx:if="{{game && game.latestVoteResult}}">
@@ -77,10 +78,20 @@
     <view wx:else class="waiting">{{game.onMission ? '已秘密提交，等待队友。' : '你未入选本轮任务，请等待结果。'}}</view>
   </view>
 
-  <view class="card" wx:if="{{game && game.phase === 'MISSION_RESULT'}}">
-    <view class="section-title">任务结算完成</view>
-    <button wx:if="{{room.host}}" class="btn btn-primary" bindtap="continueRound">进入下一轮</button>
-    <view wx:else class="waiting">等待房主进入下一轮…</view>
+  <view class="card" wx:if="{{game && game.phase === 'LADY_OF_LAKE'}}">
+    <view class="section-title">湖中仙女检查阵营</view>
+    <view wx:if="{{game.ladyHolder}}">
+      <view class="muted">点击上方可选玩家。你只能得知其阵营，检查结果仅你可见。</view>
+      <button class="btn btn-primary" disabled="{{!ladyTarget || busy}}" bindtap="inspectLady">确认检查</button>
+    </view>
+    <view wx:else class="waiting">等待 {{game.ladyHolderSeatNo}}号 {{game.ladyHolderNickname}} 使用湖中仙女…</view>
+  </view>
+
+  <view class="card" wx:if="{{ladyResult}}">
+    <view class="section-title">湖中仙女结果（仅你可见）</view>
+    <view>{{ladyResult.targetSeatNo}}号 {{ladyResult.targetNickname}} 是
+      <text class="{{ladyResult.alignment === 'GOOD' ? 'good' : 'evil'}}">{{ladyResult.alignment === 'GOOD' ? '正义阵营' : '邪恶阵营'}}</text>
+    </view>
   </view>
 
   <view class="card" wx:if="{{game && game.phase === 'ASSASSINATION'}}">

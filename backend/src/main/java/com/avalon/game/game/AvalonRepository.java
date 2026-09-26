@@ -13,6 +13,7 @@ import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public class AvalonRepository {
@@ -25,7 +26,8 @@ public class AvalonRepository {
     private static final RowMapper<PlayerRow> PLAYER = (rs, n) -> new PlayerRow(rs.getLong("id"), rs.getLong("room_id"),
             rs.getLong("user_id"), rs.getString("nickname"), rs.getInt("seat_no"), rs.getBoolean("is_host"), rs.getBoolean("is_online"));
     private static final RowMapper<GameRow> GAME = (rs, n) -> new GameRow(rs.getLong("id"), rs.getLong("room_id"),
-            rs.getInt("mission_no"), rs.getLong("leader_player_id"), rs.getInt("proposal_no"), rs.getInt("consecutive_rejections"),
+            rs.getInt("mission_no"), rs.getLong("leader_player_id"), (Long) rs.getObject("lady_holder_player_id"),
+            rs.getInt("proposal_no"), rs.getInt("consecutive_rejections"),
             rs.getInt("good_score"), rs.getInt("evil_score"), Phase.valueOf(rs.getString("phase")),
             rs.getString("winner") == null ? null : Winner.valueOf(rs.getString("winner")));
     private static final RowMapper<GamePlayerRow> GAME_PLAYER = (rs, n) -> new GamePlayerRow(rs.getLong("id"), rs.getLong("game_id"),
@@ -63,15 +65,17 @@ public class AvalonRepository {
     }
     public String nickname(long userId) { return jdbc.queryForObject("select nickname from t_avalon_user where id=?", String.class, userId); }
     public void deletePlayer(long playerId) { jdbc.update("delete from t_avalon_player where id=?", playerId); }
-    public void leavePlayer(long playerId) { jdbc.update("update t_avalon_player set is_online=false,left_at=now(),updated_at=now() where id=?", playerId); }
+    public void leavePlayer(long playerId) { jdbc.update("update t_avalon_player set is_online=false,is_host=false,left_at=now(),updated_at=now() where id=?", playerId); }
     public void setPlayerOnline(long playerId, boolean online) { jdbc.update("update t_avalon_player set is_online=?,updated_at=now() where id=?", online, playerId); }
     public void reseat(long playerId, int seat, boolean host) { jdbc.update("update t_avalon_player set seat_no=?,is_host=?,updated_at=now() where id=?", seat, host, playerId); }
+    public void setHost(long playerId, boolean host) { jdbc.update("update t_avalon_player set is_host=?,updated_at=now() where id=?", host, playerId); }
     public void updateRoomOwner(long roomId, long userId) { jdbc.update("update t_avalon_room set owner_user_id=?,updated_at=now() where id=?", userId, roomId); }
     public void closeRoom(long roomId) { jdbc.update("update t_avalon_room set status='CLOSED',updated_at=now() where id=?", roomId); }
     public void setRoomGame(long roomId, long gameId) { jdbc.update("update t_avalon_room set status='PLAYING',current_game_id=?,started_at=now(),updated_at=now() where id=?", gameId, roomId); }
 
-    public long insertGame(long roomId, long leaderPlayerId) {
-        return insert("insert into t_avalon_game(room_id,mission_no,leader_player_id,proposal_no,consecutive_rejections,good_score,evil_score,phase,created_at,updated_at) values (?,1,?,1,0,0,0,'ROLE_CONFIRM',now(),now())", roomId, leaderPlayerId);
+    public long insertGame(long roomId, long leaderPlayerId, Long ladyHolderPlayerId) {
+        return insert("insert into t_avalon_game(room_id,mission_no,leader_player_id,lady_holder_player_id,proposal_no,consecutive_rejections,good_score,evil_score,phase,created_at,updated_at) values (?,1,?,?,1,0,0,0,'ROLE_CONFIRM',now(),now())",
+                roomId, leaderPlayerId, ladyHolderPlayerId);
     }
     public void insertGamePlayer(long gameId, long playerId, Role role) {
         jdbc.update("insert into t_avalon_game_player(game_id,player_id,role_code,alignment,role_confirmed,created_at) values (?,?,?,?,false,now())",
@@ -97,6 +101,10 @@ public class AvalonRepository {
     }
     public void advanceRound(long gameId, int missionNo, long leaderPlayerId) {
         jdbc.update("update t_avalon_game set mission_no=?,leader_player_id=?,proposal_no=1,consecutive_rejections=0,phase='TEAM_BUILDING',updated_at=now() where id=?", missionNo, leaderPlayerId, gameId);
+    }
+    public void advanceAfterMission(long gameId, int goodScore, int evilScore, int missionNo, long leaderPlayerId) {
+        jdbc.update("update t_avalon_game set good_score=?,evil_score=?,mission_no=?,leader_player_id=?,proposal_no=1,consecutive_rejections=0,phase='TEAM_BUILDING',updated_at=now() where id=?",
+                goodScore, evilScore, missionNo, leaderPlayerId, gameId);
     }
     public void applyMissionScore(long gameId, int goodScore, int evilScore, Phase phase) {
         jdbc.update("update t_avalon_game set good_score=?,evil_score=?,phase=?,updated_at=now() where id=?", goodScore, evilScore, phase.name(), gameId);
@@ -134,6 +142,20 @@ public class AvalonRepository {
     public int failCount(long missionId) { return jdbc.queryForObject("select count(*) from t_avalon_mission_action where mission_id=? and action_choice='FAIL'", Integer.class, missionId); }
     public boolean hasAction(long missionId, long playerId) { return Boolean.TRUE.equals(jdbc.queryForObject("select count(*)>0 from t_avalon_mission_action where mission_id=? and player_id=?", Boolean.class, missionId, playerId)); }
 
+    public int ladyInspectionCount(long gameId) {
+        return jdbc.queryForObject("select count(*) from t_avalon_lady_inspection where game_id=?", Integer.class, gameId);
+    }
+    public Set<Long> ladyHolderHistory(long gameId) {
+        return Set.copyOf(jdbc.queryForList("select holder_player_id from t_avalon_lady_inspection where game_id=?", Long.class, gameId));
+    }
+    public void insertLadyInspection(long gameId, int sequenceNo, long holderPlayerId, long targetPlayerId, Alignment alignment) {
+        jdbc.update("insert into t_avalon_lady_inspection(game_id,sequence_no,holder_player_id,target_player_id,result_alignment,created_at) values (?,?,?,?,?,now())",
+                gameId, sequenceNo, holderPlayerId, targetPlayerId, alignment.name());
+    }
+    public void updateLadyHolder(long gameId, long holderPlayerId) {
+        jdbc.update("update t_avalon_game set lady_holder_player_id=?,updated_at=now() where id=?", holderPlayerId, gameId);
+    }
+
     private long insert(String sql, Object... args) {
         KeyHolder key = new GeneratedKeyHolder();
         jdbc.update(connection -> {
@@ -147,7 +169,8 @@ public class AvalonRepository {
 
     public record RoomRow(long id, String code, long ownerUserId, int maxPlayers, String status, Long currentGameId, LocalDateTime createdAt, LocalDateTime startedAt) {}
     public record PlayerRow(long id, long roomId, long userId, String nickname, int seatNo, boolean host, boolean online) {}
-    public record GameRow(long id, long roomId, int missionNo, long leaderPlayerId, int proposalNo, int rejections, int goodScore, int evilScore, Phase phase, Winner winner) {}
+    public record GameRow(long id, long roomId, int missionNo, long leaderPlayerId, Long ladyHolderPlayerId,
+                          int proposalNo, int rejections, int goodScore, int evilScore, Phase phase, Winner winner) {}
     public record GamePlayerRow(long id, long gameId, long playerId, Role role, Alignment alignment, boolean confirmed) {}
     public record MissionRow(long id, long gameId, int missionNo, int proposalNo, long leaderPlayerId, String teamPlayerIds, int requiredPlayers, int failThreshold, String status, Integer successCount, Integer failCount) {}
     public record VoteView(long playerId, int seatNo, String nickname, VoteChoice choice) {}

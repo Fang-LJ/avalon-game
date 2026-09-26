@@ -1,8 +1,6 @@
 spring:
   application:
     name: avalon-game-server
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://${AVALON_DB_HOST:127.0.0.1}:${AVALON_DB_PORT:13306}/${AVALON_DB_NAME:playmate_space}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true

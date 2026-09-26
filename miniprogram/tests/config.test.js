@@ -11,7 +11,22 @@ test('app registers the complete MVP pages', () => {
 test('service exposes every game operation', () => {
   global.wx = { request() {} };
   const api = require('../services/avalon');
-  ['createRoom','joinRoom','leaveRoom','start','myRole','confirmRole','submitTeam','vote','mission','continueRound','assassinate','restart'].forEach(name => assert.equal(typeof api[name], 'function'));
+  ['createRoom','joinRoom','leaveRoom','start','myRole','confirmRole','submitTeam','vote','mission','inspectLady','assassinate','restart'].forEach(name => assert.equal(typeof api[name], 'function'));
+  assert.equal(api.continueRound, undefined);
+});
+
+test('creation page exposes every supported player count', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'pages', 'create', 'create.js'), 'utf8');
+  assert.match(source, /counts:\s*\[5, 6, 7, 8, 9, 10\]/);
+});
+
+test('room page includes Lady of the Lake without a continue-round action', () => {
+  const js = fs.readFileSync(path.join(__dirname, '..', 'pages', 'room', 'room.js'), 'utf8');
+  const wxml = fs.readFileSync(path.join(__dirname, '..', 'pages', 'room', 'room.wxml'), 'utf8');
+  assert.match(js, /LADY_OF_LAKE/);
+  assert.match(wxml, /湖中仙女结果（仅你可见）/);
+  assert.doesNotMatch(js, /continueRound/);
+  assert.doesNotMatch(wxml, /continueRound/);
 });
 
 test('all page JSON and WXML/WXSS files are structurally balanced', () => {

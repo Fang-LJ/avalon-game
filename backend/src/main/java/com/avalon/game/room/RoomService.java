@@ -56,9 +56,14 @@ public class RoomService {
         if ("PLAYING".equals(room.status())) {
             repository.setPlayerOnline(player.id(), false);
         } else if ("FINISHED".equals(room.status())) {
-            // Once somebody exits a finished table the old table is closed; this preserves historical seat numbers.
             repository.leavePlayer(player.id());
-            repository.closeRoom(roomId);
+            List<PlayerRow> remaining = repository.players(roomId);
+            if (remaining.isEmpty()) repository.closeRoom(roomId);
+            else if (player.host()) {
+                PlayerRow nextHost = remaining.stream().min(java.util.Comparator.comparingInt(PlayerRow::seatNo)).orElseThrow();
+                repository.setHost(nextHost.id(), true);
+                repository.updateRoomOwner(roomId, nextHost.userId());
+            }
         } else if ("CLOSED".equals(room.status())) {
             repository.leavePlayer(player.id());
         } else {

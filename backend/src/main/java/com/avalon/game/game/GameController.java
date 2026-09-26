@@ -16,7 +16,10 @@ public class GameController {
     @PostMapping("/{gameId}/team") public ApiResponse<GameService.GameState> team(@PathVariable long gameId, @RequestBody GameService.TeamRequest r) { return ApiResponse.success(service.submitTeam(LoginUserContext.require(), gameId, r.playerIds())); }
     @PostMapping("/{gameId}/vote") public ApiResponse<GameService.GameState> vote(@PathVariable long gameId, @RequestBody GameService.VoteRequest r) { return ApiResponse.success(service.vote(LoginUserContext.require(), gameId, r.choice())); }
     @PostMapping("/{gameId}/mission") public ApiResponse<GameService.GameState> mission(@PathVariable long gameId, @RequestBody GameService.MissionRequest r) { return ApiResponse.success(service.mission(LoginUserContext.require(), gameId, r.choice())); }
-    @PostMapping("/{gameId}/continue") public ApiResponse<GameService.GameState> next(@PathVariable long gameId) { return ApiResponse.success(service.continueRound(LoginUserContext.require(), gameId)); }
+    @PostMapping("/{gameId}/lady-of-lake") public ApiResponse<GameService.LadyInspectionResult> lady(
+            @PathVariable long gameId, @RequestBody GameService.LadyInspectionRequest r) {
+        return ApiResponse.success(service.inspectWithLady(LoginUserContext.require(), gameId, r.targetPlayerId()));
+    }
     @PostMapping("/{gameId}/assassinate") public ApiResponse<GameService.GameState> assassinate(@PathVariable long gameId, @RequestBody GameService.AssassinateRequest r) { return ApiResponse.success(service.assassinate(LoginUserContext.require(), gameId, r.targetPlayerId())); }
     @PostMapping("/{gameId}/restart") public ApiResponse<GameService.GameState> restart(@PathVariable long gameId) { return ApiResponse.success(service.restart(LoginUserContext.require(), gameId)); }
 }

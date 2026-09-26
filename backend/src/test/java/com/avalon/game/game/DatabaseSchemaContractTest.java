@@ -15,4 +15,19 @@ class DatabaseSchemaContractTest {
         assertTrue(sql.contains("UNIQUE KEY uk_avalon_mission_action_once (mission_id, player_id)"));
         assertFalse(sql.matches("(?s).*CREATE TABLE IF NOT EXISTS (?!t_avalon_).*"));
     }
+    @Test void ladyMigrationIsAdditivePersistentAndNamespaced() throws Exception {
+        String sql = Files.readString(Path.of("../docs/sql/002_lady_of_the_lake.sql"));
+        assertTrue(sql.contains("ALTER TABLE t_avalon_game"));
+        assertTrue(sql.contains("ADD COLUMN lady_holder_player_id"));
+        assertTrue(sql.contains("CREATE TABLE IF NOT EXISTS t_avalon_lady_inspection"));
+        assertTrue(sql.contains("result_alignment"));
+        assertFalse(sql.toLowerCase().contains("drop table"));
+        assertFalse(sql.toLowerCase().contains("truncate"));
+    }
+    @Test void continueEndpointAndClientActionHaveBeenRemoved() throws Exception {
+        String controller = Files.readString(Path.of("src/main/java/com/avalon/game/game/GameController.java"));
+        String client = Files.readString(Path.of("../miniprogram/services/avalon.js"));
+        assertFalse(controller.contains("/{gameId}/continue"));
+        assertFalse(client.contains("continueRound"));
+    }
 }
