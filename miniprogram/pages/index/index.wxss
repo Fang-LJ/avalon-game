@@ -1,0 +1,9 @@
+.home { display: flex; flex-direction: column; justify-content: center; }
+.hero { margin: 70rpx 16rpx 80rpx; }
+.eyebrow { color: #ad8d4f; font-size: 24rpx; letter-spacing: 8rpx; }
+.title { margin-top: 20rpx; font-size: 88rpx; color: #173f35; font-weight: 750; }
+.subtitle { color: #65756e; font-size: 30rpx; margin-top: 18rpx; }
+.actions { padding: 36rpx; }
+.actions .btn { height: 104rpx; line-height: 104rpx; }
+.return { background: transparent; color: #8b6b32; font-size: 27rpx; }
+.rule-note { color: #8a948f; text-align: center; font-size: 24rpx; margin-top: 36rpx; }

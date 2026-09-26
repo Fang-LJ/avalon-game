@@ -1,0 +1,13 @@
+<view class="page">
+  <view class="card">
+    <view class="section-title">选择游戏人数</view>
+    <view class="choices">
+      <view wx:for="{{counts}}" wx:key="*this" class="choice {{maxPlayers === item ? 'active' : ''}}" data-count="{{item}}" bindtap="selectCount">
+        <text class="number">{{item}}</text><text>人</text>
+      </view>
+    </view>
+    <input class="input" maxlength="32" placeholder="你的昵称（可选）" value="{{nickname}}" bindinput="nicknameInput" />
+    <button class="btn btn-primary" loading="{{loading}}" disabled="{{loading}}" bindtap="submit">创建</button>
+  </view>
+  <view class="muted hint">房间满员后，房主即可开始游戏。</view>
+</view>

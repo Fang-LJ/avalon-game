@@ -1,0 +1,100 @@
+<view class="page" wx:if="{{room}}">
+  <view class="room-head">
+    <view><view class="muted">房间号</view><view class="room-code">{{room.roomCode}}</view></view>
+    <view class="pill">{{room.currentPlayers}} / {{room.maxPlayers}} 人</view>
+  </view>
+
+  <view class="card" wx:if="{{game}}">
+    <view class="row"><text class="section-title compact">第 {{game.missionNo}} 轮 · {{phaseTitle}}</text><text class="pill">提案 {{game.proposalNo}}</text></view>
+    <view class="score"><text class="good">正义 {{game.goodScore}}</text><text>:</text><text class="evil">{{game.evilScore}} 邪恶</text></view>
+    <view class="muted">当前队长：{{game.leaderSeatNo}}号 {{game.leaderNickname}} · 连续否决 {{game.consecutiveRejections}}/{{game.maxRejections}}</view>
+  </view>
+
+  <view class="card" wx:if="{{game && game.latestVoteResult}}">
+    <view class="section-title">上一轮组队{{game.latestVoteResult.approved ? '通过' : '未通过'}}</view>
+    <view class="vote-grid">
+      <view wx:for="{{game.latestVoteResult.votes}}" wx:key="playerId" class="vote-item">
+        <text>{{item.seatNo}}号 {{item.nickname}}</text><text class="{{item.choice === 'APPROVE' ? 'good' : 'evil'}}">{{item.choice === 'APPROVE' ? '赞成' : '反对'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{game && game.latestMissionResult}}">
+    <view class="section-title">第 {{game.latestMissionResult.missionNo}} 轮任务{{game.latestMissionResult.status === 'SUCCESS' ? '成功' : '失败'}}</view>
+    <view class="score"><text class="good">成功票 {{game.latestMissionResult.successCount}}</text><text class="evil">失败票 {{game.latestMissionResult.failCount}}</text></view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">玩家</view>
+    <view wx:for="{{displayPlayers}}" wx:key="playerId" class="player {{item.selected ? 'selected' : ''}}" data-id="{{item.playerId}}" bindtap="togglePlayer">
+      <view class="seat">{{item.seatNo}}</view>
+      <view class="player-name">{{item.nickname}} <text wx:if="{{item.me}}">（你）</text></view>
+      <text wx:if="{{item.host}}" class="pill">房主</text>
+      <text class="online {{item.online ? '' : 'offline'}}">{{item.online ? '在线' : '离线'}}</text>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{!game}}">
+    <view class="section-title">等待大厅</view>
+    <view class="muted">人数到齐后，房主可以开始游戏。</view>
+    <button wx:if="{{room.host}}" class="btn btn-primary" disabled="{{!room.canStart || busy}}" loading="{{busy}}" bindtap="startGame">开始游戏</button>
+    <view wx:else class="waiting">等待房主开始…</view>
+    <button class="btn btn-secondary" bindtap="leaveRoom">退出房间</button>
+  </view>
+
+  <view class="card role-card" wx:if="{{game && game.phase === 'ROLE_CONFIRM' && role}}">
+    <view class="muted">你的身份</view><view class="role-name {{role.alignmentCode === 'GOOD' ? 'good' : 'evil'}}">{{role.roleName}}</view>
+    <view class="alignment">{{role.alignmentName}}</view><view class="instruction">{{role.instruction}}</view>
+    <view wx:if="{{role.visiblePlayers.length}}" class="vision">
+      <view class="muted">你能看到</view>
+      <view wx:for="{{role.visiblePlayers}}" wx:key="playerId">{{item.seatNo}}号 {{item.nickname}} · {{item.hint}}</view>
+    </view>
+    <button class="btn btn-primary" disabled="{{role.confirmed || busy}}" bindtap="confirmRole">{{role.confirmed ? '已确认身份' : '确认身份'}}</button>
+    <view class="muted center">已确认 {{game.confirmedCount}} / {{game.playerCount}}</view>
+  </view>
+
+  <view class="card" wx:if="{{game && game.phase === 'TEAM_BUILDING'}}">
+    <view class="section-title">队长选择任务成员</view>
+    <view class="muted">本轮需要 {{game.requiredTeamSize}} 人。{{isLeader ? '点击上方玩家进行选择。' : '等待队长提交队伍。'}}</view>
+    <button wx:if="{{isLeader}}" class="btn btn-primary" disabled="{{selectedIds.length !== game.requiredTeamSize || busy}}" bindtap="submitTeam">提交队伍（{{selectedIds.length}}/{{game.requiredTeamSize}}）</button>
+  </view>
+
+  <view class="card" wx:if="{{game && game.phase === 'TEAM_VOTING'}}">
+    <view class="section-title">是否同意这支队伍？</view>
+    <view class="team-list">入选：<text wx:for="{{selectedNames}}" wx:key="*this">{{item}} </text></view>
+    <view wx:if="{{!game.hasVoted}}" class="two-buttons">
+      <button class="btn approve" bindtap="approve">赞成</button><button class="btn reject" bindtap="reject">反对</button>
+    </view>
+    <view wx:else class="waiting">已投票，等待其他玩家（{{game.voteCount}}/{{game.playerCount}}）</view>
+  </view>
+
+  <view class="card" wx:if="{{game && game.phase === 'MISSION_EXECUTING'}}">
+    <view class="section-title">执行秘密任务</view>
+    <view wx:if="{{game.onMission && !game.hasSubmittedMission}}">
+      <button class="btn approve" bindtap="missionSuccess">任务成功</button>
+      <button wx:if="{{game.evil}}" class="btn reject" bindtap="missionFail">任务失败</button>
+    </view>
+    <view wx:else class="waiting">{{game.onMission ? '已秘密提交，等待队友。' : '你未入选本轮任务，请等待结果。'}}</view>
+  </view>
+
+  <view class="card" wx:if="{{game && game.phase === 'MISSION_RESULT'}}">
+    <view class="section-title">任务结算完成</view>
+    <button wx:if="{{room.host}}" class="btn btn-primary" bindtap="continueRound">进入下一轮</button>
+    <view wx:else class="waiting">等待房主进入下一轮…</view>
+  </view>
+
+  <view class="card" wx:if="{{game && game.phase === 'ASSASSINATION'}}">
+    <view class="section-title">刺杀阶段</view>
+    <view wx:if="{{game.assassin}}"><view class="muted">正义已完成三个任务。点击上方玩家选择梅林。</view><button class="btn btn-danger" disabled="{{!assassinationTarget}}" bindtap="assassinate">确认刺杀</button></view>
+    <view wx:else class="waiting">刺客正在寻找梅林…</view>
+  </view>
+
+  <view class="card end-card" wx:if="{{game && game.phase === 'FINISHED'}}">
+    <view class="muted">游戏结束</view><view class="end-title {{game.winner === 'GOOD' ? 'good' : 'evil'}}">{{game.winner === 'GOOD' ? '正义阵营胜利' : '邪恶阵营胜利'}}</view>
+    <view wx:for="{{game.identities}}" wx:key="playerId" class="identity"><text>{{item.seatNo}}号 {{item.nickname}}</text><text class="{{item.alignment === 'GOOD' ? 'good' : 'evil'}}">{{item.roleName}}</text></view>
+    <button wx:if="{{room.host}}" class="btn btn-primary" bindtap="restart">再来一局</button>
+    <button class="btn btn-secondary" bindtap="leaveRoom">退出房间</button>
+  </view>
+</view>
+
+<view wx:else class="page loading">正在进入房间…</view>

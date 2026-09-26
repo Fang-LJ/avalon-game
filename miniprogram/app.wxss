@@ -1,0 +1,17 @@
+page { background: #f4f0e6; color: #26352f; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; }
+.page { min-height: 100vh; box-sizing: border-box; padding: 40rpx 32rpx 80rpx; }
+.card { background: #fffdf7; border-radius: 28rpx; padding: 32rpx; box-shadow: 0 12rpx 36rpx rgba(26,61,51,.08); margin-bottom: 24rpx; }
+.title { color: #173f35; font-size: 56rpx; line-height: 1.2; font-weight: 700; }
+.section-title { color: #173f35; font-size: 34rpx; font-weight: 650; margin-bottom: 24rpx; }
+.muted { color: #73817a; font-size: 26rpx; }
+.btn { border: 0; border-radius: 999rpx; font-size: 32rpx; font-weight: 600; margin-top: 24rpx; }
+.btn::after { border: 0; }
+.btn-primary { background: #173f35; color: #fffdf7; }
+.btn-secondary { background: #e4ebe5; color: #173f35; }
+.btn-danger { background: #7b2e2e; color: white; }
+.btn[disabled] { background: #c7cec9; color: #fff; }
+.input { box-sizing: border-box; width: 100%; height: 96rpx; border-radius: 20rpx; padding: 0 28rpx; background: #eeece5; margin: 20rpx 0; font-size: 32rpx; }
+.good { color: #167768; }
+.evil { color: #8a3030; }
+.pill { display: inline-block; padding: 8rpx 18rpx; border-radius: 999rpx; background: #e5ece7; color: #315b4d; font-size: 24rpx; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }

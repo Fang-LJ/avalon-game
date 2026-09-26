@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: avalon-game-server
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${AVALON_DB_HOST:127.0.0.1}:${AVALON_DB_PORT:13306}/${AVALON_DB_NAME:playmate_space}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${AVALON_DB_USERNAME:playmate}
+    password: ${AVALON_DB_PASSWORD:playmate_dev_password}
+server:
+  port: ${SERVER_PORT:8081}
+avalon:
+  jwt:
+    secret: ${AVALON_JWT_SECRET:avalon-local-dev-jwt-secret-change-me-at-least-32-bytes}
+    expire-seconds: ${AVALON_JWT_EXPIRE_SECONDS:604800}
+  wechat:
+    app-id: ${AVALON_WECHAT_APP_ID:}
+    app-secret: ${AVALON_WECHAT_APP_SECRET:}

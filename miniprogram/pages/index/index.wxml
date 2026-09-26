@@ -1,0 +1,13 @@
+<view class="page home">
+  <view class="hero">
+    <text class="eyebrow">AVALON GAME</text>
+    <view class="title">阿瓦隆</view>
+    <view class="subtitle">和朋友一起开始一场阵营对决</view>
+  </view>
+  <view class="card actions">
+    <button class="btn btn-primary" bindtap="create">创建房间</button>
+    <button class="btn btn-secondary" bindtap="join">加入房间</button>
+    <button wx:if="{{currentRoom}}" class="btn return" bindtap="returnRoom">返回游戏 · {{currentRoom.roomCode}}</button>
+  </view>
+  <view class="rule-note">6–8 人 · 服务端裁判 · 隐藏身份</view>
+</view>

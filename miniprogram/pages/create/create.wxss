@@ -1,0 +1,5 @@
+.choices { display: flex; gap: 18rpx; }
+.choice { flex: 1; text-align: center; padding: 36rpx 0; background: #ecebe4; border-radius: 22rpx; color: #607068; }
+.choice.active { background: #173f35; color: #fff; }
+.number { font-size: 46rpx; font-weight: 700; margin-right: 4rpx; }
+.hint { text-align: center; }

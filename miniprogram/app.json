@@ -1,0 +1,11 @@
+{
+  "pages": ["pages/index/index", "pages/create/create", "pages/join/join", "pages/room/room"],
+  "window": {
+    "navigationBarTitleText": "阿瓦隆",
+    "navigationBarBackgroundColor": "#173f35",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f4f0e6",
+    "backgroundTextStyle": "dark"
+  },
+  "sitemapLocation": "sitemap.json"
+}

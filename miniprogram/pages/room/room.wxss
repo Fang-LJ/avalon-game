@@ -1,0 +1,16 @@
+.room-head { display: flex; justify-content: space-between; align-items: center; margin: 10rpx 8rpx 34rpx; }
+.room-code { color: #173f35; font-size: 58rpx; font-weight: 750; letter-spacing: 8rpx; }
+.compact { margin-bottom: 0; }
+.score { display: flex; justify-content: center; align-items: center; gap: 28rpx; font-size: 34rpx; font-weight: 700; margin: 20rpx 0; }
+.player { min-height: 86rpx; display: flex; align-items: center; gap: 18rpx; border-top: 1rpx solid #e8e5db; }
+.player:first-of-type { border-top: 0; }
+.player.selected { background: #e2eee7; margin: 0 -14rpx; padding: 0 14rpx; border-radius: 16rpx; }
+.seat { width: 52rpx; height: 52rpx; line-height: 52rpx; text-align: center; border-radius: 50%; background: #e7ebe6; color: #173f35; font-weight: 700; }
+.player-name { flex: 1; }
+.online { color: #3e8067; font-size: 22rpx; }.offline { color: #a2aaa6; }
+.waiting { text-align: center; color: #728079; padding: 34rpx 0 10rpx; }
+.role-card { text-align: center; }.role-name { font-size: 68rpx; font-weight: 750; margin: 18rpx 0 4rpx; }.alignment { font-size: 28rpx; }.instruction { margin: 32rpx 0; line-height: 1.8; }.vision { background: #f0eee7; border-radius: 18rpx; padding: 22rpx; line-height: 1.8; }.center { text-align: center; margin-top: 20rpx; }
+.two-buttons { display: flex; gap: 20rpx; }.two-buttons .btn { flex: 1; }.approve { background: #167768; color: white; }.reject { background: #8a3030; color: white; }
+.team-list { padding: 20rpx; background: #f0eee7; border-radius: 16rpx; }
+.vote-item,.identity { display: flex; justify-content: space-between; padding: 15rpx 0; border-top: 1rpx solid #ebe7dc; }.vote-item:first-child,.identity:first-child { border-top: 0; }
+.end-card { text-align: center; }.end-title { font-size: 48rpx; font-weight: 750; margin: 18rpx 0 30rpx; }.loading { text-align: center; padding-top: 200rpx; color: #75827c; }
