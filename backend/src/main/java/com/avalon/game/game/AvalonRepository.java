@@ -99,6 +99,9 @@ public class AvalonRepository {
     }
     public void deleteGamePlayer(long gamePlayerId) { jdbc.update("delete from t_avalon_game_player where id=?", gamePlayerId); }
     public void leaveGamePlayer(long gamePlayerId) { jdbc.update("update t_avalon_game_player set is_online=false,left_at=now(),updated_at=now() where id=?", gamePlayerId); }
+    public void archiveGamePlayers(long gameId) {
+        jdbc.update("update t_avalon_game_player set is_online=false,left_at=coalesce(left_at,now()),updated_at=now() where game_id=? and left_at is null", gameId);
+    }
     public void setPlayerOnline(long gamePlayerId, boolean online) { jdbc.update("update t_avalon_game_player set is_online=?,updated_at=now() where id=?", online, gamePlayerId); }
     public void reseat(long gamePlayerId, int seat) { jdbc.update("update t_avalon_game_player set seat_no=?,updated_at=now() where id=?", seat, gamePlayerId); }
     public void updateGameOwner(long gameId, long userId) { jdbc.update("update t_avalon_game set owner_user_id=?,updated_at=now() where id=?", userId, gameId); }

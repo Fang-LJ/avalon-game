@@ -103,6 +103,14 @@ class RoomServiceTest {
         verify(repository, never()).leaveGamePlayer(anyLong());
     }
 
+    @Test void currentDoesNotReturnAnArchivedFinishedGeneration() {
+        when(repository.activeGameForUser(100)).thenReturn(Optional.empty());
+
+        assertNull(service.current(100));
+
+        verify(repository, never()).game(anyLong(), anyBoolean());
+    }
+
     private void prepareFinishedGame(GamePlayerRow leaving, List<GamePlayerRow> remaining, long owner) {
         when(repository.game(1, true)).thenReturn(Optional.of(game("FINISHED", owner)));
         when(repository.player(1, leaving.userId())).thenReturn(Optional.of(leaving));

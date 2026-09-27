@@ -7,6 +7,7 @@ import com.avalon.game.realtime.RoomEventPublisher;
 import com.avalon.game.room.RoomService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.springframework.dao.DuplicateKeyException;
 
 import java.util.List;
@@ -125,7 +126,7 @@ class GameServiceStateMachineTest {
                 () -> service.mission(202, 50, MissionChoice.SUCCESS)).getCode());
     }
 
-    @Test void restartCreatesNewGameAndCopiesPlayersWithoutMutatingOldGame() {
+    @Test void restartCreatesNewGameThenArchivesOldActivePlayersWithoutDeletingHistory() {
         GameRow finished = game(5, 3, 2, Phase.FINISHED);
         prepareContext(finished, players.getFirst());
         when(repository.players(50)).thenReturn(players);
@@ -146,6 +147,56 @@ class GameServiceStateMachineTest {
         verify(repository, never()).deleteGamePlayer(anyLong());
         verify(repository, times(5)).assignRole(eq(90L), anyLong(), any(Role.class));
         verify(repository).startGame(eq(90L), anyLong(), isNull());
+        verify(repository).archiveGamePlayers(50);
+    }
+
+    @Test void restartDoesNotArchiveOldPlayersWhenReplacementInitializationFails() {
+        GameRow finished = game(5, 3, 2, Phase.FINISHED);
+        prepareContext(finished, players.getFirst());
+        when(repository.players(50)).thenReturn(players);
+        when(repository.insertWaitingGame("123456", 201, 5)).thenReturn(90L);
+        GameRow replacement = new GameRow(90, "123456", 201, 5, "AVALON_V1", "WAITING", null,
+                1, 1, null, 0, 0, 0, null, null, null, null, null, null, null);
+        when(repository.game(90, true)).thenReturn(Optional.of(replacement));
+        List<GamePlayerRow> copied = playersForGame(90, 200);
+        when(repository.players(90)).thenReturn(copied);
+        doThrow(new IllegalStateException("role persistence failed")).when(repository)
+                .assignRole(eq(90L), anyLong(), any(Role.class));
+
+        assertThrows(IllegalStateException.class, () -> service.restart(201, 50));
+
+        verify(repository, never()).archiveGamePlayers(50);
+        verify(events, never()).publish(50, "GAME_RESTARTED");
+    }
+
+    @Test void consecutiveRestartsArchiveAThenBAndKeepCAsOnlyActiveGeneration() {
+        List<GamePlayerRow> gameAPlayers = players;
+        List<GamePlayerRow> gameBPlayers = playersForGame(90, 200);
+        List<GamePlayerRow> gameCPlayers = playersForGame(130, 300);
+        GameRow gameA = game(5, 3, 2, Phase.FINISHED);
+        GameRow waitingB = waitingGame(90);
+        GameRow finishedB = finishedGame(90, gameBPlayers.getFirst().id());
+        GameRow waitingC = waitingGame(130);
+        when(repository.game(50, true)).thenReturn(Optional.of(gameA));
+        when(repository.game(90, true)).thenReturn(Optional.of(waitingB)).thenReturn(Optional.of(finishedB));
+        when(repository.game(130, true)).thenReturn(Optional.of(waitingC));
+        when(roomService.requirePlayer(50, 201)).thenReturn(gameAPlayers.getFirst());
+        when(roomService.requirePlayer(90, 201)).thenReturn(gameBPlayers.getFirst());
+        when(repository.players(50)).thenReturn(gameAPlayers);
+        when(repository.players(90)).thenReturn(gameBPlayers);
+        when(repository.players(130)).thenReturn(gameCPlayers);
+        when(repository.insertWaitingGame("123456", 201, 5)).thenReturn(90L, 130L);
+
+        service.restart(201, 50);
+        service.restart(201, 90);
+
+        InOrder order = inOrder(repository);
+        order.verify(repository).startGame(eq(90L), anyLong(), isNull());
+        order.verify(repository).archiveGamePlayers(50);
+        order.verify(repository).startGame(eq(130L), anyLong(), isNull());
+        order.verify(repository).archiveGamePlayers(90);
+        verify(repository, never()).deleteGamePlayer(anyLong());
+        verify(repository, never()).archiveGamePlayers(130);
     }
 
     @Test void assassinationPersistsTheSelectedTargetOnGame() {
@@ -187,5 +238,19 @@ class GameServiceStateMachineTest {
     }
     private GamePlayerRow player(long id, long userId, int seat, Role role) {
         return new GamePlayerRow(id, 50, userId, seat, "P" + seat, role, role.alignment(), true, true, null);
+    }
+    private GameRow waitingGame(long id) {
+        return new GameRow(id, "123456", 201, 5, "AVALON_V1", "WAITING", null,
+                1, 1, null, 0, 0, 0, null, null, null, null, null, null, null);
+    }
+    private GameRow finishedGame(long id, long leaderId) {
+        return new GameRow(id, "123456", 201, 5, "AVALON_V1", "FINISHED", Phase.FINISHED,
+                5, 1, leaderId, 0, 3, 2, null, Winner.GOOD, "ASSASSINATION_MISSED", null,
+                null, null, null);
+    }
+    private List<GamePlayerRow> playersForGame(long gameId, long idBase) {
+        return java.util.stream.IntStream.rangeClosed(1, 5)
+                .mapToObj(seat -> new GamePlayerRow(idBase + seat, gameId, 200 + seat, seat, "P" + seat,
+                        Role.LOYAL_SERVANT, Alignment.GOOD, true, true, null)).toList();
     }
 }

@@ -54,4 +54,11 @@ class DatabaseSchemaContractTest {
         assertFalse(controller.contains("/{gameId}/continue"));
         assertFalse(client.contains("continueRound"));
     }
+
+    @Test void restartArchivingExcludesOldPlayersFromActiveLookupButKeepsHistoricalReads() throws Exception {
+        String repository = Files.readString(Path.of("src/main/java/com/avalon/game/game/AvalonRepository.java"));
+        assertTrue(repository.contains("left_at=coalesce(left_at,now())"));
+        assertTrue(repository.contains("gp.left_at is null and g.status in ('WAITING','PLAYING','FINISHED')"));
+        assertTrue(repository.contains("select * from t_avalon_game_player where game_id=? order by seat_no"));
+    }
 }

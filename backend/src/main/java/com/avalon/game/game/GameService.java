@@ -230,6 +230,7 @@ public class GameService {
         for (GamePlayerRow old : oldPlayers) repository.insertGamePlayer(newGameId, old.userId(), old.nickname(), old.seatNo());
         GameRow newGame = repository.game(newGameId, true).orElseThrow();
         initializeGame(newGame, repository.players(newGameId));
+        repository.archiveGamePlayers(gameId);
         events.publish(gameId, "GAME_RESTARTED");
         events.publish(newGameId, "GAME_STARTED");
         return state(userId, newGameId);
