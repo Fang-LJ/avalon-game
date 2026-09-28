@@ -1,13 +1,42 @@
 const { getConfig } = require('./config');
 const { getToken } = require('./token');
-let socket = null; let retryTimer = null; let stopped = true;
-function connect(onEvent) {
-  stopped = false; close(false);
-  socket = wx.connectSocket({ url: `${getConfig().wsBaseUrl}/ws/avalon`, header: { Authorization: `Bearer ${getToken()}` } });
-  socket.onMessage(message => { try { onEvent(JSON.parse(message.data)); } catch (_) {} });
-  socket.onClose(() => { socket = null; if (!stopped) retryTimer = setTimeout(() => connect(onEvent), 2000); });
-  socket.onError(() => {});
-  return () => close(true);
+let socket = null,
+  retryTimer = null,
+  generation = 0;
+function close() {
+  generation++;
+  clearTimeout(retryTimer);
+  retryTimer = null;
+  const previous = socket;
+  socket = null;
+  if (previous) previous.close({});
 }
-function close(permanent = true) { stopped = permanent; if (retryTimer) clearTimeout(retryTimer); retryTimer = null; if (socket) socket.close({}); socket = null; }
+function connect(onEvent) {
+  close();
+  const session = generation;
+  function open() {
+    if (session !== generation || !getToken()) return;
+    const current = wx.connectSocket({
+      url: `${getConfig().wsBaseUrl}/ws/avalon`,
+      header: { Authorization: `Bearer ${getToken()}` },
+    });
+    socket = current;
+    current.onMessage((message) => {
+      if (session !== generation) return;
+      try {
+        onEvent(JSON.parse(message.data));
+      } catch (_) {}
+    });
+    current.onClose(() => {
+      if (session !== generation) return;
+      socket = null;
+      retryTimer = setTimeout(open, 2000);
+    });
+    current.onError(() => {});
+  }
+  open();
+  return () => {
+    if (session === generation) close();
+  };
+}
 module.exports = { connect, close };

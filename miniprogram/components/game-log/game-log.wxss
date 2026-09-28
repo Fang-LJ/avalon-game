@@ -1,0 +1,14 @@
+:host {
+  display: block;
+}
+.log-entry {
+  margin-bottom: 22rpx;
+}
+.log-title {
+  font-size: 25rpx;
+  font-weight: 700;
+}
+.lady-log {
+  border-top: 1px solid var(--border);
+  padding-top: 16rpx;
+}

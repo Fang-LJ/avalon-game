@@ -1,11 +1,28 @@
 {
-  "pages": ["pages/index/index", "pages/create/create", "pages/join/join", "pages/room/room"],
+  "pages": [
+    "pages/login/login",
+    "pages/index/index",
+    "pages/create/create",
+    "pages/join/join",
+    "pages/room/room",
+    "pages/history/history",
+    "pages/replay/replay",
+    "pages/me/me"
+  ],
   "window": {
+    "navigationStyle": "custom",
     "navigationBarTitleText": "阿瓦隆",
-    "navigationBarBackgroundColor": "#173f35",
     "navigationBarTextStyle": "white",
-    "backgroundColor": "#f4f0e6",
-    "backgroundTextStyle": "dark"
+    "backgroundColor": "#101713",
+    "backgroundTextStyle": "light"
+  },
+  "usingComponents": {
+    "page-head": "/components/page-head/page-head",
+    "app-tab-bar": "/components/app-tab-bar/app-tab-bar",
+    "game-card": "/components/game-card/game-card",
+    "player-seat": "/components/player-seat/player-seat",
+    "mission-track": "/components/mission-track/mission-track",
+    "game-log": "/components/game-log/game-log"
   },
   "sitemapLocation": "sitemap.json"
 }

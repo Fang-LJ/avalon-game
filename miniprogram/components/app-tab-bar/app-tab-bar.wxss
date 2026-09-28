@@ -1,0 +1,27 @@
+:host {
+  display: block;
+}
+.tab-bar {
+  position: fixed;
+  z-index: 20;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: var(--elevated);
+  padding: 21rpx 0 calc(15rpx + env(safe-area-inset-bottom));
+}
+.tab {
+  flex: 1;
+  text-align: center;
+  color: var(--muted);
+  font-size: 21rpx;
+}
+.tab.active {
+  color: var(--gold);
+}
+.tab-icon {
+  font-size: 35rpx;
+  line-height: 50rpx;
+  margin-bottom: 6rpx;
+}

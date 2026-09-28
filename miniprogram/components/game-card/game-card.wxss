@@ -1,0 +1,15 @@
+:host {
+  display: block;
+}
+.card.gold {
+  border-color: var(--gold);
+  color: var(--text);
+}
+.card.good {
+  border-color: var(--good);
+  color: var(--text);
+}
+.card.evil {
+  border-color: var(--evil);
+  color: var(--text);
+}

@@ -1,0 +1,23 @@
+<view
+  class="seat {{compact ? 'compact' : ''}} {{player.disabled ? 'disabled' : ''}}"
+  bindtap="choose"
+>
+  <view
+    class="seat-avatar {{player.me ? 'me' : ''}} {{player.selected ? 'selected' : ''}} {{player.leader ? 'leader' : ''}}"
+  >
+    <image
+      wx:if="{{player.avatarUrl}}"
+      src="{{player.avatarUrl}}"
+      mode="aspectFill"
+    />
+    <text wx:else>{{player.initial}}</text>
+  </view>
+  <view class="seat-name">
+    {{player.seatNo ? player.seatNo + ' ' : ''}}{{player.nickname}}
+  </view>
+  <view class="badges">
+    <text wx:if="{{player.leader || player.host}}" class="badge leader-badge">{{player.leader ? '队长' : '房主'}}</text>
+    <text wx:if="{{player.selected}}" class="badge selected-badge">已选</text>
+    <text wx:if="{{player.me}}" class="badge me-badge">我</text>
+  </view>
+</view>

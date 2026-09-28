@@ -1,5 +1,40 @@
-.choices { display: flex; gap: 18rpx; }
-.choice { flex: 1; text-align: center; padding: 36rpx 0; background: #ecebe4; border-radius: 22rpx; color: #607068; }
-.choice.active { background: #173f35; color: #fff; }
-.number { font-size: 46rpx; font-weight: 700; margin-right: 4rpx; }
-.hint { text-align: center; }
+.create-page {
+  display: flex;
+  flex-direction: column;
+}
+.form-title {
+  font-weight: 700;
+}
+.count-row {
+  display: flex;
+  gap: 15rpx;
+  padding-top: 12rpx;
+}
+.count {
+  flex: 1;
+  min-width: 0;
+  padding: 16rpx 0;
+  text-align: center;
+  border-radius: 23rpx;
+  background: var(--soft);
+  font-weight: 700;
+}
+.count.active {
+  background: var(--gold);
+  color: var(--bg);
+}
+.rule-preview {
+  margin-top: 66rpx;
+}
+.rule-title {
+  font-size: 31rpx;
+  font-weight: 700;
+}
+.room-settings {
+  margin-top: 48rpx;
+}
+.create-actions {
+  margin-top: auto;
+  padding-top: 100rpx;
+  padding-bottom: 85rpx;
+}

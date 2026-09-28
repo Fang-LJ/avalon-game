@@ -42,7 +42,7 @@ class RoomServiceTest {
 
         assertSame(view, spy.create(100, 5, "新昵称"));
         verify(repository).insertWaitingGame(matches("\\d{6}"), eq(100L), eq(5));
-        verify(repository).insertGamePlayer(1, 100, "新昵称", 1);
+        verify(repository).insertGamePlayer(1, 100, "原昵称", 1);
     }
 
     @Test void joinOnlyUsesWaitingGameAndPersistsNextSeat() {

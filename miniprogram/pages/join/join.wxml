@@ -1,8 +1,39 @@
 <view class="page">
-  <view class="card">
-    <view class="section-title">输入房间号</view>
-    <input class="input code" type="number" maxlength="6" placeholder="6 位房间号" value="{{roomCode}}" bindinput="codeInput" />
-    <input class="input" maxlength="32" placeholder="你的昵称（可选）" value="{{nickname}}" bindinput="nicknameInput" />
-    <button class="btn btn-primary" disabled="{{roomCode.length !== 6 || loading}}" loading="{{loading}}" bindtap="submit">加入房间</button>
+  <page-head
+    title="加入房间"
+    subtitle="输入好友分享的 6 位房间号"
+    back="{{true}}"
+  />
+  <view class="card join-example center">
+    <view class="example-code gold">464349</view>
+    <view class="muted small">示例房间号</view>
+  </view>
+  <view class="join-input">
+    <view class="input-label">房间号</view>
+    <input
+      class="input"
+      value="{{roomCode}}"
+      type="number"
+      maxlength="6"
+      placeholder="请输入 6 位房间号"
+      placeholder-class="muted"
+      bindinput="codeInput"
+    />
+    <view class="muted small input-hint">仅支持加入等待中的房间</view>
+  </view>
+  <view class="join-actions actions">
+    <button
+      class="btn"
+      disabled="{{!valid || loading}}"
+      loading="{{loading}}"
+      bindtap="submit"
+    >
+      加入房间
+    </button>
+    <button class="btn ghost" disabled="{{true}}">扫码加入（暂未开放）</button>
+  </view>
+  <view class="card join-hint">
+    <view>没有房间号？</view>
+    <view class="muted small">让房主在微信里分享房间邀请给你。</view>
   </view>
 </view>

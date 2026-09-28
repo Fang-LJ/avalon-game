@@ -1,16 +1,194 @@
-.room-head { display: flex; justify-content: space-between; align-items: center; margin: 10rpx 8rpx 34rpx; }
-.room-code { color: #173f35; font-size: 58rpx; font-weight: 750; letter-spacing: 8rpx; }
-.compact { margin-bottom: 0; }
-.score { display: flex; justify-content: center; align-items: center; gap: 28rpx; font-size: 34rpx; font-weight: 700; margin: 20rpx 0; }
-.player { min-height: 86rpx; display: flex; align-items: center; gap: 18rpx; border-top: 1rpx solid #e8e5db; }
-.player:first-of-type { border-top: 0; }
-.player.selected { background: #e2eee7; margin: 0 -14rpx; padding: 0 14rpx; border-radius: 16rpx; }
-.seat { width: 52rpx; height: 52rpx; line-height: 52rpx; text-align: center; border-radius: 50%; background: #e7ebe6; color: #173f35; font-weight: 700; }
-.player-name { flex: 1; }
-.online { color: #3e8067; font-size: 22rpx; }.offline { color: #a2aaa6; }
-.waiting { text-align: center; color: #728079; padding: 34rpx 0 10rpx; }
-.role-card { text-align: center; }.role-name { font-size: 68rpx; font-weight: 750; margin: 18rpx 0 4rpx; }.alignment { font-size: 28rpx; }.instruction { margin: 32rpx 0; line-height: 1.8; }.vision { background: #f0eee7; border-radius: 18rpx; padding: 22rpx; line-height: 1.8; }.center { text-align: center; margin-top: 20rpx; }
-.two-buttons { display: flex; gap: 20rpx; }.two-buttons .btn { flex: 1; }.approve { background: #167768; color: white; }.reject { background: #8a3030; color: white; }
-.team-list { padding: 20rpx; background: #f0eee7; border-radius: 16rpx; }
-.vote-item,.identity { display: flex; justify-content: space-between; padding: 15rpx 0; border-top: 1rpx solid #ebe7dc; }.vote-item:first-child,.identity:first-child { border-top: 0; }
-.end-card { text-align: center; }.end-title { font-size: 48rpx; font-weight: 750; margin: 18rpx 0 30rpx; }.loading { text-align: center; padding-top: 200rpx; color: #75827c; }
+.room-page {
+  padding-bottom: calc(28rpx + env(safe-area-inset-bottom));
+}
+.lobby-title {
+  font-size: 31rpx;
+  font-weight: bold;
+}
+.room-code {
+  font-size: 50rpx;
+  font-weight: bold;
+}
+.lobby-label {
+  margin-top: 24rpx;
+}
+.lobby-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28rpx 12rpx;
+  margin-top: 32rpx;
+}
+.lobby-rules {
+  margin-top: 55rpx;
+}
+.lobby-actions {
+  margin-top: 125rpx;
+}
+.role-card {
+  border: 2px solid var(--gold);
+  text-align: center;
+  padding-top: 48rpx;
+  padding-bottom: 32rpx;
+}
+.role-name {
+  font-size: 58rpx;
+  font-weight: bold;
+  margin-top: 25rpx !important;
+}
+.role-emblem {
+  margin: 45rpx auto !important;
+  width: 242rpx;
+  height: 242rpx;
+  display: flex;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  font-size: 92rpx;
+  font-weight: bold;
+}
+.role-emblem image {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+.role-emblem text {
+  z-index: 1;
+}
+.role-instruction {
+  font-size: 29rpx;
+  padding: 0 15rpx;
+}
+.role-vision {
+  margin-top: 45rpx !important;
+}
+.vision-seats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18rpx;
+  margin-top: 23rpx;
+}
+.role-actions {
+  margin-top: 100rpx;
+}
+.board {
+  height: 890rpx;
+  margin-top: 50rpx;
+  position: relative;
+}
+.board.large-table {
+  height: 960rpx;
+}
+.positioned-seat {
+  position: absolute;
+  transform: translateX(-50%);
+}
+.board-center {
+  position: absolute;
+  top: 35%;
+  left: 21%;
+  width: 58%;
+  padding: 25rpx 16rpx;
+  text-align: center;
+}
+.board-center > view:first-child {
+  font-weight: bold;
+  font-size: 28rpx;
+}
+.phase-actions {
+  margin-top: 25rpx;
+}
+.mission-info {
+  margin-top: 40rpx;
+}
+.mission-role {
+  margin-top: 55rpx;
+}
+.mission-select {
+  margin-top: 65rpx;
+}
+.mission-select .section-title {
+  margin-bottom: 44rpx;
+}
+.chosen {
+  outline: 3px solid var(--gold);
+  outline-offset: 4px;
+}
+.privacy-note {
+  margin-top: 90rpx;
+  margin-bottom: 100rpx;
+}
+.lady-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  justify-items: center;
+  gap: 32rpx;
+  margin: 60rpx 0;
+}
+.winner {
+  font-size: 46rpx;
+  font-weight: bold;
+}
+.identity-list {
+  margin-top: 80rpx;
+}
+.identity-row {
+  display: flex;
+  gap: 30rpx;
+  font-size: 23rpx;
+}
+.identity-row text:first-child {
+  width: 180rpx;
+}
+.finish-actions {
+  margin-top: 130rpx;
+}
+.private-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  padding: 38rpx;
+}
+.private-result {
+  width: 100%;
+  border-color: var(--gold);
+}
+.result-alignment {
+  font-size: 35rpx;
+  font-weight: bold;
+}
+.private-result .btn {
+  margin-top: 35rpx;
+}
+.has-phase-actions {
+  padding-bottom: calc(220rpx + env(safe-area-inset-bottom));
+}
+.room-page .board {
+  height: 820rpx;
+  margin-top: 36rpx;
+}
+.room-page .board.large-table {
+  height: 960rpx;
+}
+.room-page .phase-actions {
+  position: fixed;
+  left: 38rpx;
+  right: 38rpx;
+  bottom: 0;
+  margin: 0;
+  padding: 18rpx 0 calc(14rpx + env(safe-area-inset-bottom));
+  background: var(--bg);
+  z-index: 20;
+}
+.phase-actions .footer-note {
+  margin: 12rpx 0 0;
+}
+.room-page .lady-grid {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24rpx 10rpx;
+  margin: 45rpx 0;
+}

@@ -1,1 +1,19 @@
-.code { font-size: 48rpx; text-align: center; letter-spacing: 14rpx; }
+.join-example {
+  padding: 74rpx 0;
+}
+.example-code {
+  font-size: 62rpx;
+  font-weight: 700;
+}
+.join-input {
+  margin-top: 90rpx;
+}
+.input-hint {
+  margin-top: 14rpx;
+}
+.join-actions {
+  margin-top: 76rpx;
+}
+.join-hint {
+  margin-top: 110rpx;
+}

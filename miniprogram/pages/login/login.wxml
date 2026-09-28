@@ -1,0 +1,40 @@
+<view class="page login-page">
+  <view class="brand">
+    <view class="brand-mark">
+      <image src="/assets/avalon-mark.svg" />
+      <text>A</text>
+    </view>
+    <view class="brand-name">阿瓦隆</view>
+    <view class="gold small">AVALON</view>
+    <view class="tagline muted">在谎言与忠诚之间，找到真正的同伴。</view>
+  </view>
+  <view class="login-actions">
+    <button
+      class="btn"
+      bindtap="login"
+      loading="{{busy || checking}}"
+      disabled="{{busy || checking}}"
+    >
+      微信授权登录
+    </button>
+    <view class="footer-note">首次登录将自动创建阿瓦隆账号</view>
+    <view class="error center" wx:if="{{error}}">{{error}}</view>
+    <view class="legal muted" bindtap="legal">
+      登录即代表同意《用户协议》与《隐私政策》
+    </view>
+  </view>
+  <view wx:if="{{mockLogin}}" class="card mock-users">
+    <view class="gold">仅本地开发 · 模拟用户</view>
+    <view class="chips">
+      <view
+        wx:for="{{mockUsers}}"
+        wx:key="key"
+        class="chip"
+        data-key="{{item.key}}"
+        bindtap="selectMockUser"
+      >
+        {{item.nickname}}
+      </view>
+    </view>
+  </view>
+</view>

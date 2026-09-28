@@ -1,0 +1,18 @@
+:host {
+  display: block;
+}
+.page-head {
+  padding-bottom: 43rpx;
+}
+.heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56rpx;
+}
+.title {
+  max-width: 540rpx;
+}
+.subtitle {
+  margin-top: 3rpx;
+}

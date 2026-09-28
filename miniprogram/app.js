@@ -1,5 +1,6 @@
-const auth = require('./services/auth');
 App({
-  globalData: { appName: '阿瓦隆', loginPromise: null },
-  onLaunch() { this.globalData.loginPromise = auth.ensureLogin(); }
+  globalData: { appName: '阿瓦隆' },
+  onLaunch() {
+    // Login is explicitly initiated by the user on the login page.
+  },
 });

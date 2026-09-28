@@ -1,0 +1,39 @@
+<view class="page replay-page">
+  <page-head
+    title="对局复盘"
+    subtitle="{{replay ? replay.playerCount + ' 人局 · ' + (replay.winner === 'GOOD' ? '正义胜利' : '邪恶胜利') + (replay.duration !== null ? ' · ' + replay.duration + ' 分钟' : '') : '仅本局参与者可查看已结束对局'}}"
+    back="{{true}}"
+  />
+  <view wx:if="{{error}}" class="error" bindtap="load">
+    {{error}} · 点击重试
+  </view>
+  <view wx:elif="{{loading}}" class="empty">正在加载完整复盘…</view>
+  <block wx:elif="{{replay}}">
+    <view class="card replay-identities">
+      <view class="gold">身份公开</view>
+      <view class="identity-wrap">
+        <text
+          wx:for="{{replay.players}}"
+          wx:key="playerId"
+          class="small {{item.alignment === 'GOOD' ? 'good' : 'evil'}}"
+        >
+          {{item.seatNo}} {{item.nickname}} · {{item.roleName}}
+        </text>
+      </view>
+      <view class="muted small">
+        房间 {{replay.roomCode}} · {{replay.timeText}}
+      </view>
+    </view>
+    <game-log entries="{{entries}}" replay="{{true}}" />
+    <view class="card final-record">
+      <view class="gold">最终结算{{replay.targetText ? ' · 刺杀' : ''}}</view>
+      <view wx:if="{{replay.targetText}}" class="muted">
+        刺杀目标：{{replay.targetText}}
+      </view>
+      <view class="{{replay.winner === 'GOOD' ? 'good' : 'evil'}}">
+        {{replay.reasonText}}
+      </view>
+    </view>
+    <view class="footer-note">以上为本局完整记录</view>
+  </block>
+</view>

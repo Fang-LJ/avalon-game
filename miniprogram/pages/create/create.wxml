@@ -1,13 +1,48 @@
-<view class="page">
+<view class="page create-page">
+  <page-head
+    title="创建房间"
+    subtitle="选择人数后即可邀请好友加入"
+    back="{{true}}"
+  />
   <view class="card">
-    <view class="section-title">选择游戏人数</view>
-    <view class="choices">
-      <view wx:for="{{counts}}" wx:key="*this" class="choice {{maxPlayers === item ? 'active' : ''}}" data-count="{{item}}" bindtap="selectCount">
-        <text class="number">{{item}}</text><text>人</text>
+    <view class="form-title">游戏人数</view>
+    <view class="count-row">
+      <view
+        wx:for="{{counts}}"
+        wx:key="*this"
+        class="count {{maxPlayers === item ? 'active' : ''}}"
+        data-count="{{item}}"
+        bindtap="selectCount"
+      >
+        {{item}}
       </view>
     </view>
-    <input class="input" maxlength="32" placeholder="你的昵称（可选）" value="{{nickname}}" bindinput="nicknameInput" />
-    <button class="btn btn-primary" loading="{{loading}}" disabled="{{loading}}" bindtap="submit">创建</button>
   </view>
-  <view class="muted hint">房间满员后，房主即可开始游戏。</view>
+  <view class="card rule-preview">
+    <view class="gold rule-title">{{maxPlayers}} 人局</view>
+    <view class="muted">正义 {{rule.good}} · 邪恶 {{rule.evil}}</view>
+    <view class="small">{{rule.goodRoles}}</view>
+    <view class="small">{{rule.evilRoles}}</view>
+    <view class="muted small">任务人数：{{rule.teamText}}</view>
+    <view class="muted small">第 4 个任务需要 {{rule.fourth}} 张失败票</view>
+    <view class="gold small" wx:if="{{rule.lady}}">启用湖中仙女</view>
+  </view>
+  <view class="card room-settings">
+    <view class="form-title">房间设置</view>
+    <view class="muted">
+      • 房间号自动生成
+      <view>• 开局后身份随机分配</view>
+      <view>• 对局记录自动保存</view>
+    </view>
+  </view>
+  <view class="create-actions actions">
+    <button
+      class="btn"
+      disabled="{{loading}}"
+      loading="{{loading}}"
+      bindtap="submit"
+    >
+      创建 {{maxPlayers}} 人房间
+    </button>
+  </view>
 </view>

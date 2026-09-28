@@ -1,0 +1,9 @@
+<view class="page-head" style="padding-top: {{top}}px;">
+  <view class="heading-row">
+    <view class="title" bindtap="{{back ? 'goBack' : ''}}">
+      {{back ? '‹ ' : ''}}{{title}}
+    </view>
+    <slot name="right"></slot>
+  </view>
+  <view class="subtitle">{{subtitle}}</view>
+</view>

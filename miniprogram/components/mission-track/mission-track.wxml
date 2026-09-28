@@ -1,0 +1,10 @@
+<view class="track">
+  <text class="muted">任务</text>
+  <view wx:for="{{dots}}" wx:key="n" class="dot {{item.status}}">
+    {{item.label}}
+  </view>
+  <view class="score">
+    <text class="good">正义 {{good}}</text>
+    <text class="evil">邪恶 {{evil}}</text>
+  </view>
+</view>

@@ -1,0 +1,11 @@
+.replay-identities {
+  margin-bottom: 65rpx;
+}
+.identity-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx 20rpx;
+}
+.final-record {
+  margin-top: 35rpx;
+}

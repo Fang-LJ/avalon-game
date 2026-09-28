@@ -1,0 +1,47 @@
+<view class="page tabs">
+  <page-head title="历史战绩" subtitle="你的每一局阿瓦隆" />
+  <view class="card">
+    <view class="history-total gold">
+      {{stats ? stats.totalGames : '—'}} 场对局
+    </view>
+    <view class="muted">
+      {{stats ? stats.wins : 0}} 胜 · {{stats ? stats.losses : 0}} 负 · 胜率
+      {{stats ? stats.winRate : 0}}%
+    </view>
+    <view class="chips">
+      <view
+        wx:for="{{filters}}"
+        wx:key="key"
+        class="chip {{alignment === item.key ? 'active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="filter"
+      >
+        {{item.label}}
+      </view>
+    </view>
+  </view>
+  <view class="section-title history-label">最近对局</view>
+  <view
+    wx:for="{{items}}"
+    wx:key="gameId"
+    class="card history-game"
+    data-id="{{item.gameId}}"
+    bindtap="replay"
+  >
+    <view class="history-title">
+      {{item.playerCount}} 人局 · {{item.roleName}}
+    </view>
+    <view class="{{item.winner === 'GOOD' ? 'good' : 'evil'}}">
+      {{item.resultText}} · {{item.won ? '胜' : '负'}}
+    </view>
+    <view class="muted small">{{item.timeText}} · 查看复盘 ›</view>
+  </view>
+  <view wx:if="{{error}}" class="error" bindtap="retry">{{error}}</view>
+  <view wx:elif="{{loading}}" class="empty">正在加载…</view>
+  <view wx:elif="{{!items.length}}" class="empty">暂无符合条件的对局</view>
+  <view wx:elif="{{items.length < total}}" class="link center" bindtap="more">
+    加载更多
+  </view>
+  <view wx:else class="footer-note">已显示全部战绩</view>
+  <app-tab-bar active="history" />
+</view>

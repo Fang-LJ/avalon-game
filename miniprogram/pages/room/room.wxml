@@ -1,111 +1,346 @@
-<view class="page" wx:if="{{room}}">
-  <view class="room-head">
-    <view><view class="muted">房间号</view><view class="room-code">{{room.roomCode}}</view></view>
-    <view class="pill">{{room.currentPlayers}} / {{room.maxPlayers}} 人</view>
-  </view>
-
-  <view class="card" wx:if="{{game}}">
-    <view class="row"><text class="section-title compact">第 {{game.missionNo}} 轮 · {{phaseTitle}}</text><text class="pill">提案 {{game.proposalNo}}</text></view>
-    <view class="score"><text class="good">正义 {{game.goodScore}}</text><text>:</text><text class="evil">{{game.evilScore}} 邪恶</text></view>
-    <view class="muted">当前队长：{{game.leaderSeatNo}}号 {{game.leaderNickname}} · 连续否决 {{game.consecutiveRejections}}/{{game.maxRejections}}</view>
-    <view class="muted" wx:if="{{game.ladyEnabled}}">湖中仙女：{{game.ladyHolderSeatNo}}号 {{game.ladyHolderNickname}} · 已使用 {{game.ladyUsedCount}}/3</view>
-  </view>
-
-  <view class="card" wx:if="{{game && game.latestVoteResult}}">
-    <view class="section-title">上一轮组队{{game.latestVoteResult.approved ? '通过' : '未通过'}}</view>
-    <view class="vote-grid">
-      <view wx:for="{{game.latestVoteResult.votes}}" wx:key="playerId" class="vote-item">
-        <text>{{item.seatNo}}号 {{item.nickname}}</text><text class="{{item.choice === 'APPROVE' ? 'good' : 'evil'}}">{{item.choice === 'APPROVE' ? '赞成' : '反对'}}</text>
+<view
+  class="page room-page {{game && game.phase !== 'ROLE_CONFIRM' && game.phase !== 'FINISHED' ? 'has-phase-actions' : ''}}"
+  wx:if="{{room}}"
+>
+  <page-head
+    title="{{game && (game.phase === 'TEAM_BUILDING' || game.phase === 'TEAM_VOTING' || game.phase === 'MISSION_EXECUTING') ? '第 ' + game.missionNo + ' 轮 · ' + phaseTitle : phaseTitle}}"
+    subtitle="{{game && game.phase === 'ROLE_CONFIRM' ? '仅你自己可见 · 请注意遮挡屏幕' : '房间 ' + room.roomCode + ' · ' + room.maxPlayers + ' 人局'}}"
+  />
+  <view wx:if="{{error}}" class="error" bindtap="refresh">{{error}}</view>
+  <block wx:if="{{!game}}">
+    <view class="card">
+      <view class="lobby-title">邀请好友加入</view>
+      <view class="muted">
+        {{room.currentPlayers}} / {{room.maxPlayers}} 人 · {{room.canStart ?
+        '房主可以开始游戏' : '等待玩家到齐'}}
+      </view>
+      <view class="row" bindtap="copyCode">
+        <text class="room-code gold">{{room.roomCode}}</text>
+        <text class="muted small">点击复制房间号</text>
       </view>
     </view>
-  </view>
-
-  <view class="card" wx:if="{{game && game.latestMissionResult}}">
-    <view class="section-title">第 {{game.latestMissionResult.missionNo}} 轮任务{{game.latestMissionResult.status === 'SUCCESS' ? '成功' : '失败'}}</view>
-    <view class="score"><text class="good">成功票 {{game.latestMissionResult.successCount}}</text><text class="evil">失败票 {{game.latestMissionResult.failCount}}</text></view>
-  </view>
-
-  <view class="card">
-    <view class="section-title">玩家</view>
-    <view wx:for="{{displayPlayers}}" wx:key="playerId" class="player {{item.selected ? 'selected' : ''}}" data-id="{{item.playerId}}" bindtap="togglePlayer">
-      <view class="seat">{{item.seatNo}}</view>
-      <view class="player-name">{{item.nickname}} <text wx:if="{{item.me}}">（你）</text></view>
-      <text wx:if="{{item.host}}" class="pill">房主</text>
-      <text class="online {{item.online ? '' : 'offline'}}">{{item.online ? '在线' : '离线'}}</text>
+    <view class="section-title lobby-label">玩家</view>
+    <view class="lobby-grid">
+      <player-seat
+        wx:for="{{displayPlayers}}"
+        wx:key="playerId"
+        player="{{item}}"
+      />
     </view>
-  </view>
-
-  <view class="card" wx:if="{{!game}}">
-    <view class="section-title">等待大厅</view>
-    <view class="muted">人数到齐后，房主可以开始游戏。</view>
-    <button wx:if="{{room.host}}" class="btn btn-primary" disabled="{{!room.canStart || busy}}" loading="{{busy}}" bindtap="startGame">开始游戏</button>
-    <view wx:else class="waiting">等待房主开始…</view>
-    <button class="btn btn-secondary" bindtap="leaveRoom">退出房间</button>
-  </view>
-
-  <view class="card role-card" wx:if="{{game && game.phase === 'ROLE_CONFIRM' && role}}">
-    <view class="muted">你的身份</view><view class="role-name {{role.alignmentCode === 'GOOD' ? 'good' : 'evil'}}">{{role.roleName}}</view>
-    <view class="alignment">{{role.alignmentName}}</view><view class="instruction">{{role.instruction}}</view>
-    <view wx:if="{{role.visiblePlayers.length}}" class="vision">
-      <view class="muted">你能看到</view>
-      <view wx:for="{{role.visiblePlayers}}" wx:key="playerId">{{item.seatNo}}号 {{item.nickname}} · {{item.hint}}</view>
+    <view class="card lobby-rules">
+      <view class="gold">本局规则</view>
+      <view class="muted small">
+        {{room.maxPlayers}} 人局 · {{rule.evilRoles}} · 第 4 个任务需
+        {{rule.fourth}} 张失败票{{rule.lady ? ' · 湖中仙女' : ''}}
+      </view>
     </view>
-    <button class="btn btn-primary" disabled="{{role.confirmed || busy}}" bindtap="confirmRole">{{role.confirmed ? '已确认身份' : '确认身份'}}</button>
-    <view class="muted center">已确认 {{game.confirmedCount}} / {{game.playerCount}}</view>
-  </view>
-
-  <view class="card" wx:if="{{game && game.phase === 'TEAM_BUILDING'}}">
-    <view class="section-title">队长选择任务成员</view>
-    <view class="muted">本轮需要 {{game.requiredTeamSize}} 人。{{isLeader ? '点击上方玩家进行选择。' : '等待队长提交队伍。'}}</view>
-    <button wx:if="{{isLeader}}" class="btn btn-primary" disabled="{{selectedIds.length !== game.requiredTeamSize || busy}}" bindtap="submitTeam">提交队伍（{{selectedIds.length}}/{{game.requiredTeamSize}}）</button>
-  </view>
-
-  <view class="card" wx:if="{{game && game.phase === 'TEAM_VOTING'}}">
-    <view class="section-title">是否同意这支队伍？</view>
-    <view class="team-list">入选：<text wx:for="{{selectedNames}}" wx:key="*this">{{item}} </text></view>
-    <view wx:if="{{!game.hasVoted}}" class="two-buttons">
-      <button class="btn approve" bindtap="approve">赞成</button><button class="btn reject" bindtap="reject">反对</button>
+    <view class="lobby-actions actions">
+      <button
+        class="btn"
+        disabled="{{!room.canStart || busy}}"
+        loading="{{busy}}"
+        bindtap="startGame"
+      >
+        {{room.host ? '开始游戏' : '等待房主开始'}}
+      </button>
+      <view class="footer-note">仅房主可开始 · 开局后身份随机分配</view>
+      <view class="link center small" bindtap="leaveRoom">退出房间</view>
     </view>
-    <view wx:else class="waiting">已投票，等待其他玩家（{{game.voteCount}}/{{game.playerCount}}）</view>
-  </view>
-
-  <view class="card" wx:if="{{game && game.phase === 'MISSION_EXECUTING'}}">
-    <view class="section-title">执行秘密任务</view>
-    <view wx:if="{{game.onMission && !game.hasSubmittedMission}}">
-      <button class="btn approve" bindtap="missionSuccess">任务成功</button>
-      <button wx:if="{{game.evil}}" class="btn reject" bindtap="missionFail">任务失败</button>
+  </block>
+  <block wx:elif="{{game.phase === 'ROLE_CONFIRM'}}">
+    <view class="role-card card" wx:if="{{role}}">
+      <view class="{{role.alignmentCode === 'GOOD' ? 'good' : 'evil'}}">
+        {{role.alignmentName}}
+      </view>
+      <view class="role-name">{{role.roleName}}</view>
+      <view class="gold small">{{role.roleCode}}</view>
+      <view class="role-emblem">
+        <image src="/assets/role-emblem.svg" />
+        <text>{{role.initial}}</text>
+      </view>
+      <view class="role-instruction">{{role.instruction}}</view>
+      <view class="role-vision" wx:if="{{role.visiblePlayers.length}}">
+        <view class="muted">{{role.visiblePlayers[0].hint}}</view>
+        <view class="vision-seats">
+          <player-seat
+            wx:for="{{role.visiblePlayers}}"
+            wx:key="playerId"
+            player="{{item}}"
+          />
+        </view>
+      </view>
+      <view wx:else class="muted">你没有额外角色视野</view>
     </view>
-    <view wx:else class="waiting">{{game.onMission ? '已秘密提交，等待队友。' : '你未入选本轮任务，请等待结果。'}}</view>
-  </view>
-
-  <view class="card" wx:if="{{game && game.phase === 'LADY_OF_LAKE'}}">
-    <view class="section-title">湖中仙女检查阵营</view>
-    <view wx:if="{{game.ladyHolder}}">
-      <view class="muted">点击上方可选玩家。你只能得知其阵营，检查结果仅你可见。</view>
-      <button class="btn btn-primary" disabled="{{!ladyTarget || busy}}" bindtap="inspectLady">确认检查</button>
+    <view class="role-actions actions">
+      <button
+        class="btn"
+        disabled="{{!role || role.confirmed || busy}}"
+        bindtap="confirmRole"
+      >
+        {{role.confirmed ? '已确认，等待其他玩家' : '我已确认身份'}}
+      </button>
+      <view class="footer-note">
+        已确认 {{game.confirmedCount}} / {{game.playerCount}} ·
+        全员确认后自动进入第 1 轮
+      </view>
     </view>
-    <view wx:else class="waiting">等待 {{game.ladyHolderSeatNo}}号 {{game.ladyHolderNickname}} 使用湖中仙女…</view>
-  </view>
-
-  <view class="card" wx:if="{{ladyResult}}">
-    <view class="section-title">湖中仙女结果（仅你可见）</view>
-    <view>{{ladyResult.targetSeatNo}}号 {{ladyResult.targetNickname}} 是
-      <text class="{{ladyResult.alignment === 'GOOD' ? 'good' : 'evil'}}">{{ladyResult.alignment === 'GOOD' ? '正义阵营' : '邪恶阵营'}}</text>
+  </block>
+  <block wx:elif="{{game.phase === 'FINISHED'}}">
+    <game-card tone="{{game.winner === 'GOOD' ? 'good' : 'evil'}}">
+      <view class="winner {{game.winner === 'GOOD' ? 'good' : 'evil'}}">
+        {{game.winner === 'GOOD' ? '正义' : '邪恶'}}阵营获胜
+      </view>
+      <view class="muted">{{finished.reasonText || '正在加载结算…'}}</view>
+      <view wx:if="{{finished.targetName}}" class="muted small">
+        刺杀目标：{{finished.targetName}}
+      </view>
+    </game-card>
+    <view class="card identity-list">
+      <view wx:for="{{game.identities}}" wx:key="playerId" class="identity-row">
+        <text>{{item.seatNo}} {{item.nickname}}</text>
+        <text class="{{item.alignment === 'GOOD' ? 'good' : 'evil'}}">
+          {{item.roleName}}
+        </text>
+      </view>
     </view>
-  </view>
-
-  <view class="card" wx:if="{{game && game.phase === 'ASSASSINATION'}}">
-    <view class="section-title">刺杀阶段</view>
-    <view wx:if="{{game.assassin}}"><view class="muted">正义已完成三个任务。点击上方玩家选择梅林。</view><button class="btn btn-danger" disabled="{{!assassinationTarget}}" bindtap="assassinate">确认刺杀</button></view>
-    <view wx:else class="waiting">刺客正在寻找梅林…</view>
-  </view>
-
-  <view class="card end-card" wx:if="{{game && game.phase === 'FINISHED'}}">
-    <view class="muted">游戏结束</view><view class="end-title {{game.winner === 'GOOD' ? 'good' : 'evil'}}">{{game.winner === 'GOOD' ? '正义阵营胜利' : '邪恶阵营胜利'}}</view>
-    <view wx:for="{{game.identities}}" wx:key="playerId" class="identity"><text>{{item.seatNo}}号 {{item.nickname}}</text><text class="{{item.alignment === 'GOOD' ? 'good' : 'evil'}}">{{item.roleName}}</text></view>
-    <button wx:if="{{room.host}}" class="btn btn-primary" bindtap="restart">再来一局</button>
-    <button class="btn btn-secondary" bindtap="leaveRoom">退出房间</button>
+    <view class="finish-actions actions">
+      <button class="btn" bindtap="replay">查看完整复盘</button>
+      <button
+        wx:if="{{room.host}}"
+        class="btn"
+        disabled="{{busy || room.currentPlayers !== room.maxPlayers}}"
+        bindtap="restart"
+      >
+        再来一局
+      </button>
+      <view
+        class="footer-note"
+        wx:if="{{room.currentPlayers !== room.maxPlayers}}"
+      >
+        人数不足，不能再来一局
+      </view>
+      <button class="btn ghost" disabled="{{busy}}" bindtap="leaveRoom">
+        退出房间
+      </button>
+    </view>
+  </block>
+  <block wx:else>
+    <mission-track
+      wx:if="{{game.phase !== 'LADY_OF_LAKE' && game.phase !== 'ASSASSINATION'}}"
+      missions="{{timeline.missions}}"
+      current="{{game.missionNo}}"
+      good="{{game.goodScore}}"
+      evil="{{game.evilScore}}"
+    />
+    <view wx:if="{{game.phase === 'ASSASSINATION'}}" class="card">
+      <view class="evil">
+        {{game.assassin ? '你是刺客' : '等待刺客选择目标'}}
+      </view>
+      <view class="muted small">正义已完成 3 个任务 · 邪恶最后机会</view>
+    </view>
+    <view
+      wx:if="{{board}}"
+      class="board {{room.maxPlayers >= 9 ? 'large-table' : ''}}"
+    >
+      <view
+        wx:for="{{displayPlayers}}"
+        wx:key="playerId"
+        class="positioned-seat"
+        style="{{item.position}}"
+      >
+        <player-seat
+          compact="{{room.maxPlayers >= 9}}"
+          player="{{item}}"
+          bind:select="togglePlayer"
+        />
+      </view>
+      <view class="card board-center">
+        <block wx:if="{{game.phase === 'TEAM_BUILDING'}}">
+          <view class="gold">
+            {{isLeader ? '请选择任务成员' : '队长正在选择任务成员'}}
+          </view>
+          <view class="muted">本轮需要 {{game.requiredTeamSize}} 人</view>
+          <view class="good small">已选：{{selectedText || '暂无'}}</view>
+        </block>
+        <block wx:elif="{{game.phase === 'TEAM_VOTING'}}">
+          <view class="gold">是否同意这支队伍？</view>
+          <view class="muted small">队伍：{{selectedText}}</view>
+          <view class="muted small">
+            {{game.hasVoted ? '你已投票' : '请投票'}} · {{game.voteCount}} /
+            {{game.playerCount}}
+          </view>
+        </block>
+        <block wx:elif="{{game.phase === 'MISSION_EXECUTING'}}">
+          <view class="good">组队通过</view>
+          <view class="good small">同意：{{voteResult.approveText}}</view>
+          <view class="evil small">反对：{{voteResult.rejectText}}</view>
+        </block>
+        <block wx:elif="{{game.phase === 'ASSASSINATION'}}">
+          <view class="gold">
+            {{game.assassin ? (targetName ? '已选择：' + targetName :
+            '请选择刺杀目标') : '刺客正在寻找梅林'}}
+          </view>
+          <view class="muted small">确认后不可更改</view>
+        </block>
+      </view>
+    </view>
+    <block
+      wx:if="{{game.phase === 'MISSION_EXECUTING' && game.onMission && !viewVotes}}"
+    >
+      <view class="card mission-info">
+        <view class="gold">你已被选入本轮任务</view>
+        <view class="muted">本轮共 {{game.requiredTeamSize}} 名任务成员</view>
+        <view class="link small" bindtap="toggleVotes">查看组队投票结果 ›</view>
+      </view>
+      <view class="card mission-role">
+        <view class="{{game.evil ? 'evil' : 'good'}}">
+          你的身份：{{role.roleName}}
+        </view>
+        <view class="muted">
+          {{game.evil ? '邪恶阵营可以选择 SUCCESS 或 FAIL' : '正义阵营只能选择 SUCCESS'}}
+        </view>
+      </view>
+      <view wx:if="{{!game.hasSubmittedMission}}" class="mission-select">
+        <view class="section-title">请选择任务牌</view>
+        <view class="two-buttons">
+          <button
+            class="btn success {{missionChoice === 'SUCCESS' ? 'chosen' : ''}}"
+            disabled="{{busy}}"
+            bindtap="missionSuccess"
+          >
+            SUCCESS · 成功
+          </button>
+          <button
+            wx:if="{{game.evil}}"
+            class="btn danger {{missionChoice === 'FAIL' ? 'chosen' : ''}}"
+            disabled="{{busy}}"
+            bindtap="missionFail"
+          >
+            FAIL · 失败
+          </button>
+        </view>
+      </view>
+      <view wx:else class="empty">已秘密提交，等待任务成员</view>
+      <view class="card privacy-note">
+        <view>你的选择不会公开给其他玩家</view>
+        <view class="muted small">
+          当前对局只公开最终 SUCCESS / FAIL
+          数量；完整出票仅在结束后的参与者复盘中显示。
+        </view>
+      </view>
+    </block>
+    <block wx:if="{{game.phase === 'LADY_OF_LAKE'}}">
+      <view class="card">
+        <view class="gold">当前持有者：{{game.ladyHolderNickname}}</view>
+        <view class="muted small">
+          第 {{game.missionNo}} 个任务结算后 · {{game.ladyHolder ?
+          '选择从未持有过湖中仙女的玩家' : '等待持有者检查阵营'}}
+        </view>
+      </view>
+      <view class="lady-grid">
+        <player-seat
+          wx:for="{{ladyPlayers}}"
+          wx:key="playerId"
+          compact="{{true}}"
+          player="{{item}}"
+          bind:select="togglePlayer"
+        />
+      </view>
+      <view class="card">
+        <view class="gold">
+          {{game.ladyHolder ? (targetName ? '已选择：' + targetName :
+          '请选择检查目标') : '检查结果仅持有者可见'}}
+        </view>
+        <view class="muted small">
+          检查后自动传递 token；只得知 GOOD / EVIL，不会显示角色。
+        </view>
+      </view>
+    </block>
+    <game-log
+      wx:if="{{board && game.phase !== 'ASSASSINATION'}}"
+      entries="{{entries}}"
+    />
+    <view class="phase-actions actions">
+      <button
+        wx:if="{{game.phase === 'TEAM_BUILDING'}}"
+        class="btn"
+        disabled="{{!isLeader || selectedIds.length !== game.requiredTeamSize || busy}}"
+        bindtap="submitTeam"
+      >
+        {{isLeader ? '确认发车' : '等待队长选人'}}
+      </button>
+      <view wx:elif="{{game.phase === 'TEAM_VOTING'}}">
+        <view wx:if="{{!game.hasVoted}}" class="two-buttons">
+          <button class="btn success" disabled="{{busy}}" bindtap="approve">
+            同意
+          </button>
+          <button class="btn danger" disabled="{{busy}}" bindtap="reject">
+            反对
+          </button>
+        </view>
+        <button wx:else class="btn" disabled="{{true}}">
+          已投票，等待其他玩家
+        </button>
+      </view>
+      <block wx:elif="{{game.phase === 'MISSION_EXECUTING'}}">
+        <button
+          wx:if="{{game.onMission && viewVotes}}"
+          class="btn"
+          bindtap="toggleVotes"
+        >
+          返回秘密任务
+        </button>
+        <button
+          wx:elif="{{game.onMission && !game.hasSubmittedMission}}"
+          class="btn"
+          disabled="{{!missionChoice || busy}}"
+          bindtap="submitMission"
+        >
+          确认提交
+        </button>
+        <button wx:else class="btn" disabled="{{true}}">
+          等待任务成员提交
+        </button>
+      </block>
+      <button
+        wx:elif="{{game.phase === 'LADY_OF_LAKE'}}"
+        class="btn"
+        disabled="{{!game.ladyHolder || !ladyTarget || busy}}"
+        bindtap="inspectLady"
+      >
+        {{game.ladyHolder ? '确认检查并传递湖中仙女' : '等待持有者操作'}}
+      </button>
+      <button
+        wx:elif="{{game.phase === 'ASSASSINATION'}}"
+        class="btn danger"
+        disabled="{{!game.assassin || !assassinationTarget || busy}}"
+        bindtap="assassinate"
+      >
+        {{game.assassin ? '确认刺杀' + targetName : '等待刺客行动'}}
+      </button>
+      <view
+        wx:if="{{game.phase === 'TEAM_BUILDING' || game.phase === 'TEAM_VOTING'}}"
+        class="footer-note"
+      >
+        连续否决 {{game.consecutiveRejections}} / {{game.maxRejections}} ·
+        {{game.leaderNickname}} 为当前队长
+      </view>
+    </view>
+  </block>
+  <view wx:if="{{ladyResult}}" class="private-overlay">
+    <view class="card private-result">
+      <view class="muted small">湖中仙女结果（仅你可见）</view>
+      <view
+        class="{{ladyResult.alignment === 'GOOD' ? 'good' : 'evil'}} result-alignment"
+      >
+        {{ladyResult.targetNickname}} 属于：{{ladyResult.alignment}}
+      </view>
+      <view class="muted small">湖中仙女已传给该玩家，对局已自动推进。</view>
+      <button class="btn" bindtap="dismissLady">我已知晓</button>
+    </view>
   </view>
 </view>
-
-<view wx:else class="page loading">正在进入房间…</view>
+<view wx:else class="page">
+  <page-head title="阿瓦隆" subtitle="正在进入房间…" />
+  <view class="error" wx:if="{{error}}" bindtap="refresh">{{error}}</view>
+</view>

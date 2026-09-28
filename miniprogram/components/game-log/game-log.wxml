@@ -1,0 +1,55 @@
+<view class="log-list">
+  <view
+    wx:for="{{entries}}"
+    wx:key="proposalId"
+    wx:if="{{replay || expanded || index === entries.length - 1}}"
+    class="card log-entry"
+  >
+    <view class="log-title">
+      第 {{item.missionNo}} 轮 · 第 {{item.proposalNo}} 次提案
+    </view>
+    <view class="muted small">
+      队长：{{item.leaderNickname}} · 队伍：{{item.teamText}}
+    </view>
+    <view class="good small" wx:if="{{item.resolved}}">
+      同意：{{item.approveText || '无'}}
+    </view>
+    <view class="evil small" wx:if="{{item.resolved}}">
+      反对：{{item.rejectText || '无'}}
+    </view>
+    <view class="gold small">{{item.statusText}}</view>
+    <view
+      wx:if="{{item.mission}}"
+      class="{{item.mission.status === 'SUCCESS' ? 'good' : 'evil'}} small"
+    >
+      任务{{item.mission.status === 'SUCCESS' ? '成功' : '失败'}} · SUCCESS ×
+      {{item.mission.successCount}} / FAIL × {{item.mission.failCount}}
+    </view>
+    <view wx:if="{{replay && item.mission}}" class="muted small">
+      任务 {{item.mission.requiredPlayers}} 人 · 失败阈值
+      {{item.mission.failThreshold}}
+    </view>
+    <view
+      wx:if="{{replay}}"
+      wx:for="{{item.actions}}"
+      wx:for-item="action"
+      wx:key="id"
+      class="small {{action.choice === 'FAIL' ? 'evil' : 'muted'}}"
+    >
+      {{action.playerText}} → {{action.choice}}
+    </view>
+    <view wx:if="{{replay && item.ladyText}}" class="lady-log gold small">
+      湖中仙女：{{item.ladyText}}
+    </view>
+  </view>
+  <view wx:if="{{!entries.length}}" class="card muted small">
+    组队与任务记录将在这里显示
+  </view>
+  <view
+    wx:if="{{!replay && entries.length > 1}}"
+    class="link center small"
+    bindtap="toggle"
+  >
+    {{expanded ? '收起记录' : '展开全部记录'}}
+  </view>
+</view>

@@ -1,24 +1,63 @@
-<view class="page home">
-  <view class="hero">
-    <text class="eyebrow">AVALON GAME</text>
-    <view class="title">阿瓦隆</view>
-    <view class="subtitle">和朋友一起开始一场阵营对决</view>
-  </view>
-  <view class="card actions">
-    <button class="btn btn-primary" bindtap="create">创建房间</button>
-    <button class="btn btn-secondary" bindtap="join">加入房间</button>
-    <button wx:if="{{currentRoom}}" class="btn return" bindtap="returnRoom">返回游戏 · {{currentRoom.roomCode}}</button>
-  </view>
-  <view wx:if="{{mockLogin}}" class="card mock-login">
-    <view class="mock-heading">
-      <text class="mock-title">测试身份</text>
-      <text class="mock-status">当前：玩家{{currentMockKey}}</text>
+<view class="page tabs home-page">
+  <page-head
+    title="阿瓦隆"
+    subtitle="{{profile ? '晚上好，' + profile.nickname : '欢迎来到阿瓦隆'}}"
+  >
+    <view slot="right" class="avatar home-avatar">
+      <image
+        wx:if="{{profile.avatarUrl}}"
+        src="{{profile.avatarUrl}}"
+        mode="aspectFill"
+      />
+      <text wx:else>{{profile.initial || 'A'}}</text>
     </view>
-    <view class="mock-users">
-      <button wx:for="{{mockUsers}}" wx:key="key" data-key="{{item.key}}" disabled="{{switchingMock}}"
-        class="mock-user {{item.key === currentMockKey ? 'active' : ''}}" bindtap="selectMockUser">{{item.nickname}}</button>
-    </view>
-    <view class="mock-note">切换身份后会自动重新登录，可用于多窗口联调。</view>
+  </page-head>
+  <game-card tone="gold">
+    <view class="hero-title">今晚，谁在隐藏身份？</view>
+    <view class="muted">5–10 人在线阿瓦隆 · 房间制 · 自动规则裁定</view>
+  </game-card>
+  <view class="home-actions actions">
+    <button class="btn" bindtap="create">创建房间</button>
+    <button class="btn ghost" bindtap="join">加入房间</button>
+    <button wx:if="{{currentRoom}}" class="btn ghost" bindtap="returnRoom">
+      返回房间 {{currentRoom.roomCode}}
+    </button>
   </view>
-  <view class="rule-note">5–10 人 · 服务端裁判 · 隐藏身份</view>
+  <view class="recent">
+    <view class="section-title">最近对局</view>
+    <view wx:if="{{error}}" class="error" bindtap="load">{{error}}</view>
+    <view wx:elif="{{loading}}" class="card muted">正在加载…</view>
+    <view wx:elif="{{recent}}" class="card" bindtap="replay">
+      <view class="recent-title">
+        {{recent.playerCount}} 人局 · {{recent.roleName}} ·
+        {{recent.resultText}}
+      </view>
+      <view class="muted small">
+        {{recent.timeText}} · 房间 {{recent.roomCode}}
+      </view>
+      <view class="gold small">查看对局复盘 ›</view>
+    </view>
+    <view wx:else class="card muted">
+      还没有完成的对局，邀请好友开始第一局吧。
+    </view>
+  </view>
+  <view class="rules-entry card" bindtap="rules">
+    <view>怎么玩？</view>
+    <view class="muted small">规则说明 · 角色说明 · 任务人数表</view>
+  </view>
+  <view wx:if="{{mockLogin}}" class="card local-panel">
+    <view class="gold">仅本地 · 切换模拟用户</view>
+    <view class="chips">
+      <view
+        wx:for="{{mockUsers}}"
+        wx:key="key"
+        class="chip {{currentMockKey === item.key ? 'active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="selectMockUser"
+      >
+        {{item.nickname}}
+      </view>
+    </view>
+  </view>
+  <app-tab-bar active="index" />
 </view>

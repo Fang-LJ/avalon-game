@@ -1,0 +1,18 @@
+.profile-name {
+  font-size: 33rpx;
+  font-weight: bold;
+  margin-bottom: 8rpx;
+}
+.my-data {
+  margin-top: 100rpx;
+}
+.settings-menu {
+  margin-top: 80rpx;
+}
+.settings-menu > view {
+  padding: 8rpx 0;
+}
+.logout {
+  margin-top: 145rpx;
+  opacity: 0.75;
+}

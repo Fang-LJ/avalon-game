@@ -27,7 +27,7 @@ public class RoomService {
     public RoomView create(long userId, int maxPlayers, String nickname) {
         com.avalon.game.game.GameRuleConfig.forPlayers(maxPlayers);
         ensureNoActiveRoom(userId);
-        String name = normalizedNickname(nickname, repository.nickname(userId));
+        String name = normalizedNickname(null, repository.nickname(userId));
         for (int attempt = 0; attempt < 20; attempt++) {
             String code = String.format("%06d", random.nextInt(1_000_000));
             if (repository.waitingRoomCodeExists(code)) continue;
@@ -51,7 +51,7 @@ public class RoomService {
         ensureNoActiveRoom(userId);
         List<GamePlayerRow> players = repository.players(game.id());
         if (players.size() >= game.playerCount()) throw new BusinessException("房间已满");
-        repository.insertGamePlayer(game.id(), userId, normalizedNickname(nickname, repository.nickname(userId)), players.size() + 1);
+        repository.insertGamePlayer(game.id(), userId, normalizedNickname(null, repository.nickname(userId)), players.size() + 1);
         events.publish(game.id(), "PLAYER_JOINED");
         return get(userId, game.id());
     }

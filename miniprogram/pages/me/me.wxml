@@ -1,0 +1,43 @@
+<view class="page tabs me-page">
+  <page-head title="我的" subtitle="账号、战绩与设置" />
+  <view wx:if="{{error}}" class="error" bindtap="load">{{error}}</view>
+  <view class="card">
+    <view class="row">
+      <view class="avatar">
+        <image
+          wx:if="{{profile.avatarUrl}}"
+          src="{{profile.avatarUrl}}"
+          mode="aspectFill"
+        />
+        <text wx:else>{{profile.initial || 'A'}}</text>
+      </view>
+      <view>
+        <view class="profile-name">{{profile.nickname || '正在加载…'}}</view>
+        <view class="good small">
+          {{mockLogin ? '本地测试账号' : '微信账号已连接'}}
+        </view>
+      </view>
+    </view>
+    <view wx:if="{{profile}}" class="link small" bindtap="editNickname">
+      编辑昵称 ›
+    </view>
+  </view>
+  <view class="card my-data">
+    <view>我的数据</view>
+    <view class="muted">
+      总对局 {{stats ? stats.totalGames : 0}} · 胜率 {{stats ? stats.winRate :
+      0}}%
+    </view>
+    <view class="muted small">常用角色：{{commonRoles}}</view>
+  </view>
+  <view class="card settings-menu">
+    <view bindtap="history">历史战绩 ›</view>
+    <view bindtap="rules">规则与角色说明 ›</view>
+    <view bindtap="legal">用户协议与隐私政策 ›</view>
+    <view bindtap="about">关于阿瓦隆 ›</view>
+  </view>
+  <view class="logout actions">
+    <button class="btn" bindtap="logout">退出登录</button>
+  </view>
+  <app-tab-bar active="me" />
+</view>

@@ -1,0 +1,15 @@
+.history-total {
+  font-size: 38rpx;
+  font-weight: 700;
+}
+.history-label {
+  margin-top: 45rpx;
+  margin-bottom: 28rpx;
+}
+.history-game {
+  margin-bottom: 48rpx;
+}
+.history-title {
+  font-size: 27rpx;
+  font-weight: 700;
+}

@@ -1,0 +1,36 @@
+:host {
+  display: block;
+}
+.track {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+.dot {
+  width: 58rpx;
+  height: 58rpx;
+  border-radius: 50%;
+  background: var(--soft);
+  text-align: center;
+  line-height: 58rpx;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+.SUCCESS {
+  background: var(--good);
+  color: var(--bg);
+}
+.FAILED {
+  background: var(--evil);
+}
+.CURRENT {
+  background: var(--gold);
+  color: var(--bg);
+}
+.score {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  font-size: 19rpx;
+  white-space: nowrap;
+}

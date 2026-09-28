@@ -57,6 +57,27 @@ public class AvalonRepository {
                 provider, providerUserId, nickname);
     }
     public String nickname(long userId) { return jdbc.queryForObject("select nickname from t_avalon_user where id=?", String.class, userId); }
+    public Optional<UserRow> user(long userId) {
+        return jdbc.query("select * from t_avalon_user where id=?", USER, userId).stream().findFirst();
+    }
+    public void updateNickname(long userId, String nickname) {
+        jdbc.update("update t_avalon_user set nickname=?,updated_at=now() where id=?", nickname, userId);
+    }
+    public List<ProposalRow> proposals(long gameId) {
+        return jdbc.query("select * from t_avalon_proposal where game_id=? order by mission_no,proposal_no", PROPOSAL, gameId);
+    }
+    /** Secrets: only GameHistoryService.replay calls these after authorization. */
+    public List<MissionActionRow> missionActions(long missionId) {
+        return jdbc.query("select * from t_avalon_mission_action where mission_id=? order by game_player_id",
+                (rs,n) -> new MissionActionRow(rs.getLong("id"), rs.getLong("mission_id"),
+                        rs.getLong("game_player_id"), MissionChoice.valueOf(rs.getString("action_choice"))), missionId);
+    }
+    public List<LadyActionRow> ladyActions(long gameId) {
+        return jdbc.query("select * from t_avalon_lady_action where game_id=? order by sequence_no",
+                (rs,n) -> new LadyActionRow(rs.getLong("id"), rs.getLong("game_id"), rs.getInt("sequence_no"),
+                        rs.getLong("holder_game_player_id"), rs.getLong("target_game_player_id"),
+                        Alignment.valueOf(rs.getString("result_alignment"))), gameId);
+    }
 
     public boolean waitingRoomCodeExists(String code) {
         return Boolean.TRUE.equals(jdbc.queryForObject("select count(*)>0 from t_avalon_game where room_code=? and status='WAITING'", Boolean.class, code));
