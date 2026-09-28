@@ -4,6 +4,10 @@
 backend/target/
 miniprogram/node_modules/
 miniprogram/project.private.config.json
+minigame/node_modules/
+minigame/project.private.config.json
+minigame/config.local.js
+minigame/qa-output/
 .env
 .env.*
 **/.env

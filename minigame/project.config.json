@@ -1,0 +1,14 @@
+{
+  "appid": "wx97dc3f00b0615728",
+  "projectname": "avalon-minigame",
+  "compileType": "game",
+  "libVersion": "3.8.10",
+  "setting": { "es6": true, "minified": true, "urlCheck": false },
+  "packOptions": {
+    "ignore": [
+      { "type": "folder", "value": "tests" },
+      { "type": "folder", "value": "scripts" },
+      { "type": "folder", "value": "qa-output" }
+    ]
+  }
+}
