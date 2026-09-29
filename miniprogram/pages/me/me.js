@@ -30,20 +30,8 @@ Page({
       this.setData({ error: '个人信息加载失败，点击重试' });
     }
   },
-  editNickname() {
-    wx.showModal({
-      title: '编辑昵称',
-      editable: true,
-      placeholderText: '1–32 个字符',
-      content: this.data.profile.nickname,
-      success: (r) => {
-        if (r.confirm)
-          api
-            .updateProfile(r.content)
-            .then(() => this.load())
-            .catch(() => {});
-      },
-    });
+  editProfile() {
+    wx.navigateTo({ url: '/pages/profile/profile?mode=edit' });
   },
   history() {
     wx.reLaunch({ url: '/pages/history/history' });

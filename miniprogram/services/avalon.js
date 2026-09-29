@@ -1,11 +1,11 @@
 const { request } = require('../utils/request');
 module.exports = {
   profile: () => request({ url: '/api/avalon/me/profile' }),
-  updateProfile: (nickname) =>
+  updateProfile: (data) =>
     request({
       url: '/api/avalon/me/profile',
       method: 'PUT',
-      data: { nickname },
+      data,
     }),
   history: (page = 1, size = 10, alignment = '') =>
     request({

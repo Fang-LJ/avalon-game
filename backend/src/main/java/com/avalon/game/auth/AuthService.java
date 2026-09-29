@@ -29,16 +29,19 @@ public class AuthService {
     public LoginResult login(LoginRequest request) {
         ResolvedIdentity identity = resolver.resolve(request == null ? null : request.code(), request == null ? null : request.mockOpenid());
         var existing = repository.user(identity.provider(), identity.providerUserId());
-        long userId;
+        boolean isNewUser = existing.isEmpty();
+        AvalonRepository.UserRow user;
         if (existing.isEmpty()) {
             String nickname = request != null && StringUtils.hasText(request.nickname()) ? request.nickname().trim() : "微信玩家";
-            userId = repository.insertUser(identity.provider(), identity.providerUserId(), nickname);
-        } else userId = existing.get().id();
-        String nickname = repository.nickname(userId);
-        return new LoginResult(jwtService.create(userId), userId, nickname);
+            long userId = repository.insertUser(identity.provider(), identity.providerUserId(), nickname);
+            user = new AvalonRepository.UserRow(userId, identity.provider(), identity.providerUserId(), nickname, null);
+        } else user = existing.get();
+        return new LoginResult(jwtService.create(user.id()), user.id(), user.nickname(), user.avatarUrl(), isNewUser,
+                StringUtils.hasText(user.nickname()) && StringUtils.hasText(user.avatarUrl()));
     }
     public record LoginRequest(String code, String mockOpenid, String nickname) {}
-    public record LoginResult(String token, Long userId, String nickname) {}
+    public record LoginResult(String token, Long userId, String nickname, String avatarUrl,
+                              boolean isNewUser, boolean profileComplete) {}
 }
 
 interface WechatIdentityResolver { ResolvedIdentity resolve(String code, String mockOpenid); }

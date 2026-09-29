@@ -21,11 +21,18 @@ class ProductionConfigurationValidatorTest {
         COMPLETE.put("AVALON_JWT_SECRET", "test-only-production-secret-with-more-than-32-bytes");
         COMPLETE.put("AVALON_WECHAT_APP_ID", "test-app-id");
         COMPLETE.put("AVALON_WECHAT_APP_SECRET", "test-app-secret");
+        COMPLETE.put("AVALON_MINIO_ENDPOINT", "http://minio:9000");
+        COMPLETE.put("AVALON_MINIO_ACCESS_KEY", "test-access-key");
+        COMPLETE.put("AVALON_MINIO_SECRET_KEY", "test-secret-key");
+        COMPLETE.put("AVALON_MINIO_BUCKET", "playmate-files");
+        COMPLETE.put("AVALON_MINIO_PUBLIC_BASE_URL", "https://api.invalid/minio");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"AVALON_DB_HOST", "AVALON_DB_PORT", "AVALON_DB_NAME", "AVALON_DB_USERNAME",
-            "AVALON_DB_PASSWORD", "AVALON_JWT_SECRET", "AVALON_WECHAT_APP_ID", "AVALON_WECHAT_APP_SECRET"})
+            "AVALON_DB_PASSWORD", "AVALON_JWT_SECRET", "AVALON_WECHAT_APP_ID", "AVALON_WECHAT_APP_SECRET",
+            "AVALON_MINIO_ENDPOINT", "AVALON_MINIO_ACCESS_KEY", "AVALON_MINIO_SECRET_KEY", "AVALON_MINIO_BUCKET",
+            "AVALON_MINIO_PUBLIC_BASE_URL"})
     void productionFailsClosedWhenAnyRequiredConfigurationIsMissing(String missingName) {
         IllegalStateException error = assertThrows(IllegalStateException.class,
                 () -> new ProductionConfigurationValidator(environmentWithout(missingName)));

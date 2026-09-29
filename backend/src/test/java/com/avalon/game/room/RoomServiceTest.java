@@ -3,6 +3,7 @@ package com.avalon.game.room;
 import com.avalon.game.game.AvalonRepository;
 import com.avalon.game.game.AvalonRepository.GamePlayerRow;
 import com.avalon.game.game.AvalonRepository.GameRow;
+import com.avalon.game.game.AvalonRepository.RoomPlayerViewRow;
 import com.avalon.game.realtime.RoomEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,6 +76,22 @@ class RoomServiceTest {
 
         assertEquals(2, result.roomId());
         assertEquals(2, result.currentGameId());
+    }
+
+    @Test void roomViewReturnsAvatarFromJoinedPlayerQuery() {
+        GameRow waiting = game("WAITING",100);
+        GamePlayerRow me = player(10,100,1);
+        when(repository.game(1,false)).thenReturn(Optional.of(waiting));
+        when(repository.player(1,100)).thenReturn(Optional.of(me));
+        when(repository.roomPlayers(1)).thenReturn(List.of(
+                new RoomPlayerViewRow(10,100,1,"P1","https://avatar.invalid/1.png",true),
+                new RoomPlayerViewRow(11,101,2,"P2",null,true)));
+
+        RoomService.RoomView result=service.get(100,1);
+
+        assertEquals("https://avatar.invalid/1.png",result.players().getFirst().avatarUrl());
+        assertNull(result.players().get(1).avatarUrl());
+        verify(repository).roomPlayers(1);
     }
 
     @Test void ownerLeavingFinishedGameTransfersOwnershipWithoutReseating() {

@@ -23,15 +23,35 @@ class MeServiceTest {
     @Test void profileContainsOnlyPublicAccountFields() throws Exception {
         var result=service.profile(101);
         assertEquals(101,result.userId());assertEquals("昵称",result.nickname());assertNotNull(result.avatarUrl());
+        assertTrue(result.profileComplete());
         String json=new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(result);
+        assertTrue(json.contains("\"profileComplete\":true"));
         assertFalse(json.contains("openid"));assertFalse(json.contains("provider"));
     }
     @Test void missingAccountRequiresLogin() { assertThrows(BusinessException.class,()->service.profile(999)); }
-    @Test void nicknameUpdateDoesNotRewriteHistoricalSnapshots() {
-        service.updateNickname(101,"  新昵称  ");verify(repository).updateNickname(101,"新昵称");verifyNoInteractions(jdbc);
+    @Test void nicknameAndAvatarUpdateTogether() {
+        when(repository.user(101)).thenReturn(
+                Optional.of(new AvalonRepository.UserRow(101,"WECHAT","private-openid","旧昵称","https://avatar.invalid/old.png")),
+                Optional.of(new AvalonRepository.UserRow(101,"WECHAT","private-openid","新昵称","https://avatar.invalid/new.png")));
+        var result=service.updateProfile(101,new MeService.ProfileUpdateRequest("  新昵称  "," https://avatar.invalid/new.png "));
+        verify(repository).updateNickname(101,"新昵称");verify(repository).updateAvatar(101,"https://avatar.invalid/new.png");
+        assertEquals("新昵称",result.nickname());assertEquals("https://avatar.invalid/new.png",result.avatarUrl());verifyNoInteractions(jdbc);
+    }
+    @Test void nicknameOnlyUpdateKeepsAvatarUntouched() {
+        service.updateProfile(101,new MeService.ProfileUpdateRequest("新昵称",null));
+        verify(repository).updateNickname(101,"新昵称");verify(repository,never()).updateAvatar(anyLong(),anyString());
+    }
+    @Test void avatarOnlyUpdateKeepsNicknameUntouched() {
+        service.updateProfile(101,new MeService.ProfileUpdateRequest(null,"https://avatar.invalid/new.png"));
+        verify(repository).updateAvatar(101,"https://avatar.invalid/new.png");verify(repository,never()).updateNickname(anyLong(),anyString());
+    }
+    @Test void oldProfileWithoutAvatarIsIncomplete() {
+        when(repository.user(102)).thenReturn(Optional.of(new AvalonRepository.UserRow(102,"WECHAT","old","微信玩家",null)));
+        assertFalse(service.profile(102).profileComplete());
     }
     @Test void invalidNicknameRejected() {
-        for(String name:List.of(""," ","a".repeat(33),"bad\nname"))assertThrows(BusinessException.class,()->service.updateNickname(101,name));
+        for(String name:List.of(""," ","a".repeat(33),"bad\nname"))assertThrows(BusinessException.class,
+                ()->service.updateProfile(101,new MeService.ProfileUpdateRequest(name,null)));
         verify(repository,never()).updateNickname(anyLong(),anyString());
     }
     @Test void invalidPaginationOrAlignmentRejectedBeforeSql() {

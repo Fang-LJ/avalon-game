@@ -1,6 +1,10 @@
 spring:
   application:
     name: avalon-game-server
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://${AVALON_DB_HOST:127.0.0.1}:${AVALON_DB_PORT:13306}/${AVALON_DB_NAME:playmate_space}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
@@ -15,3 +19,9 @@ avalon:
   wechat:
     app-id: ${AVALON_WECHAT_APP_ID:}
     app-secret: ${AVALON_WECHAT_APP_SECRET:}
+  minio:
+    endpoint: ${AVALON_MINIO_ENDPOINT:http://127.0.0.1:19000}
+    access-key: ${AVALON_MINIO_ACCESS_KEY:playmate_minio}
+    secret-key: ${AVALON_MINIO_SECRET_KEY:playmate_minio_dev_password}
+    bucket: ${AVALON_MINIO_BUCKET:playmate-files}
+    public-base-url: ${AVALON_MINIO_PUBLIC_BASE_URL:http://127.0.0.1:19000}

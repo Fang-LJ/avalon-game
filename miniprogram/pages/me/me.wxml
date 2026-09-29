@@ -18,8 +18,8 @@
         </view>
       </view>
     </view>
-    <view wx:if="{{profile}}" class="link small" bindtap="editNickname">
-      编辑昵称 ›
+    <view wx:if="{{profile}}" class="link small" bindtap="editProfile">
+      编辑头像与昵称 ›
     </view>
   </view>
   <view class="card my-data">

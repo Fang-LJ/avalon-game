@@ -6,6 +6,7 @@ import com.avalon.game.game.GameTypes.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,15 +23,35 @@ public class MeService {
 
     public Profile profile(long userId) {
         var user = repository.user(userId).orElseThrow(() -> new BusinessException("UNAUTHORIZED", "请重新登录"));
-        return new Profile(user.id(), user.nickname(), user.avatarUrl());
+        return new Profile(user.id(), user.nickname(), user.avatarUrl(), profileComplete(user.nickname(), user.avatarUrl()));
     }
     @Transactional
-    public Profile updateNickname(long userId, String nickname) {
+    public Profile updateProfile(long userId, ProfileUpdateRequest request) {
         profile(userId);
-        if (nickname == null || nickname.isBlank() || nickname.trim().length() > 32 || nickname.codePoints().anyMatch(Character::isISOControl))
-            throw new BusinessException("PARAM_ERROR", "昵称须为 1–32 个字符");
-        repository.updateNickname(userId, nickname.trim());
+        if (request == null || request.nickname() == null && request.avatarUrl() == null)
+            throw new BusinessException("PARAM_ERROR", "请至少更新一项资料");
+        if (request.nickname() != null) repository.updateNickname(userId, validNickname(request.nickname()));
+        if (request.avatarUrl() != null) repository.updateAvatar(userId, validAvatarUrl(request.avatarUrl()));
         return profile(userId);
+    }
+
+    private String validNickname(String nickname) {
+        String value = nickname.trim();
+        if (!StringUtils.hasText(value) || value.length() > 32 || value.codePoints().anyMatch(Character::isISOControl))
+            throw new BusinessException("PARAM_ERROR", "昵称须为 1–32 个字符");
+        return value;
+    }
+
+    private String validAvatarUrl(String avatarUrl) {
+        String value = avatarUrl.trim();
+        if (!StringUtils.hasText(value) || value.length() > 512 || value.codePoints().anyMatch(Character::isISOControl)
+                || !(value.startsWith("https://") || value.startsWith("http://")))
+            throw new BusinessException("PARAM_ERROR", "头像地址不正确");
+        return value;
+    }
+
+    private boolean profileComplete(String nickname, String avatarUrl) {
+        return StringUtils.hasText(nickname) && StringUtils.hasText(avatarUrl);
     }
 
     public GamesPage games(long userId, int page, int size, String alignment) {
@@ -71,7 +92,8 @@ public class MeService {
         return new Stats(total, wins, total - wins, total == 0 ? 0 : Math.round(wins * 1000.0 / total) / 10.0,
                 good, goodWins, total - good, wins - goodWins, counts);
     }
-    public record Profile(long userId, String nickname, String avatarUrl) {}
+    public record Profile(long userId, String nickname, String avatarUrl, boolean profileComplete) {}
+    public record ProfileUpdateRequest(String nickname, String avatarUrl) {}
     public record HistoryGame(long gameId, String roomCode, int playerCount, Role roleCode, String roleName,
                               Alignment alignment, Winner winner, boolean won, String finishReason,
                               LocalDateTime startedAt, LocalDateTime finishedAt) {}

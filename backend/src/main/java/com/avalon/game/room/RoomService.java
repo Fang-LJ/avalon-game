@@ -103,8 +103,8 @@ public class RoomService {
         }
         GameRow selectedGame = game;
         GamePlayerRow me = requirePlayer(selectedGame.id(), userId);
-        List<PlayerView> players = repository.players(selectedGame.id()).stream()
-                .map(p -> new PlayerView(p.id(), p.userId() == userId, p.nickname(), p.seatNo(),
+        List<PlayerView> players = repository.roomPlayers(selectedGame.id()).stream()
+                .map(p -> new PlayerView(p.gamePlayerId(), p.userId() == userId, p.nickname(), p.avatarUrl(), p.seatNo(),
                         p.userId() == selectedGame.ownerUserId(), p.online())).toList();
         Long currentGameId = "WAITING".equals(selectedGame.status()) ? null : selectedGame.id();
         return new RoomView(selectedGame.id(), selectedGame.code(), selectedGame.playerCount(), selectedGame.status(), currentGameId,
@@ -128,7 +128,8 @@ public class RoomService {
 
     public record CreateRequest(int maxPlayers, String nickname) {}
     public record JoinRequest(String roomCode, String nickname) {}
-    public record PlayerView(long playerId, boolean me, String nickname, int seatNo, boolean host, boolean online) {}
+    public record PlayerView(long playerId, boolean me, String nickname, String avatarUrl,
+                             int seatNo, boolean host, boolean online) {}
     public record RoomView(long roomId, String roomCode, int maxPlayers, String status, Long currentGameId, boolean host,
                            long myPlayerId, int currentPlayers, List<PlayerView> players, boolean canStart) {}
 }

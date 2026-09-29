@@ -13,15 +13,21 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class QueryAuthorizationTest {
-    MockMvc mvc; MeService me; GameHistoryService history; JwtService jwt;
+    MockMvc mvc; MeService me; AvatarService avatars; GameHistoryService history; JwtService jwt;
     @BeforeEach void setup() {
-        me=mock(MeService.class);history=mock(GameHistoryService.class);jwt=mock(JwtService.class);
+        me=mock(MeService.class);avatars=mock(AvatarService.class);history=mock(GameHistoryService.class);jwt=mock(JwtService.class);
         when(jwt.parse("valid")).thenReturn(101L);
-        mvc=MockMvcBuilders.standaloneSetup(new MeController(me),new GameHistoryController(history))
+        mvc=MockMvcBuilders.standaloneSetup(new MeController(me,avatars),new GameHistoryController(history))
                 .setControllerAdvice(new GlobalExceptionHandler()).addInterceptors(new AuthInterceptor(jwt)).build();
+    }
+    @Test void avatarUploadRequiresLogin() throws Exception {
+        mvc.perform(multipart("/api/avalon/me/avatar").file("file",new byte[]{1}))
+                .andExpect(status().isUnauthorized());
+        verifyNoInteractions(avatars);
     }
     @ParameterizedTest @ValueSource(strings={"/api/avalon/me/profile","/api/avalon/me/games","/api/avalon/me/stats","/api/avalon/game/1/timeline","/api/avalon/game/1/replay"})
     void everyReadRequiresLogin(String url) throws Exception {

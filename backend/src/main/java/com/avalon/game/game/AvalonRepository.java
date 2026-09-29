@@ -63,6 +63,9 @@ public class AvalonRepository {
     public void updateNickname(long userId, String nickname) {
         jdbc.update("update t_avalon_user set nickname=?,updated_at=now() where id=?", nickname, userId);
     }
+    public void updateAvatar(long userId, String avatarUrl) {
+        jdbc.update("update t_avalon_user set avatar_url=?,updated_at=now() where id=?", avatarUrl, userId);
+    }
     public List<ProposalRow> proposals(long gameId) {
         return jdbc.query("select * from t_avalon_proposal where game_id=? order by mission_no,proposal_no", PROPOSAL, gameId);
     }
@@ -105,6 +108,14 @@ public class AvalonRepository {
     }
     public List<GamePlayerRow> players(long gameId) {
         return jdbc.query("select * from t_avalon_game_player where game_id=? and left_at is null order by seat_no", GAME_PLAYER, gameId);
+    }
+    public List<RoomPlayerViewRow> roomPlayers(long gameId) {
+        return jdbc.query("select gp.id game_player_id,gp.user_id,gp.seat_no,gp.nickname_snapshot,u.avatar_url,gp.is_online"
+                        + " from t_avalon_game_player gp join t_avalon_user u on u.id=gp.user_id"
+                        + " where gp.game_id=? and gp.left_at is null order by gp.seat_no",
+                (rs,n) -> new RoomPlayerViewRow(rs.getLong("game_player_id"), rs.getLong("user_id"),
+                        rs.getInt("seat_no"), rs.getString("nickname_snapshot"), rs.getString("avatar_url"),
+                        rs.getBoolean("is_online")), gameId);
     }
     public List<GamePlayerRow> gamePlayers(long gameId) {
         return jdbc.query("select * from t_avalon_game_player where game_id=? order by seat_no", GAME_PLAYER, gameId);
@@ -250,6 +261,8 @@ public class AvalonRepository {
                           LocalDateTime finishedAt) {}
     public record GamePlayerRow(long id, long gameId, long userId, int seatNo, String nickname, Role role,
                                 Alignment alignment, boolean confirmed, boolean online, LocalDateTime leftAt) {}
+    public record RoomPlayerViewRow(long gamePlayerId, long userId, int seatNo, String nickname,
+                                    String avatarUrl, boolean online) {}
     public record ProposalRow(long id, long gameId, int missionNo, int proposalNo, long leaderGamePlayerId,
                               List<Long> teamPlayerIds, String status, int approveCount, int rejectCount) {}
     public record VoteRow(long id, long proposalId, long gamePlayerId, VoteChoice choice) {}

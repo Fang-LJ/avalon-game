@@ -13,7 +13,9 @@ public class ProductionConfigurationValidator {
     static final String LOCAL_JWT_SECRET = "avalon-local-dev-jwt-secret-change-me-at-least-32-bytes";
     private static final List<String> REQUIRED = List.of(
             "AVALON_DB_HOST", "AVALON_DB_PORT", "AVALON_DB_NAME", "AVALON_DB_USERNAME", "AVALON_DB_PASSWORD",
-            "AVALON_JWT_SECRET", "AVALON_WECHAT_APP_ID", "AVALON_WECHAT_APP_SECRET"
+            "AVALON_JWT_SECRET", "AVALON_WECHAT_APP_ID", "AVALON_WECHAT_APP_SECRET",
+            "AVALON_MINIO_ENDPOINT", "AVALON_MINIO_ACCESS_KEY", "AVALON_MINIO_SECRET_KEY",
+            "AVALON_MINIO_BUCKET", "AVALON_MINIO_PUBLIC_BASE_URL"
     );
     private final Environment environment;
 

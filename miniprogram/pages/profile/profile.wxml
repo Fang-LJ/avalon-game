@@ -1,0 +1,47 @@
+<view class="page profile-page">
+  <page-head
+    back="{{mode === 'edit'}}"
+    title="完善个人资料"
+    subtitle="设置头像和昵称，让朋友更容易认出你。"
+  />
+  <view wx:if="{{loading}}" class="card empty">正在加载资料…</view>
+  <view wx:else class="card profile-card">
+    <button
+      class="avatar-button"
+      open-type="chooseAvatar"
+      bindchooseavatar="handleChooseAvatar"
+      disabled="{{uploading || saving}}"
+    >
+      <view class="profile-avatar">
+        <image wx:if="{{avatarUrl}}" src="{{avatarUrl}}" mode="aspectFill" />
+        <text wx:else>{{initial || 'A'}}</text>
+      </view>
+      <view class="gold small">{{uploading ? '上传中' : '选择微信头像'}}</view>
+    </button>
+    <view class="album-link link small" bindtap="chooseFromAlbum">从相册选择</view>
+    <view class="profile-field">
+      <view class="input-label">昵称</view>
+      <input
+        class="input"
+        type="nickname"
+        maxlength="32"
+        value="{{nickname}}"
+        placeholder="选择或填写昵称"
+        placeholder-class="input-placeholder"
+        bindinput="nicknameInput"
+        bindblur="nicknameInput"
+      />
+    </view>
+  </view>
+  <view wx:if="{{error}}" class="error center">{{error}}</view>
+  <view class="profile-actions actions">
+    <button
+      class="btn"
+      loading="{{saving}}"
+      disabled="{{!canSave || uploading || saving}}"
+      bindtap="save"
+    >
+      {{uploading ? '上传中' : '保存并开始游戏'}}
+    </button>
+  </view>
+</view>
