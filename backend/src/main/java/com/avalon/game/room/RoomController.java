@@ -19,6 +19,13 @@ public class RoomController {
     @PostMapping("/{roomId}/leave") public ApiResponse<Void> leave(@PathVariable long roomId) {
         service.leave(LoginUserContext.require(), roomId); return ApiResponse.success(null);
     }
+    @PostMapping("/{roomId}/seat") public ApiResponse<RoomService.RoomView> seat(
+            @PathVariable long roomId, @RequestBody RoomService.SeatRequest request) {
+        return ApiResponse.success(service.seat(LoginUserContext.require(), roomId, request.seatNo()));
+    }
+    @PostMapping("/{roomId}/stand") public ApiResponse<RoomService.RoomView> stand(@PathVariable long roomId) {
+        return ApiResponse.success(service.stand(LoginUserContext.require(), roomId));
+    }
     @GetMapping("/current") public ApiResponse<RoomService.RoomView> current() { return ApiResponse.success(service.current(LoginUserContext.require())); }
     @GetMapping("/{roomId}") public ApiResponse<RoomService.RoomView> get(@PathVariable long roomId) { return ApiResponse.success(service.get(LoginUserContext.require(), roomId)); }
 }

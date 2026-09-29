@@ -26,10 +26,20 @@ class DatabaseSchemaContractTest {
         assertTrue(sql.contains("UNIQUE KEY uk_avalon_lady_target (game_id, target_game_player_id)"));
         assertTrue(sql.contains("team_player_ids JSON NOT NULL"));
         assertTrue(sql.contains("assassination_target_game_player_id BIGINT NULL"));
+        assertTrue(sql.contains("seat_no TINYINT NULL"));
+        assertTrue(sql.contains("UNIQUE KEY uk_avalon_game_seat (game_id, seat_no)"));
         assertFalse(sql.contains("CREATE TABLE IF NOT EXISTS t_avalon_room"));
         assertFalse(sql.contains("CREATE TABLE IF NOT EXISTS t_avalon_player"));
         assertFalse(sql.contains("CREATE TABLE IF NOT EXISTS t_avalon_user_identity"));
         assertFalse(sql.matches("(?s).*CREATE TABLE IF NOT EXISTS (?!t_avalon_).*"));
+    }
+
+    @Test void seatMigrationIsNonDestructiveAndOnlyMakesSeatNullable() throws Exception {
+        String sql=Files.readString(Path.of("../docs/sql/004_seat_system.sql"));
+        assertTrue(sql.contains("MODIFY COLUMN seat_no TINYINT NULL"));
+        assertFalse(sql.toUpperCase().contains("DROP TABLE"));
+        assertFalse(sql.toUpperCase().contains("DELETE FROM"));
+        assertFalse(sql.toUpperCase().contains("TRUNCATE"));
     }
 
     @Test void destructiveV2MigrationDropsLegacyTablesAndRecreatesExactlyV2() throws Exception {
@@ -60,5 +70,6 @@ class DatabaseSchemaContractTest {
         assertTrue(repository.contains("left_at=coalesce(left_at,now())"));
         assertTrue(repository.contains("gp.left_at is null and g.status in ('WAITING','PLAYING','FINISHED')"));
         assertTrue(repository.contains("select * from t_avalon_game_player where game_id=? order by seat_no"));
+        assertTrue(repository.contains("(Integer) rs.getObject(\"seat_no\")"));
     }
 }

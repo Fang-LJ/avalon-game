@@ -36,6 +36,7 @@ public class GameService {
         if (!"WAITING".equals(game.status())) throw new BusinessException("游戏已经开始");
         List<GamePlayerRow> players = repository.players(gameId);
         if (players.size() != game.playerCount()) throw new BusinessException("人数未满，暂时不能开始");
+        requireCompleteSeating(players, game.playerCount());
         initializeGame(game, players);
         events.publish(gameId, "GAME_STARTED");
         return state(userId, gameId);
@@ -44,11 +45,11 @@ public class GameService {
     private void initializeGame(GameRow game, List<GamePlayerRow> players) {
         GameRuleConfig config = GameRuleConfig.forPlayers(players.size());
         int leaderSeat = random.nextInt(players.size()) + 1;
-        long leaderId = players.stream().filter(p -> p.seatNo() == leaderSeat).findFirst().orElseThrow().id();
+        long leaderId = players.stream().filter(p -> Objects.equals(p.seatNo(), leaderSeat)).findFirst().orElseThrow().id();
         Long ladyHolderId = null;
         if (config.ladyOfLake()) {
             int holderSeat = GameRulesEngine.initialLadyHolderSeat(leaderSeat, players.size());
-            ladyHolderId = players.stream().filter(p -> p.seatNo() == holderSeat).findFirst().orElseThrow().id();
+            ladyHolderId = players.stream().filter(p -> Objects.equals(p.seatNo(), holderSeat)).findFirst().orElseThrow().id();
         }
         List<Role> roles = GameRulesEngine.shuffledRoles(config, random);
         for (int i = 0; i < players.size(); i++) repository.assignRole(game.id(), players.get(i).id(), roles.get(i));
@@ -60,7 +61,7 @@ public class GameService {
         Context context = context(userId, gameId, false);
         GamePlayerRow mine = context.player;
         List<RoleVisibilityService.RolePlayer> all = repository.gamePlayers(gameId).stream()
-                .map(gp -> new RoleVisibilityService.RolePlayer(gp.id(), gp.seatNo(), gp.nickname(), gp.role())).toList();
+                .map(gp -> new RoleVisibilityService.RolePlayer(gp.id(), requireSeat(gp), gp.nickname(), gp.role())).toList();
         String instruction = switch (mine.role()) {
             case MERLIN -> "保护好自己的身份，帮助正义阵营找出邪恶玩家。";
             case PERCIVAL -> "你看到的是梅林与莫甘娜，但无法分辨他们。";
@@ -202,7 +203,7 @@ public class GameService {
             events.publish(gameId, "ROUND_CHANGED");
         }
         events.publish(gameId, "LADY_OF_LAKE_COMPLETED");
-        return new LadyInspectionResult(target.id(), target.seatNo(), target.nickname(), target.alignment().name());
+        return new LadyInspectionResult(target.id(), requireSeat(target), target.nickname(), target.alignment().name());
     }
 
     @Transactional
@@ -220,7 +221,7 @@ public class GameService {
     }
 
     @Transactional
-    public GameState restart(long userId, long gameId) {
+    public RoomService.RoomView restart(long userId, long gameId) {
         Context c = context(userId, gameId, true);
         GameActionPolicy.requirePhase(c.game.phase(), Phase.FINISHED);
         if (c.game.ownerUserId() != userId) throw new BusinessException("FORBIDDEN", "只有房主可以再来一局");
@@ -228,12 +229,10 @@ public class GameService {
         GameActionPolicy.requireRestartPlayerCount(oldPlayers.size(), c.game.playerCount());
         long newGameId = repository.insertWaitingGame(c.game.code(), c.game.ownerUserId(), c.game.playerCount());
         for (GamePlayerRow old : oldPlayers) repository.insertGamePlayer(newGameId, old.userId(), old.nickname(), old.seatNo());
-        GameRow newGame = repository.game(newGameId, true).orElseThrow();
-        initializeGame(newGame, repository.players(newGameId));
         repository.archiveGamePlayers(gameId);
-        events.publish(gameId, "GAME_RESTARTED");
-        events.publish(newGameId, "GAME_STARTED");
-        return state(userId, newGameId);
+        events.publish(gameId, "REMATCH_CREATED");
+        events.publish(newGameId, "REMATCH_CREATED");
+        return roomService.get(userId, newGameId);
     }
 
     @Transactional(readOnly = true)
@@ -254,7 +253,7 @@ public class GameService {
         TeamVoteResult latestVoteResult = latestResolved == null ? null : new TeamVoteResult(latestResolved.missionNo(),
                 latestResolved.proposalNo(), "APPROVED".equals(latestResolved.status()), repository.votes(latestResolved.id()));
         List<PublicIdentity> identities = c.game.phase() == Phase.FINISHED ? repository.gamePlayers(gameId).stream()
-                .map(gp -> new PublicIdentity(gp.id(), gp.seatNo(), gp.nickname(), gp.role().label(), gp.alignment().name()))
+                .map(gp -> new PublicIdentity(gp.id(), requireSeat(gp), gp.nickname(), gp.role().label(), gp.alignment().name()))
                 .sorted(Comparator.comparingInt(PublicIdentity::seatNo)).toList() : List.of();
         MissionResult result = latestMission == null ? null : new MissionResult(latestMission.missionNo(),
                 latestMission.successCount(), latestMission.failCount(), latestMission.status());
@@ -269,12 +268,12 @@ public class GameService {
                     .filter(id -> id != c.player.id() && !previousHolders.contains(id)).toList();
         }
         return new GameState(gameId, gameId, c.game.phase().name(), c.game.missionNo(), c.game.proposalNo(), c.game.rejections(),
-                c.game.goodScore(), c.game.evilScore(), leader.id(), leader.seatNo(), leader.nickname(),
+                c.game.goodScore(), c.game.evilScore(), leader.id(), requireSeat(leader), leader.nickname(),
                 c.game.missionNo() <= 5 ? config.teamSize(c.game.missionNo()) : 0, config.rejectedTeamsToEvilWin(),
                 repository.confirmedCount(gameId), players.size(), team, voteCount, votes, hasVoted, hasSubmittedMission,
                 team.contains(c.player.id()), latestVoteResult, c.player.alignment() == Alignment.EVIL,
                 c.player.role() == Role.ASSASSIN, result, config.ladyOfLake(), c.game.ladyHolderGamePlayerId(),
-                ladyHolder == null ? null : ladyHolder.seatNo(), ladyHolder == null ? null : ladyHolder.nickname(),
+                ladyHolder == null ? null : requireSeat(ladyHolder), ladyHolder == null ? null : ladyHolder.nickname(),
                 isLadyHolder, ladyUsedCount, ladyEligibleTargetIds,
                 c.game.winner() == null ? null : c.game.winner().name(), identities);
     }
@@ -293,8 +292,21 @@ public class GameService {
     private long nextLeader(GameRow game) {
         List<GamePlayerRow> players = repository.players(game.id());
         GamePlayerRow leader = repository.gamePlayerById(game.leaderGamePlayerId()).orElseThrow();
-        int nextSeat = GameRulesEngine.nextSeat(leader.seatNo(), players.size());
-        return players.stream().filter(p -> p.seatNo() == nextSeat).findFirst().orElseThrow().id();
+        int nextSeat = GameRulesEngine.nextSeat(requireSeat(leader), game.playerCount());
+        return players.stream().filter(p -> Objects.equals(p.seatNo(), nextSeat)).findFirst()
+                .orElseThrow(() -> new IllegalStateException("正式游戏座位不完整")).id();
+    }
+
+    private void requireCompleteSeating(List<GamePlayerRow> players, int maxPlayers) {
+        Set<Integer> seats = players.stream().map(GamePlayerRow::seatNo).filter(Objects::nonNull).collect(Collectors.toSet());
+        boolean complete = seats.size() == maxPlayers
+                && seats.containsAll(java.util.stream.IntStream.rangeClosed(1, maxPlayers).boxed().toList());
+        if (!complete) throw new BusinessException("SEATS_INCOMPLETE", "所有玩家入座后才能开始游戏");
+    }
+
+    private int requireSeat(GamePlayerRow player) {
+        if (player.seatNo() == null) throw new IllegalStateException("正式游戏玩家缺少座位");
+        return player.seatNo();
     }
 
     private record Context(GameRow game, GamePlayerRow player) {}

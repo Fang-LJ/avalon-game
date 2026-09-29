@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS t_avalon_game_player (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   game_id BIGINT NOT NULL,
   user_id BIGINT NOT NULL,
-  seat_no TINYINT NOT NULL,
+  seat_no TINYINT NULL,
   nickname_snapshot VARCHAR(64) NOT NULL,
   role_code VARCHAR(32) NULL,
   alignment VARCHAR(16) NULL,

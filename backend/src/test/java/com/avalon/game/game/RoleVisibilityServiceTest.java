@@ -1,6 +1,7 @@
 package com.avalon.game.game;
 
 import com.avalon.game.game.GameTypes.Role;
+import com.avalon.game.game.RoleVisibilityService.KnowledgeType;
 import org.junit.jupiter.api.Test;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,11 +13,14 @@ class RoleVisibilityServiceTest {
             p(5, Role.ASSASSIN), p(6, Role.MINION), p(7, Role.MORDRED), p(8, Role.OBERON));
     @Test void merlinSeesOberonAndMinionButNotMordredOrSpecificRoles() {
         var view = service.visiblePlayers(1, Role.MERLIN, players);
-        assertEquals(List.of(4L,5L,6L,8L), ids(view)); assertTrue(view.stream().allMatch(v -> v.hint().equals("邪恶阵营")));
+        assertEquals(List.of(4L,5L,6L,8L), ids(view));
+        assertTrue(view.stream().allMatch(v -> v.knowledgeType()==KnowledgeType.EVIL && v.hint().equals("邪恶阵营")));
     }
     @Test void percivalSeesOnlyIndistinguishableMerlinAndMorganaCandidates() {
         var view = service.visiblePlayers(2, Role.PERCIVAL, players);
-        assertEquals(List.of(1L,4L), ids(view)); assertEquals(1, view.stream().map(RoleVisibilityService.VisiblePlayer::hint).distinct().count());
+        assertEquals(List.of(1L,4L), ids(view));
+        assertTrue(view.stream().allMatch(v -> v.knowledgeType()==KnowledgeType.MERLIN_OR_MORGANA));
+        assertEquals(1, view.stream().map(v -> v.knowledgeType()+":"+v.hint()).distinct().count());
     }
     @Test void ordinaryEvilSeesOtherOrdinaryEvilButNeverOberonOrSpecificRoles() {
         for (long viewerId : List.of(4L, 5L, 6L, 7L)) {
@@ -24,7 +28,7 @@ class RoleVisibilityServiceTest {
             var view = service.visiblePlayers(viewerId, role, players);
             assertFalse(ids(view).contains(8L));
             assertFalse(ids(view).contains(viewerId));
-            assertTrue(view.stream().allMatch(v -> v.hint().equals("邪恶同伴")));
+            assertTrue(view.stream().allMatch(v -> v.knowledgeType()==KnowledgeType.EVIL_ALLY && v.hint().equals("邪恶同伴")));
         }
         assertEquals(List.of(4L,5L,7L), ids(service.visiblePlayers(6, Role.MINION, players)));
     }

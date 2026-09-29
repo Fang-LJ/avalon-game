@@ -12,17 +12,34 @@
 .lobby-label {
   margin-top: 24rpx;
 }
-.lobby-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 28rpx 12rpx;
+.lobby-board {
+  height: 820rpx;
   margin-top: 32rpx;
+  position: relative;
+}
+.lobby-board.large-table {
+  height: 960rpx;
+}
+.lobby-center {
+  position: absolute;
+  top: 35%;
+  left: 25%;
+  width: 50%;
+  padding: 22rpx 12rpx;
+  text-align: center;
+}
+.room-code-small {
+  font-size: 34rpx;
+  font-weight: 700;
+}
+.standing-list {
+  margin-top: 22rpx;
 }
 .lobby-rules {
   margin-top: 55rpx;
 }
 .lobby-actions {
-  margin-top: 125rpx;
+  margin-top: 55rpx;
 }
 .role-card {
   border: 2px solid var(--gold);
@@ -163,6 +180,64 @@
 }
 .private-result .btn {
   margin-top: 35rpx;
+}
+.private-role-trigger {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 20rpx);
+  right: 38rpx;
+  z-index: 25;
+  padding: 11rpx 20rpx;
+  border: 1px solid var(--gold);
+  border-radius: 999rpx;
+  color: var(--gold);
+  background: var(--elevated);
+  font-size: 21rpx;
+}
+.role-overlay-card {
+  max-height: 82vh;
+  overflow-y: auto;
+  text-align: center;
+}
+.role-overlay-name {
+  margin-top: 18rpx !important;
+  color: var(--gold);
+  font-size: 52rpx;
+  font-weight: 700;
+}
+.role-overlay-instruction {
+  margin-top: 30rpx !important;
+  font-size: 27rpx;
+}
+.role-overlay-vision {
+  margin-top: 34rpx !important;
+  padding-top: 24rpx;
+  border-top: 1px solid var(--border);
+}
+.role-overlay-player {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14rpx !important;
+  padding: 12rpx 18rpx;
+  border-radius: 18rpx;
+  background: var(--soft);
+}
+.knowledge-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  font-weight: 900;
+}
+.knowledge-inline.knowledge-evil {
+  color: var(--text);
+  background: var(--evil);
+}
+.knowledge-inline.knowledge-candidate {
+  color: var(--bg);
+  background: var(--gold);
 }
 .has-phase-actions {
   padding-bottom: calc(220rpx + env(safe-area-inset-bottom));

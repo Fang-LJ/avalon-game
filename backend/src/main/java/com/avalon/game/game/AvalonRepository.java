@@ -37,7 +37,7 @@ public class AvalonRepository {
             rs.getObject("created_at", LocalDateTime.class), rs.getObject("started_at", LocalDateTime.class),
             rs.getObject("finished_at", LocalDateTime.class));
     private static final RowMapper<GamePlayerRow> GAME_PLAYER = (rs, n) -> new GamePlayerRow(rs.getLong("id"),
-            rs.getLong("game_id"), rs.getLong("user_id"), rs.getInt("seat_no"), rs.getString("nickname_snapshot"),
+            rs.getLong("game_id"), rs.getLong("user_id"), (Integer) rs.getObject("seat_no"), rs.getString("nickname_snapshot"),
             rs.getString("role_code") == null ? null : Role.valueOf(rs.getString("role_code")),
             rs.getString("alignment") == null ? null : Alignment.valueOf(rs.getString("alignment")),
             rs.getBoolean("role_confirmed"), rs.getBoolean("is_online"), rs.getObject("left_at", LocalDateTime.class));
@@ -89,7 +89,7 @@ public class AvalonRepository {
         return insert("insert into t_avalon_game(room_code,owner_user_id,player_count,rule_version,status,phase,created_at,updated_at) values (?,?,?,'AVALON_V1','WAITING',null,now(),now())",
                 code, ownerUserId, playerCount);
     }
-    public long insertGamePlayer(long gameId, long userId, String nickname, int seatNo) {
+    public long insertGamePlayer(long gameId, long userId, String nickname, Integer seatNo) {
         return insert("insert into t_avalon_game_player(game_id,user_id,seat_no,nickname_snapshot,joined_at,updated_at) values (?,?,?,?,now(),now())",
                 gameId, userId, seatNo, nickname);
     }
@@ -107,14 +107,14 @@ public class AvalonRepository {
                 GAME, roomCode, userId).stream().findFirst();
     }
     public List<GamePlayerRow> players(long gameId) {
-        return jdbc.query("select * from t_avalon_game_player where game_id=? and left_at is null order by seat_no", GAME_PLAYER, gameId);
+        return jdbc.query("select * from t_avalon_game_player where game_id=? and left_at is null order by seat_no is null,seat_no,id", GAME_PLAYER, gameId);
     }
     public List<RoomPlayerViewRow> roomPlayers(long gameId) {
         return jdbc.query("select gp.id game_player_id,gp.user_id,gp.seat_no,gp.nickname_snapshot,u.avatar_url,gp.is_online"
                         + " from t_avalon_game_player gp join t_avalon_user u on u.id=gp.user_id"
                         + " where gp.game_id=? and gp.left_at is null order by gp.seat_no",
                 (rs,n) -> new RoomPlayerViewRow(rs.getLong("game_player_id"), rs.getLong("user_id"),
-                        rs.getInt("seat_no"), rs.getString("nickname_snapshot"), rs.getString("avatar_url"),
+                        (Integer) rs.getObject("seat_no"), rs.getString("nickname_snapshot"), rs.getString("avatar_url"),
                         rs.getBoolean("is_online")), gameId);
     }
     public List<GamePlayerRow> gamePlayers(long gameId) {
@@ -135,7 +135,9 @@ public class AvalonRepository {
         jdbc.update("update t_avalon_game_player set is_online=false,left_at=coalesce(left_at,now()),updated_at=now() where game_id=? and left_at is null", gameId);
     }
     public void setPlayerOnline(long gamePlayerId, boolean online) { jdbc.update("update t_avalon_game_player set is_online=?,updated_at=now() where id=?", online, gamePlayerId); }
-    public void reseat(long gamePlayerId, int seat) { jdbc.update("update t_avalon_game_player set seat_no=?,updated_at=now() where id=?", seat, gamePlayerId); }
+    public void updateSeat(long gamePlayerId, Integer seat) {
+        jdbc.update("update t_avalon_game_player set seat_no=?,updated_at=now() where id=?", seat, gamePlayerId);
+    }
     public void updateGameOwner(long gameId, long userId) { jdbc.update("update t_avalon_game set owner_user_id=?,updated_at=now() where id=?", userId, gameId); }
     public void closeGame(long gameId) { jdbc.update("update t_avalon_game set status='CLOSED',updated_at=now() where id=?", gameId); }
 
@@ -259,9 +261,9 @@ public class AvalonRepository {
                           int goodScore, int evilScore, Long ladyHolderGamePlayerId, Winner winner, String finishReason,
                           Long assassinationTargetGamePlayerId, LocalDateTime createdAt, LocalDateTime startedAt,
                           LocalDateTime finishedAt) {}
-    public record GamePlayerRow(long id, long gameId, long userId, int seatNo, String nickname, Role role,
+    public record GamePlayerRow(long id, long gameId, long userId, Integer seatNo, String nickname, Role role,
                                 Alignment alignment, boolean confirmed, boolean online, LocalDateTime leftAt) {}
-    public record RoomPlayerViewRow(long gamePlayerId, long userId, int seatNo, String nickname,
+    public record RoomPlayerViewRow(long gamePlayerId, long userId, Integer seatNo, String nickname,
                                     String avatarUrl, boolean online) {}
     public record ProposalRow(long id, long gameId, int missionNo, int proposalNo, long leaderGamePlayerId,
                               List<Long> teamPlayerIds, String status, int approveCount, int rejectCount) {}

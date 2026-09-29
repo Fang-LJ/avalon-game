@@ -368,8 +368,12 @@ test('seat rectangles stay in screen and above log at 375/390/430 widths', () =>
       const boxes = seats(
         Array.from({ length: count }, (_, i) => ({
           playerId: i + 1,
+          seatNo: i + 1,
           nickname: '昵称',
         })),
+        [],
+        null,
+        count,
       ).map((s) => {
         const [x, y] = s.position.match(/[\d.]+/g).map(Number);
         return {
@@ -447,9 +451,10 @@ test('Lady chooser excludes past holders and result stays private to current pag
     room: {
       myPlayerId: 1,
       players: [
-        { playerId: 1, nickname: '甲' },
-        { playerId: 2, nickname: '乙' },
+        { playerId: 1, seatNo: 1, nickname: '甲' },
+        { playerId: 2, seatNo: 2, nickname: '乙' },
       ],
+      maxPlayers: 5,
     },
     game: {
       gameId: 5,

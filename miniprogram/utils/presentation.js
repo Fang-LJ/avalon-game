@@ -56,34 +56,53 @@ function historyItem(game) {
     reasonText: FINISH[game.finishReason] || game.finishReason,
   };
 }
-function seats(players, selected = [], leaderId) {
-  const n = players.length;
-  // Reserve the bottom quarter for names and badges, not just avatar bounds.
-  const eight = [
-    [11, 9],
-    [50, 2],
-    [89, 9],
-    [92, 39],
-    [89, 68],
-    [50, 75],
-    [11, 68],
-    [8, 39],
-  ];
-  return players.map((p, i) => {
-    const angle = -Math.PI / 2 + (i * 2 * Math.PI) / n;
-    const [x, y] =
-      n === 8
-        ? eight[i]
-        : [
-            50 + 42 * Math.cos(angle),
-            n >= 9 ? 41 + 39 * Math.sin(angle) : 38.5 + 36.5 * Math.sin(angle),
-          ];
+function seatPosition(seatNo, maxPlayers) {
+  const angle = -Math.PI / 2 + ((seatNo - 1) * 2 * Math.PI) / maxPlayers;
+  const x = 50 + 42 * Math.cos(angle);
+  const y =
+    maxPlayers >= 9
+      ? 41 + 39 * Math.sin(angle)
+      : 38.5 + 36.5 * Math.sin(angle);
+  return `left:${x.toFixed(2)}%;top:${y.toFixed(2)}%;`;
+}
+function privateKnowledge(player) {
+  const type = player.knowledgeType;
+  if (!type) return player;
+  return {
+    ...player,
+    knowledgeSymbol: type === 'MERLIN_OR_MORGANA' ? '?' : '●',
+    knowledgeClass:
+      type === 'MERLIN_OR_MORGANA' ? 'knowledge-candidate' : 'knowledge-evil',
+  };
+}
+function seats(players, selected = [], leaderId, maxPlayers = players.length) {
+  return players.filter((p) => p.seatNo != null).map((p) => {
     return {
-      ...p,
+      ...privateKnowledge(p),
       initial: initial(p.nickname),
       selected: selected.includes(p.playerId),
       leader: p.playerId === leaderId,
-      position: `left:${x.toFixed(2)}%;top:${y.toFixed(2)}%;`,
+      position: seatPosition(p.seatNo, maxPlayers),
+    };
+  });
+}
+function lobbySeats(players, maxPlayers) {
+  const bySeat = Object.fromEntries(
+    players.filter((p) => p.seatNo != null).map((p) => [p.seatNo, p]),
+  );
+  return Array.from({ length: maxPlayers }, (_, index) => {
+    const seatNo = index + 1;
+    const player = bySeat[seatNo];
+    return {
+      ...(player || {
+        playerId: `empty-${seatNo}`,
+        nickname: '',
+        avatarUrl: '',
+        empty: true,
+      }),
+      seatNo,
+      initial: player ? initial(player.nickname) : '+',
+      position: seatPosition(seatNo, maxPlayers),
     };
   });
 }
@@ -164,7 +183,10 @@ module.exports = {
   initial,
   dateText,
   historyItem,
+  seatPosition,
+  privateKnowledge,
   seats,
+  lobbySeats,
   logs,
   showRules,
   showLegal,

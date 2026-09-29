@@ -22,6 +22,14 @@ module.exports = {
     request({ url: '/api/avalon/room/join', method: 'POST', data }),
   leaveRoom: (id) =>
     request({ url: `/api/avalon/room/${id}/leave`, method: 'POST' }),
+  seat: (id, seatNo) =>
+    request({
+      url: `/api/avalon/room/${id}/seat`,
+      method: 'POST',
+      data: { seatNo },
+    }),
+  stand: (id) =>
+    request({ url: `/api/avalon/room/${id}/stand`, method: 'POST' }),
   start: (roomId) =>
     request({ url: `/api/avalon/game/start?roomId=${roomId}`, method: 'POST' }),
   game: (id) => request({ url: `/api/avalon/game/${id}` }),

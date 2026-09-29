@@ -9,6 +9,7 @@
   gap: 8rpx;
 }
 .seat-avatar {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -19,20 +20,17 @@
   border-radius: 50%;
   font-size: 38rpx;
   font-weight: 700;
-  overflow: hidden;
+  overflow: visible;
 }
 .seat-avatar image {
   width: 100%;
   height: 100%;
+  border-radius: 50%;
 }
-.seat-avatar.me {
-  border: 2px solid var(--accent);
-}
-.seat-avatar.selected {
-  border: 2px solid var(--good);
-}
-.seat-avatar.leader {
-  box-shadow: 0 0 0 2px var(--gold);
+.empty-avatar {
+  border-style: dashed;
+  color: var(--gold);
+  font-size: 46rpx;
 }
 .seat-name {
   max-width: 146rpx;
@@ -40,6 +38,68 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+.seat-number {
+  color: var(--text);
+  font-size: 24rpx;
+  font-weight: 700;
+}
+.formal .seat-number {
+  font-size: 28rpx;
+}
+.formal .seat-name {
+  color: var(--muted);
+  font-size: 18rpx;
+}
+.seat-empty-label {
+  color: var(--muted);
+  font-size: 18rpx;
+}
+.seat-badge {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30rpx;
+  height: 30rpx;
+  padding: 0 6rpx;
+  border: 2px solid var(--bg);
+  border-radius: 999rpx;
+  font-size: 18rpx;
+  font-weight: 900;
+  line-height: 1;
+}
+.leader-icon {
+  top: -11rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--bg);
+  background: var(--gold);
+}
+.selected-icon {
+  top: -5rpx;
+  right: -5rpx;
+  color: var(--bg);
+  background: var(--good);
+}
+.knowledge-icon {
+  right: -5rpx;
+  bottom: -5rpx;
+}
+.knowledge-evil {
+  color: var(--text);
+  background: var(--evil);
+}
+.knowledge-candidate {
+  color: var(--bg);
+  background: var(--gold);
+}
+.me-icon {
+  bottom: -5rpx;
+  left: -5rpx;
+  color: var(--text);
+  background: var(--accent);
 }
 .badges {
   display: flex;

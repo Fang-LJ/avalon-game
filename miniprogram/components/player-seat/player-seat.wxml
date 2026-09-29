@@ -1,9 +1,9 @@
 <view
-  class="seat {{compact ? 'compact' : ''}} {{player.disabled ? 'disabled' : ''}}"
+  class="seat {{compact ? 'compact' : ''}} {{formal ? 'formal' : ''}} {{player.empty ? 'empty-seat' : ''}} {{player.disabled ? 'disabled' : ''}}"
   bindtap="choose"
 >
   <view
-    class="seat-avatar {{player.me ? 'me' : ''}} {{player.selected ? 'selected' : ''}} {{player.leader ? 'leader' : ''}}"
+    class="seat-avatar {{player.empty ? 'empty-avatar' : ''}}"
   >
     <image
       wx:if="{{player.avatarUrl}}"
@@ -11,13 +11,17 @@
       mode="aspectFill"
     />
     <text wx:else>{{player.initial}}</text>
+    <text wx:if="{{player.leader}}" class="seat-badge leader-icon">♛</text>
+    <text wx:if="{{player.selected}}" class="seat-badge selected-icon">✓</text>
+    <text wx:if="{{player.knowledgeType}}" class="seat-badge knowledge-icon {{player.knowledgeClass}}">{{player.knowledgeSymbol}}</text>
+    <text wx:if="{{player.me}}" class="seat-badge me-icon">我</text>
   </view>
-  <view class="seat-name">
-    {{player.seatNo ? player.seatNo + ' ' : ''}}{{player.nickname}}
+  <view class="seat-number">{{player.seatNo}}号位</view>
+  <view wx:if="{{!player.empty && !hideNickname}}" class="seat-name">
+    {{player.nickname}}
   </view>
-  <view class="badges">
-    <text wx:if="{{player.leader || player.host}}" class="badge leader-badge">{{player.leader ? '队长' : '房主'}}</text>
-    <text wx:if="{{player.selected}}" class="badge selected-badge">已选</text>
-    <text wx:if="{{player.me}}" class="badge me-badge">我</text>
+  <view wx:if="{{player.empty}}" class="seat-empty-label">空座</view>
+  <view class="badges" wx:if="{{lobby && !player.empty && player.host}}">
+    <text class="badge leader-badge">房主</text>
   </view>
 </view>

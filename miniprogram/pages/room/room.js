@@ -19,6 +19,7 @@ Page({
     role: null,
     rule: null,
     displayPlayers: [],
+    standingPlayers: [],
     selectedIds: [],
     selectedText: '',
     targetName: '',
@@ -37,6 +38,7 @@ Page({
     finished: null,
     board: false,
     viewVotes: false,
+    roleOverlay: false,
   },
   onLoad(options) {
     this.setData({ roomId: Number(options.roomId) });
@@ -95,6 +97,7 @@ Page({
         finished: null,
         draftKey: '',
         viewVotes: false,
+        roleOverlay: false,
       });
     this.setData({
       room,
@@ -130,7 +133,7 @@ Page({
         ...role,
         initial: role.roleCode.charAt(0),
         visiblePlayers: role.visiblePlayers.map((p) => ({
-          ...p,
+          ...ui.privateKnowledge(p),
           initial: ui.initial(p.nickname),
         })),
       },
@@ -162,10 +165,36 @@ Page({
     }
   },
   decoratePlayers() {
-    const { room, game, selectedIds } = this.data;
+    const { room, game, role, selectedIds } = this.data;
     if (!room) return;
+    if (!game) {
+      this.setData({
+        displayPlayers: ui.lobbySeats(room.players, room.maxPlayers),
+        standingPlayers: room.players.filter((player) => !player.seated),
+        board: false,
+      });
+      return;
+    }
+    const privateByPlayer = Object.fromEntries(
+      ((role && role.visiblePlayers) || []).map((player) => [
+        player.playerId,
+        {
+          knowledgeType: player.knowledgeType,
+          knowledgeHint: player.hint,
+        },
+      ]),
+    );
+    const privatePlayers = room.players.map((player) => ({
+      ...player,
+      ...(privateByPlayer[player.playerId] || {}),
+    }));
     const players = ui
-      .seats(room.players, selectedIds, game && game.leaderPlayerId)
+      .seats(
+        privatePlayers,
+        selectedIds,
+        game.leaderPlayerId,
+        room.maxPlayers,
+      )
       .map((p) => ({
         ...p,
         disabled: !!(
@@ -176,12 +205,7 @@ Page({
         ),
       }));
     const selected = players.filter((p) => selectedIds.includes(p.playerId));
-    const board = !!(
-      game &&
-      (['TEAM_BUILDING', 'TEAM_VOTING', 'ASSASSINATION'].includes(game.phase) ||
-        (game.phase === 'MISSION_EXECUTING' &&
-          (!game.onMission || this.data.viewVotes)))
-    );
+    const board = !['ROLE_CONFIRM', 'FINISHED'].includes(game.phase);
     const vote = game && game.latestVoteResult;
     this.setData({
       displayPlayers: players,
@@ -203,6 +227,20 @@ Page({
           }
         : null,
     });
+  },
+  handleLobbySeat(e) {
+    if (this.data.game || this.data.busy) return;
+    const detail = e.detail || {};
+    if (detail.empty)
+      return this.run(() => api.seat(this.data.roomId, Number(detail.seatNo)));
+    if (detail.me)
+      wx.showActionSheet({
+        itemList: ['起立'],
+        success: (result) => {
+          if (result.tapIndex === 0)
+            this.run(() => api.stand(this.data.roomId));
+        },
+      });
   },
   togglePlayer(e) {
     const game = this.data.game;
@@ -288,6 +326,13 @@ Page({
   dismissLady() {
     this.setData({ ladyResult: null });
   },
+  openRoleOverlay() {
+    if (this.data.role) this.setData({ roleOverlay: true });
+  },
+  closeRoleOverlay() {
+    this.setData({ roleOverlay: false });
+  },
+  ignoreTap() {},
   assassinate() {
     if (!this.data.assassinationTarget || this.data.busy) return;
     const id = this.data.assassinationTarget,
