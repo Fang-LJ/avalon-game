@@ -41,54 +41,7 @@
 .lobby-actions {
   margin-top: 55rpx;
 }
-.role-card {
-  border: 2px solid var(--gold);
-  text-align: center;
-  padding-top: 48rpx;
-  padding-bottom: 32rpx;
-}
-.role-name {
-  font-size: 58rpx;
-  font-weight: bold;
-  margin-top: 25rpx !important;
-}
-.role-emblem {
-  margin: 45rpx auto !important;
-  width: 242rpx;
-  height: 242rpx;
-  display: flex;
-  position: relative;
-  align-items: center;
-  justify-content: center;
-  color: var(--gold);
-  font-size: 92rpx;
-  font-weight: bold;
-}
-.role-emblem image {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-}
-.role-emblem text {
-  z-index: 1;
-}
-.role-instruction {
-  font-size: 29rpx;
-  padding: 0 15rpx;
-}
-.role-vision {
-  margin-top: 45rpx !important;
-}
-.vision-seats {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 18rpx;
-  margin-top: 23rpx;
-}
-.role-actions {
-  margin-top: 100rpx;
-}
+.role-progress { margin: 30rpx 0 20rpx; }
 .board {
   height: 890rpx;
   margin-top: 50rpx;
@@ -198,12 +151,7 @@
   overflow-y: auto;
   text-align: center;
 }
-.role-overlay-name {
-  margin-top: 18rpx !important;
-  color: var(--gold);
-  font-size: 52rpx;
-  font-weight: 700;
-}
+.role-overlay-art { margin: 22rpx auto !important; }
 .role-overlay-instruction {
   margin-top: 30rpx !important;
   font-size: 27rpx;

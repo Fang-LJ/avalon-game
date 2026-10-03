@@ -415,13 +415,15 @@ test('all core room phase controls still invoke existing API methods', async () 
   });
   p.setData({
     roomId: 7,
-    game: { gameId: 9, requiredTeamSize: 2 },
+    game: { gameId: 9, phase: 'ROLE_CONFIRM', requiredTeamSize: 2 },
+    role: { confirmed: false },
+    identityRevealedGameId: 9,
     selectedIds: [1, 2],
     missionChoice: 'SUCCESS',
   });
   p.run = (t) => t();
   await p.startGame();
-  await p.confirmRole();
+  await p.confirmRole({ detail: { gameId: 9 } });
   await p.submitTeam();
   await p.approve();
   await p.reject();

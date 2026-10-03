@@ -1,0 +1,39 @@
+<view class="identity-deal">
+  <view class="deal-caption">
+    <block wx:if="{{dealStage === 'SHUFFLE'}}">身份正在洗牌</block>
+    <block wx:elif="{{dealStage === 'DEALING'}}">正在送达你的身份</block>
+    <block wx:elif="{{dealStage === 'BACK'}}">你的身份已经送达</block>
+    <block wx:elif="{{dealStage === 'FLIPPING'}}">正在揭晓身份</block>
+    <block wx:else>仅你可见</block>
+  </view>
+  <view class="deal-table">
+    <view wx:if="{{dealStage === 'SHUFFLE'}}" class="shuffle-pile">
+      <image
+        wx:for="{{pile}}" wx:key="*this" src="{{back}}" mode="aspectFit"
+        class="pile-card pile-{{item}}" style="animation-delay: {{item * 55}}ms;"
+      />
+    </view>
+    <view wx:else class="delivered-card {{dealStage === 'DEALING' ? 'is-dealing' : ''}}">
+      <play-card front="{{front}}" back="{{back}}" flipped="{{flipped}}"
+        size="large" interactive="{{dealStage === 'BACK'}}" bind:select="flip" />
+    </view>
+  </view>
+  <view wx:if="{{dealStage === 'BACK'}}" class="deal-hint">点击卡牌查看身份</view>
+  <view wx:if="{{dealStage === 'REVEALED'}}" class="revealed-details">
+    <view class="alignment {{role.alignmentCode === 'GOOD' ? 'good' : 'evil'}}">{{role.alignmentName}}</view>
+    <view class="instruction">{{role.instruction}}</view>
+    <view wx:if="{{role.visiblePlayers.length}}" class="vision">
+      <view class="vision-title">{{role.visiblePlayers[0].hint}}</view>
+      <view class="vision-chips">
+        <view wx:for="{{role.visiblePlayers}}" wx:key="playerId" class="vision-chip">
+          <text>{{item.seatNo}}号</text>
+          <text class="knowledge {{item.knowledgeClass}}">{{item.knowledgeSymbol}}</text>
+        </view>
+      </view>
+    </view>
+    <view wx:else class="vision-title">你没有额外角色视野</view>
+    <button class="confirm-button" disabled="{{busy || role.confirmed}}" loading="{{busy}}" bindtap="confirm">
+      {{role.confirmed ? '已确认，等待其他玩家' : '我已确认身份'}}
+    </button>
+  </view>
+</view>

@@ -2,6 +2,7 @@ const api = require('../../services/avalon');
 const auth = require('../../services/auth');
 const socket = require('../../utils/socket');
 const ui = require('../../utils/presentation');
+const { roleCard, CARDS } = require('../../utils/cards');
 const PHASES = {
   ROLE_CONFIRM: '身份揭晓',
   TEAM_BUILDING: '队长选人',
@@ -39,6 +40,9 @@ Page({
     board: false,
     viewVotes: false,
     roleOverlay: false,
+    identityRevealedGameId: null,
+    roleCardFront: '',
+    roleCardBack: CARDS.back.ROLE,
   },
   onLoad(options) {
     this.setData({ roomId: Number(options.roomId) });
@@ -98,6 +102,8 @@ Page({
         draftKey: '',
         viewVotes: false,
         roleOverlay: false,
+        identityRevealedGameId: null,
+        roleCardFront: '',
       });
     this.setData({
       room,
@@ -129,6 +135,7 @@ Page({
     this.setData({
       game,
       timeline,
+      roleCardFront: roleCard(role.roleCode),
       role: {
         ...role,
         initial: role.roleCode.charAt(0),
@@ -283,8 +290,29 @@ Page({
   startGame() {
     return this.run(() => api.start(this.data.roomId));
   },
-  confirmRole() {
-    return this.run(() => api.confirmRole(this.data.game.gameId));
+  identityRevealed(e) {
+    if (
+      this.data.game && this.data.game.phase === 'ROLE_CONFIRM' &&
+      Number(e.detail.gameId) === this.data.game.gameId
+    ) this.setData({ identityRevealedGameId: this.data.game.gameId });
+  },
+  confirmRole(e) {
+    const { game, role, identityRevealedGameId, busy } = this.data;
+    if (
+      !game || game.phase !== 'ROLE_CONFIRM' || !role || role.confirmed || busy ||
+      identityRevealedGameId !== game.gameId ||
+      !e || Number(e.detail.gameId) !== game.gameId
+    ) return;
+    const gameId = game.gameId;
+    return this.run(() => {
+      // run() waits for a pending refresh; a rematch may have changed the game.
+      if (
+        !this.data.game || this.data.game.gameId !== gameId ||
+        this.data.game.phase !== 'ROLE_CONFIRM' || !this.data.role ||
+        this.data.role.confirmed
+      ) return;
+      return api.confirmRole(gameId);
+    });
   },
   submitTeam() {
     if (this.data.selectedIds.length !== this.data.game.requiredTeamSize)

@@ -1,0 +1,46 @@
+:host { display: block; }
+.identity-deal { text-align: center; color: #f5f1e8; }
+.deal-caption { margin-bottom: 24rpx; color: #d8b25c; font-size: 25rpx; }
+.deal-table {
+  min-height: 715rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.shuffle-pile { position: relative; width: 280rpx; height: 500rpx; }
+.pile-card {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  border-radius: 20rpx;
+  animation: shuffle 660ms ease-in-out alternate infinite;
+  box-shadow: 0 15rpx 35rpx rgba(0,0,0,.4);
+}
+.pile-0 { transform: rotate(-7deg); }
+.pile-1 { transform: rotate(6deg); }
+.pile-2 { transform: rotate(-3deg); }
+.pile-3 { transform: rotate(9deg); }
+.pile-4 { transform: rotate(-9deg); }
+.pile-5 { transform: rotate(2deg); }
+.is-dealing { animation: deliver 550ms ease-out both; }
+@keyframes shuffle {
+  0% { transform: translateX(-32rpx) translateY(-12rpx) rotate(-9deg) scale(.97); }
+  100% { transform: translateX(32rpx) translateY(12rpx) rotate(9deg) scale(1); }
+}
+@keyframes deliver {
+  from { transform: translateY(-180rpx) rotate(-6deg) scale(.4); opacity: .6; }
+  to { transform: translateY(0) rotate(0) scale(1); opacity: 1; }
+}
+.deal-hint { margin-top: 26rpx; color: #b8b7af; font-size: 24rpx; }
+.revealed-details { margin-top: 28rpx; }
+.alignment { font-size: 28rpx; font-weight: 700; }
+.good { color: #46c2a3; }
+.evil { color: #c95d68; }
+.instruction { margin: 16rpx auto 24rpx; font-size: 24rpx; line-height: 1.65; max-width: 570rpx; }
+.vision-title { color: #b8b7af; font-size: 22rpx; }
+.vision-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 16rpx; margin-top: 14rpx; }
+.vision-chip { display: flex; align-items: center; gap: 12rpx; padding: 10rpx 18rpx; background: #223027; border-radius: 18rpx; }
+.knowledge { width: 34rpx; height: 34rpx; border-radius: 50%; line-height: 34rpx; font-weight: 700; }
+.knowledge-evil { background: #c95d68; }
+.knowledge-candidate { background: #d8b25c; color: #101713; }
+.confirm-button { margin: 28rpx 0 0; padding: 23rpx 20rpx; border-radius: 28rpx; background: #3e6f58; color: #f5f1e8; font-size: 28rpx; line-height: 1.5; }
+.confirm-button::after { border: 0; }
+.confirm-button[disabled] { background: #3e6f58; color: #f5f1e8; opacity: .5; }

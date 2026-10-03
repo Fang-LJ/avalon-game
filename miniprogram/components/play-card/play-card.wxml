@@ -1,0 +1,13 @@
+<view
+  class="card-scene size-{{size}} {{selected ? 'is-selected' : ''}} {{disabled ? 'is-disabled' : ''}}"
+  bindtap="choose"
+>
+  <view class="card-inner {{flipped ? 'is-flipped' : ''}}">
+    <view class="card-face card-back" aria-hidden="{{flipped}}">
+      <image src="{{back}}" mode="aspectFit" />
+    </view>
+    <view class="card-face card-front" aria-hidden="{{!flipped}}">
+      <image wx:if="{{front}}" src="{{front}}" mode="aspectFit" />
+    </view>
+  </view>
+</view>

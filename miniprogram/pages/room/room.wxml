@@ -67,42 +67,11 @@
     </view>
   </block>
   <block wx:elif="{{game.phase === 'ROLE_CONFIRM'}}">
-    <view class="role-card card" wx:if="{{role}}">
-      <view class="{{role.alignmentCode === 'GOOD' ? 'good' : 'evil'}}">
-        {{role.alignmentName}}
-      </view>
-      <view class="role-name">{{role.roleName}}</view>
-      <view class="gold small">{{role.roleCode}}</view>
-      <view class="role-emblem">
-        <image src="/assets/role-emblem.svg" />
-        <text>{{role.initial}}</text>
-      </view>
-      <view class="role-instruction">{{role.instruction}}</view>
-      <view class="role-vision" wx:if="{{role.visiblePlayers.length}}">
-        <view class="muted">{{role.visiblePlayers[0].hint}}</view>
-        <view class="vision-seats">
-          <player-seat
-            wx:for="{{role.visiblePlayers}}"
-            wx:key="playerId"
-            player="{{item}}"
-            formal="{{true}}"
-          />
-        </view>
-      </view>
-      <view wx:else class="muted">你没有额外角色视野</view>
-    </view>
-    <view class="role-actions actions">
-      <button
-        class="btn"
-        disabled="{{!role || role.confirmed || busy}}"
-        bindtap="confirmRole"
-      >
-        {{role.confirmed ? '已确认，等待其他玩家' : '我已确认身份'}}
-      </button>
-      <view class="footer-note">
-        已确认 {{game.confirmedCount}} / {{game.playerCount}} ·
-        全员确认后自动进入第 1 轮
-      </view>
+    <card-deal-stage wx:if="{{role}}" gameId="{{game.gameId}}" role="{{role}}" busy="{{busy}}"
+      bind:reveal="identityRevealed" bind:confirm="confirmRole" />
+    <view class="footer-note center role-progress">
+      已确认 {{game.confirmedCount}} / {{game.playerCount}} ·
+      全员确认后自动进入第 1 轮
     </view>
   </block>
   <block wx:elif="{{game.phase === 'FINISHED'}}">
@@ -350,7 +319,10 @@
   <view wx:if="{{roleOverlay && role}}" class="private-overlay" catchtap="ignoreTap">
     <view class="card private-result role-overlay-card">
       <view class="muted small">仅你可见</view>
-      <view class="role-overlay-name">{{role.roleName}}</view>
+      <view class="role-overlay-art">
+        <play-card front="{{roleCardFront}}" back="{{roleCardBack}}" flipped="{{true}}"
+          size="medium" interactive="{{false}}" />
+      </view>
       <view class="{{role.alignmentCode === 'GOOD' ? 'good' : 'evil'}}">{{role.alignmentName}}</view>
       <view class="role-overlay-instruction">{{role.instruction}}</view>
       <view wx:if="{{role.visiblePlayers.length}}" class="role-overlay-vision">

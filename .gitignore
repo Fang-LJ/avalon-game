@@ -1,4 +1,5 @@
 .DS_Store
+design-source/
 .idea/
 *.iml
 backend/target/

@@ -1,0 +1,32 @@
+:host { display: inline-block; }
+.card-scene {
+  width: 330rpx;
+  height: 590rpx;
+  perspective: 1200rpx;
+  border-radius: 22rpx;
+}
+.size-small { width: 180rpx; height: 322rpx; }
+.size-large { width: 400rpx; height: 715rpx; }
+.card-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateY(0deg);
+  transition: transform 620ms ease-in-out;
+}
+.card-inner.is-flipped { transform: rotateY(180deg); }
+.card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 22rpx;
+  overflow: hidden;
+  background: #101713;
+  box-shadow: 0 16rpx 36rpx rgba(0, 0, 0, 0.38);
+}
+.card-front { transform: rotateY(180deg); }
+.card-face image { display: block; width: 100%; height: 100%; }
+.is-selected { outline: 3rpx solid #d8b25c; outline-offset: 8rpx; }
+.is-disabled { pointer-events: none; }
