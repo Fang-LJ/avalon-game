@@ -230,9 +230,32 @@ public class GameService {
         long newGameId = repository.insertWaitingGame(c.game.code(), c.game.ownerUserId(), c.game.playerCount());
         for (GamePlayerRow old : oldPlayers) repository.insertGamePlayer(newGameId, old.userId(), old.nickname(), old.seatNo());
         repository.archiveGamePlayers(gameId);
+        repository.deleteBotTestGame(gameId);
         events.publish(gameId, "REMATCH_CREATED");
         events.publish(newGameId, "REMATCH_CREATED");
         return roomService.get(userId, newGameId);
+    }
+
+    @Transactional
+    public EndResult end(long userId, long gameId) {
+        GameRow game = roomService.requireRoom(gameId, true);
+        roomService.requireHost(userId, game);
+        if ("FINISHED".equals(game.status()) || "CLOSED".equals(game.status())) return new EndResult("CLOSED".equals(game.status()));
+        if (repository.isBotGame(gameId)) {
+            repository.closeGame(gameId);
+            repository.deleteBotTestGame(gameId);
+            events.publish(gameId, "ROOM_CLOSED");
+            return new EndResult(true);
+        }
+        if ("WAITING".equals(game.status())) {
+            repository.closeGame(gameId);
+            events.publish(gameId, "ROOM_CLOSED");
+            return new EndResult(true);
+        } else if ("PLAYING".equals(game.status())) {
+            repository.finish(gameId, null, "HOST_ENDED", null);
+            events.publish(gameId, "GAME_FINISHED");
+            return new EndResult(false);
+        } else throw new BusinessException("INVALID_PHASE", "当前房间不能结束");
     }
 
     @Transactional(readOnly = true)
@@ -275,7 +298,7 @@ public class GameService {
                 c.player.role() == Role.ASSASSIN, result, config.ladyOfLake(), c.game.ladyHolderGamePlayerId(),
                 ladyHolder == null ? null : requireSeat(ladyHolder), ladyHolder == null ? null : ladyHolder.nickname(),
                 isLadyHolder, ladyUsedCount, ladyEligibleTargetIds,
-                c.game.winner() == null ? null : c.game.winner().name(), identities);
+                c.game.winner() == null ? null : c.game.winner().name(), identities, c.game.finishReason());
     }
 
     private Context context(long userId, long gameId, boolean lock) {
@@ -310,6 +333,7 @@ public class GameService {
     }
 
     private record Context(GameRow game, GamePlayerRow player) {}
+    public record EndResult(boolean closed) {}
     public record MyRoleView(String roleCode, String roleName, String alignmentCode, String alignmentName,
                              boolean confirmed, String instruction, List<RoleVisibilityService.VisiblePlayer> visiblePlayers) {}
     public record MissionResult(int missionNo, Integer successCount, Integer failCount, String status) {}
@@ -324,7 +348,8 @@ public class GameService {
                             TeamVoteResult latestVoteResult, boolean evil, boolean assassin,
                             MissionResult latestMissionResult, boolean ladyEnabled, Long ladyHolderPlayerId,
                             Integer ladyHolderSeatNo, String ladyHolderNickname, boolean ladyHolder,
-                            int ladyUsedCount, List<Long> ladyEligibleTargetIds, String winner, List<PublicIdentity> identities) {}
+                            int ladyUsedCount, List<Long> ladyEligibleTargetIds, String winner, List<PublicIdentity> identities,
+                            String finishReason) {}
     public record TeamRequest(List<Long> playerIds) {}
     public record VoteRequest(VoteChoice choice) {}
     public record MissionRequest(MissionChoice choice) {}

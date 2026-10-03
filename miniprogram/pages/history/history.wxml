@@ -31,8 +31,8 @@
     <view class="history-title">
       {{item.playerCount}} 人局 · {{item.roleName}}
     </view>
-    <view class="{{item.winner === 'GOOD' ? 'good' : 'evil'}}">
-      {{item.resultText}} · {{item.won ? '胜' : '负'}}
+    <view class="{{!item.winner ? 'gold' : item.winner === 'GOOD' ? 'good' : 'evil'}}">
+      {{item.resultText}} · {{!item.winner ? '不计胜负' : item.won ? '胜' : '负'}}
     </view>
     <view class="muted small">{{item.timeText}} · 查看复盘 ›</view>
   </view>

@@ -27,5 +27,11 @@ public class RoomController {
         return ApiResponse.success(service.stand(LoginUserContext.require(), roomId));
     }
     @GetMapping("/current") public ApiResponse<RoomService.RoomView> current() { return ApiResponse.success(service.current(LoginUserContext.require())); }
+    @PostMapping("/{roomId}/bots") public ApiResponse<RoomService.RoomView> addBot(@PathVariable long roomId) {
+        return ApiResponse.success(service.addBot(LoginUserContext.require(), roomId));
+    }
+    @DeleteMapping("/{roomId}/bots/{playerId}") public ApiResponse<RoomService.RoomView> removeBot(@PathVariable long roomId, @PathVariable long playerId) {
+        return ApiResponse.success(service.removeBot(LoginUserContext.require(), roomId, playerId));
+    }
     @GetMapping("/{roomId}") public ApiResponse<RoomService.RoomView> get(@PathVariable long roomId) { return ApiResponse.success(service.get(LoginUserContext.require(), roomId)); }
 }

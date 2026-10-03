@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -110,12 +111,53 @@ public class AvalonRepository {
         return jdbc.query("select * from t_avalon_game_player where game_id=? and left_at is null order by seat_no is null,seat_no,id", GAME_PLAYER, gameId);
     }
     public List<RoomPlayerViewRow> roomPlayers(long gameId) {
-        return jdbc.query("select gp.id game_player_id,gp.user_id,gp.seat_no,gp.nickname_snapshot,u.avatar_url,gp.is_online"
+        return jdbc.query("select gp.id game_player_id,gp.user_id,gp.seat_no,gp.nickname_snapshot,u.avatar_url,gp.is_online,u.provider"
                         + " from t_avalon_game_player gp join t_avalon_user u on u.id=gp.user_id"
                         + " where gp.game_id=? and gp.left_at is null order by gp.seat_no",
                 (rs,n) -> new RoomPlayerViewRow(rs.getLong("game_player_id"), rs.getLong("user_id"),
                         (Integer) rs.getObject("seat_no"), rs.getString("nickname_snapshot"), rs.getString("avatar_url"),
-                        rs.getBoolean("is_online")), gameId);
+                        rs.getBoolean("is_online"), "BOT".equals(rs.getString("provider"))), gameId);
+    }
+    public Set<Long> botUserIds(long gameId) {
+        return Set.copyOf(jdbc.queryForList("select gp.user_id from t_avalon_game_player gp"
+                + " join t_avalon_user u on u.id=gp.user_id where gp.game_id=? and gp.left_at is null and u.provider='BOT'", Long.class, gameId));
+    }
+    public List<Long> activeBotGameIds() {
+        return jdbc.queryForList("select distinct g.id from t_avalon_game g"
+                + " join t_avalon_game_player gp on gp.game_id=g.id join t_avalon_user u on u.id=gp.user_id"
+                + " where g.status='PLAYING' and gp.left_at is null and u.provider='BOT'", Long.class);
+    }
+    public void deleteUnreferencedBotUser(long userId) {
+        jdbc.update("delete from t_avalon_user where id=? and provider='BOT'"
+                + " and not exists (select 1 from t_avalon_game_player where user_id=?)", userId, userId);
+    }
+    public boolean isBotGame(long gameId) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("select count(*)>0 from t_avalon_game_player gp"
+                + " join t_avalon_user u on u.id=gp.user_id where gp.game_id=? and u.provider='BOT'", Boolean.class, gameId));
+    }
+    public List<Long> expiredBotGameIds() {
+        LocalDateTime cutoff = jdbc.queryForObject("select now()", LocalDateTime.class).minusMinutes(2);
+        return jdbc.queryForList("select distinct g.id from t_avalon_game g"
+                + " join t_avalon_game_player gp on gp.game_id=g.id join t_avalon_user u on u.id=gp.user_id"
+                + " where u.provider='BOT' and (g.status='CLOSED' or (g.status='FINISHED' and g.finished_at<=?))",
+                Long.class, cutoff);
+    }
+    /** Caller must hold the game row lock. Never delete a human-only or running game. */
+    @Transactional
+    public void deleteBotTestGame(long gameId) {
+        GameRow game = game(gameId, true).orElse(null);
+        if (game == null || !("FINISHED".equals(game.status()) || "CLOSED".equals(game.status())) || !isBotGame(gameId)) return;
+        List<Long> botIds = jdbc.queryForList("select gp.user_id from t_avalon_game_player gp"
+                + " join t_avalon_user u on u.id=gp.user_id where gp.game_id=? and u.provider='BOT'", Long.class, gameId);
+        jdbc.update("update t_avalon_game set leader_game_player_id=null,lady_holder_game_player_id=null,assassination_target_game_player_id=null where id=?", gameId);
+        jdbc.update("delete from t_avalon_lady_action where game_id=?", gameId);
+        jdbc.update("delete from t_avalon_mission_action where mission_id in (select id from t_avalon_mission where game_id=?)", gameId);
+        jdbc.update("delete from t_avalon_vote where proposal_id in (select id from t_avalon_proposal where game_id=?)", gameId);
+        jdbc.update("delete from t_avalon_mission where game_id=?", gameId);
+        jdbc.update("delete from t_avalon_proposal where game_id=?", gameId);
+        jdbc.update("delete from t_avalon_game_player where game_id=?", gameId);
+        jdbc.update("delete from t_avalon_game where id=?", gameId);
+        botIds.forEach(this::deleteUnreferencedBotUser);
     }
     public List<GamePlayerRow> gamePlayers(long gameId) {
         return jdbc.query("select * from t_avalon_game_player where game_id=? order by seat_no", GAME_PLAYER, gameId);
@@ -158,7 +200,7 @@ public class AvalonRepository {
     }
     public void finish(long gameId, Winner winner, String reason, Long assassinationTargetGamePlayerId) {
         jdbc.update("update t_avalon_game set status='FINISHED',phase='FINISHED',winner_alignment=?,finish_reason=?,assassination_target_game_player_id=?,finished_at=now(),updated_at=now() where id=?",
-                winner.name(), reason, assassinationTargetGamePlayerId, gameId);
+                winner == null ? null : winner.name(), reason, assassinationTargetGamePlayerId, gameId);
     }
     public void advanceRound(long gameId, int missionNo, long leaderGamePlayerId) {
         jdbc.update("update t_avalon_game set mission_no=?,leader_game_player_id=?,proposal_no=1,consecutive_rejections=0,phase='TEAM_BUILDING',updated_at=now() where id=?",
@@ -264,7 +306,11 @@ public class AvalonRepository {
     public record GamePlayerRow(long id, long gameId, long userId, Integer seatNo, String nickname, Role role,
                                 Alignment alignment, boolean confirmed, boolean online, LocalDateTime leftAt) {}
     public record RoomPlayerViewRow(long gamePlayerId, long userId, Integer seatNo, String nickname,
-                                    String avatarUrl, boolean online) {}
+                                    String avatarUrl, boolean online, boolean isBot) {
+        public RoomPlayerViewRow(long gamePlayerId, long userId, Integer seatNo, String nickname, String avatarUrl, boolean online) {
+            this(gamePlayerId, userId, seatNo, nickname, avatarUrl, online, false);
+        }
+    }
     public record ProposalRow(long id, long gameId, int missionNo, int proposalNo, long leaderGamePlayerId,
                               List<Long> teamPlayerIds, String status, int approveCount, int rejectCount) {}
     public record VoteRow(long id, long proposalId, long gamePlayerId, VoteChoice choice) {}

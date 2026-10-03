@@ -27,6 +27,7 @@ public class GameHistoryService {
         List<GamePlayerRow> players = participants(userId, gameId);
         if (game.phase() != Phase.FINISHED || !("FINISHED".equals(game.status()) || "CLOSED".equals(game.status())))
             throw new BusinessException("FORBIDDEN", "对局结束后才能查看复盘");
+        if (repository.isBotGame(gameId)) throw new BusinessException("FORBIDDEN", "机器人测试局不保留复盘");
         // Never move these secret queries above the membership and finished checks.
         List<ReplayMission> missions = repository.missions(gameId).stream()
                 .map(m -> new ReplayMission(m, repository.missionActions(m.id()))).toList();

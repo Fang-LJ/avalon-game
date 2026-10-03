@@ -23,4 +23,7 @@ public class GameController {
     }
     @PostMapping("/{gameId}/assassinate") public ApiResponse<GameService.GameState> assassinate(@PathVariable long gameId, @RequestBody GameService.AssassinateRequest r) { return ApiResponse.success(service.assassinate(LoginUserContext.require(), gameId, r.targetPlayerId())); }
     @PostMapping("/{gameId}/restart") public ApiResponse<RoomService.RoomView> restart(@PathVariable long gameId) { return ApiResponse.success(service.restart(LoginUserContext.require(), gameId)); }
+    @PostMapping("/{gameId}/end") public ApiResponse<GameService.EndResult> end(@PathVariable long gameId) {
+        return ApiResponse.success(service.end(LoginUserContext.require(), gameId));
+    }
 }

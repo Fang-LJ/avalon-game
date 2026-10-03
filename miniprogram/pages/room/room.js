@@ -21,6 +21,7 @@ Page({
     rule: null,
     displayPlayers: [],
     standingPlayers: [],
+    botPlayers: [],
     selectedIds: [],
     selectedText: '',
     targetName: '',
@@ -51,7 +52,7 @@ Page({
     if (!auth.requireSession()) return;
     this.active = true;
     this.refresh().then(() => {
-      if (this.active) this.stopSocket = socket.connect(() => this.refresh());
+      if (this.active) this.stopSocket = socket.connect(event => this.handleRoomEvent(event));
     });
     this.poller = setInterval(() => this.refresh(), 5000);
   },
@@ -65,6 +66,22 @@ Page({
     this.active = false;
     if (this.stopSocket) this.stopSocket();
     clearInterval(this.poller);
+  },
+  handleRoomEvent(event) {
+    if (!this.active) return;
+    if (event.type === 'ROOM_CLOSED' && event.roomId === this.data.roomId) {
+      this.exitClosedRoom();
+      return;
+    }
+    if (event.type === 'REMATCH_CREATED') this.setData({ roomId: event.roomId });
+    if (this.refreshing) this.refreshing.finally(() => { if (this.active) this.refresh(); });
+    else this.refresh();
+  },
+  exitClosedRoom() {
+    if (!this.active) return;
+    this.stop();
+    wx.showToast({ title: '房间已关闭', icon: 'none' });
+    wx.reLaunch({ url: '/pages/index/index' });
   },
   onPullDownRefresh() {
     this.refresh().finally(() => wx.stopPullDownRefresh());
@@ -84,8 +101,25 @@ Page({
     return this.refreshing;
   },
   async fetchState() {
-    const room = await api.room(this.data.roomId);
-    if (!this.active) return;
+    const requestedRoomId = this.data.roomId;
+    let room;
+    try {
+      room = await api.room(requestedRoomId, false);
+    } catch (error) {
+      if (!this.active || requestedRoomId !== this.data.roomId) return;
+      if (error.code !== 'NOT_FOUND') throw error;
+      // The client may have missed REMATCH_CREATED while offline. Old test games are deleted.
+      room = await api.currentRoom();
+      if (!room) {
+        this.exitClosedRoom();
+        return;
+      }
+    }
+    if (!this.active || requestedRoomId !== this.data.roomId) return;
+    if (room.status === 'CLOSED') {
+      this.exitClosedRoom();
+      return;
+    }
     const changed =
       room.currentGameId !== (this.data.game && this.data.game.gameId);
     if (changed)
@@ -117,12 +151,16 @@ Page({
       return;
     }
     const gameId = room.currentGameId;
-    const [game, timeline, role] = await Promise.all([
+    const snapshot = await Promise.all([
       api.game(gameId),
       api.timeline(gameId),
       api.myRole(gameId),
-    ]);
-    if (!this.active) return;
+    ]).catch(error => {
+      if (!this.active || room.roomId !== this.data.roomId) return null;
+      throw error;
+    });
+    if (!snapshot || !this.active || room.roomId !== this.data.roomId) return;
+    const [game, timeline, role] = snapshot;
     const key = `${gameId}-${game.missionNo}-${game.proposalNo}-${game.phase}`;
     const newPhase = key !== this.data.draftKey;
     let selectedIds = game.selectedPlayerIds || [];
@@ -156,8 +194,12 @@ Page({
     });
     this.decoratePlayers();
     if (game.phase === 'FINISHED' && !this.data.finished) {
+      if (room.testGame) {
+        this.setData({ finished: { reasonText: ui.FINISH[game.finishReason] || game.finishReason, targetName: '' } });
+        return;
+      }
       const replay = await api.replay(gameId);
-      if (this.active && this.data.game.gameId === gameId)
+      if (this.active && this.data.game && this.data.game.gameId === gameId)
         this.setData({
           finished: {
             ...replay,
@@ -178,6 +220,7 @@ Page({
       this.setData({
         displayPlayers: ui.lobbySeats(room.players, room.maxPlayers),
         standingPlayers: room.players.filter((player) => !player.seated),
+        botPlayers: room.players.filter((player) => player.isBot),
         board: false,
       });
       return;
@@ -279,6 +322,10 @@ Page({
     try {
       await this.refreshing;
       const result = await task();
+      if (result && result.closed) {
+        this.exitClosedRoom();
+        return;
+      }
       if (result && result.roomId) this.setData({ roomId: result.roomId });
       await this.refresh();
     } catch (_) {
@@ -289,6 +336,41 @@ Page({
   },
   startGame() {
     return this.run(() => api.start(this.data.roomId));
+  },
+  addBot() {
+    const { room, game, busy } = this.data;
+    if (!room || !room.host || game || busy || room.currentPlayers >= room.maxPlayers) return;
+    return this.run(() => {
+      if (!this.data.game && this.data.roomId === room.roomId) return api.addBot(room.roomId);
+    });
+  },
+  removeBot(e) {
+    const { room, game, busy, botPlayers } = this.data;
+    const playerId = Number(e.currentTarget.dataset.playerId);
+    if (!room || !room.host || game || busy || !botPlayers.some(p => p.playerId === playerId)) return;
+    return this.run(() => {
+      if (!this.data.game && this.data.roomId === room.roomId) return api.removeBot(room.roomId, playerId);
+    });
+  },
+  endGame() {
+    const { room, game, busy } = this.data;
+    if (!room || !room.host || busy || (game && game.phase === 'FINISHED')) return;
+    const roomId = room.roomId;
+    wx.showModal({
+      title: game ? '结束当前对局？' : '关闭等待房间？',
+      content: room.testGame ? '结束测试局后返回首页，临时游戏数据会清理，不保留记录。' :
+        game ? '所有玩家将停止当前流程。本局不计胜负，已产生的记录会保留。' : '关闭后所有玩家返回首页。',
+      confirmText: '确认结束',
+      success: result => {
+        if (!result.confirm) return;
+        this.run(async () => {
+          // A rematch may have arrived while the confirmation dialog was open.
+          if (this.data.roomId !== roomId || !this.data.room.host ||
+              (this.data.game && this.data.game.phase === 'FINISHED')) return;
+          return api.endGame(roomId);
+        });
+      },
+    });
   },
   identityRevealed(e) {
     if (

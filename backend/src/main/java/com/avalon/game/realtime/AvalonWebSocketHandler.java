@@ -48,6 +48,15 @@ public class AvalonWebSocketHandler extends TextWebSocketHandler {
         if (session.isOpen()) session.close(CloseStatus.SERVER_ERROR);
     }
     @EventListener public void onRoomEvent(RoomEventPublisher.RoomEvent event) {
+        if ("REMATCH_CREATED".equals(event.type())) {
+            clients.values().stream().filter(c -> c.roomId == event.roomId() && c.session.isOpen()).forEach(c -> {
+                repository.activeGameForUser(c.userId).ifPresent(game -> repository.player(game.id(), c.userId).ifPresent(player -> {
+                    clients.put(c.session.getId(), new Client(c.session, c.userId, game.id(), player.id()));
+                    try { send(c.session, game.id(), event.type()); } catch (Exception ignored) { }
+                }));
+            });
+            return;
+        }
         broadcast(event.roomId(), event.type());
         if ("GAME_RESTARTED".equals(event.type())) {
             clients.values().stream().filter(c -> c.roomId == event.roomId() && c.session.isOpen()).forEach(c -> {

@@ -45,7 +45,9 @@ WebSocket 事件只广播事件名、房间号和时间戳，客户端收到后�
 - `t_avalon_mission_action`
 - `t_avalon_lady_action`
 
-`game` 同时承载等待大厅、进行中对局和已结束历史，`game_player` 保存当局座位、昵称、身份及阵营快照。每次发车、公开投票、任务及具体任务出票、湖中仙女操作都会分别持久化；公开 GameState 仍不会泄露任务出票者或 Lady 私有结果。“再来一局”会复用房间号但创建新的 game/game_player 记录，上一局保持不变。
+`game` 同时承载等待大厅、进行中对局和已结束历史，`game_player` 保存当局座位、昵称、身份及阵营快照。每次发车、公开投票、任务及具体任务出票、湖中仙女操作都会分别持久化；公开 GameState 仍不会泄露任务出票者或 Lady 私有结果。“再来一局”会复用房间号但创建新的 WAITING game/game_player 记录，真人局上一局保持不变。
+
+房主可在等待大厅添加测试机器人，并在任意进行中阶段结束对局。含机器人的对局不计战绩、不保留历史/复盘，运行数据在结束后清理；真人局被房主提前结束则保留记录但不计胜负。详见 [机器人测试局与结束对局](docs/bot-testing.md)。无需新增表或 migration。
 
 数据库连接位于 `backend/src/main/resources/application.yml`，通过 `AVALON_DB_HOST/PORT/NAME/USERNAME/PASSWORD` 覆盖。默认本地端口和 schema 与 playmate-space 的本地 Docker 配置一致。
 

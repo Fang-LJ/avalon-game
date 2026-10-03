@@ -136,3 +136,4 @@
   max-width: 125rpx;
   font-size: 21rpx;
 }
+.seat-bot { font-size: 18rpx; line-height: 22rpx; color: var(--gold); }

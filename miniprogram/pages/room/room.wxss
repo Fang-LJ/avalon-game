@@ -215,3 +215,9 @@
   gap: 24rpx 10rpx;
   margin: 45rpx 0;
 }
+.host-controls { display: flex; justify-content: flex-end; margin-bottom: 16rpx; }
+.host-end { background: transparent; color: var(--muted); font-size: 24rpx; padding: 0 20rpx; margin: 0; line-height: 64rpx; }
+.host-end::after, .bot-remove::after { border: none; }
+.bot-list { margin-top: 16rpx; }
+.bot-row { justify-content: space-between; }
+.bot-remove { background: transparent; color: var(--gold); font-size: 24rpx; margin: 0; padding: 0 16rpx; line-height: 60rpx; }

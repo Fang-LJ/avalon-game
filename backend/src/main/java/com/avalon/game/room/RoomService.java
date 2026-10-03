@@ -98,6 +98,45 @@ public class RoomService {
     }
 
     @Transactional
+    public RoomView addBot(long userId, long roomId) {
+        GameRow game = requireRoom(roomId, true);
+        requireHost(userId, game);
+        requireWaiting(game);
+        List<GamePlayerRow> players = repository.players(roomId);
+        if (players.size() >= game.playerCount()) throw new BusinessException("房间已满");
+        Set<String> names = players.stream().map(GamePlayerRow::nickname).collect(Collectors.toSet());
+        int number = IntStream.rangeClosed(1, game.playerCount()).filter(n -> !names.contains("机器人" + n)).findFirst().orElse(1);
+        String nickname = "机器人" + number;
+        long botId = repository.insertUser("BOT", java.util.UUID.randomUUID().toString(), nickname);
+        try {
+            repository.insertGamePlayer(roomId, botId, nickname, firstEmptySeat(players, game.playerCount()));
+        } catch (DuplicateKeyException exception) {
+            throw seatTaken();
+        }
+        events.publish(roomId, "BOT_ADDED");
+        return get(userId, roomId);
+    }
+
+    @Transactional
+    public RoomView removeBot(long userId, long roomId, long playerId) {
+        GameRow game = requireRoom(roomId, true);
+        requireHost(userId, game);
+        requireWaiting(game);
+        GamePlayerRow bot = repository.gamePlayer(roomId, playerId)
+                .filter(p -> repository.botUserIds(roomId).contains(p.userId()))
+                .orElseThrow(() -> new BusinessException("PARAM_ERROR", "只能移除本房间的机器人"));
+        repository.deleteGamePlayer(bot.id());
+        repository.deleteUnreferencedBotUser(bot.userId());
+        events.publish(roomId, "BOT_REMOVED");
+        return get(userId, roomId);
+    }
+
+    public void requireHost(long userId, GameRow game) {
+        requirePlayer(game.id(), userId);
+        if (game.ownerUserId() != userId) throw new BusinessException("FORBIDDEN", "只有房主可以操作");
+    }
+
+    @Transactional
     public void leave(long userId, long roomId) {
         GameRow game = requireRoom(roomId, true);
         GamePlayerRow player = requirePlayer(roomId, userId);
@@ -110,18 +149,25 @@ public class RoomService {
             repository.leaveGamePlayer(player.id());
         } else {
             repository.deleteGamePlayer(player.id());
-            List<GamePlayerRow> remaining = repository.players(roomId);
-            if (remaining.isEmpty()) repository.closeGame(roomId);
-            else if (game.ownerUserId() == player.userId()) repository.updateGameOwner(roomId, nextOwner(remaining).userId());
+            transferOrClose(game, player.userId());
         }
         events.publish(roomId, "PLAYER_LEFT");
     }
 
     private void transferOrClose(GameRow game, long leavingUserId) {
         List<GamePlayerRow> remaining = repository.players(game.id());
-        if (remaining.isEmpty()) repository.closeGame(game.id());
+        Set<Long> bots = repository.botUserIds(game.id());
+        List<GamePlayerRow> humans = remaining.stream().filter(p -> !bots.contains(p.userId())).toList();
+        if (humans.isEmpty()) {
+            repository.closeGame(game.id());
+            if (repository.isBotGame(game.id())) {
+                repository.deleteBotTestGame(game.id());
+                events.publish(game.id(), "ROOM_CLOSED");
+                return;
+            }
+        }
         else if (game.ownerUserId() == leavingUserId) {
-            repository.updateGameOwner(game.id(), nextOwner(remaining).userId());
+            repository.updateGameOwner(game.id(), nextOwner(humans).userId());
         }
     }
 
@@ -143,7 +189,7 @@ public class RoomService {
         List<PlayerView> players = repository.roomPlayers(selectedGame.id()).stream()
                 .map(p -> new PlayerView(p.gamePlayerId(), p.userId() == userId, p.nickname(), p.avatarUrl(), p.seatNo(),
                         p.seatNo() != null,
-                        p.userId() == selectedGame.ownerUserId(), p.online())).toList();
+                        p.userId() == selectedGame.ownerUserId(), p.online(), p.isBot())).toList();
         int seatedPlayers = (int) players.stream().filter(PlayerView::seated).count();
         boolean allSeatsCovered = seatedPlayers == selectedGame.playerCount()
                 && players.stream().map(PlayerView::seatNo).collect(Collectors.toSet())
@@ -189,8 +235,10 @@ public class RoomService {
     public record JoinRequest(String roomCode, String nickname) {}
     public record SeatRequest(Integer seatNo) {}
     public record PlayerView(long playerId, boolean me, String nickname, String avatarUrl,
-                             Integer seatNo, boolean seated, boolean host, boolean online) {}
+                             Integer seatNo, boolean seated, boolean host, boolean online, boolean isBot) {}
     public record RoomView(long roomId, String roomCode, int maxPlayers, String status, Long currentGameId, boolean host,
                            long myPlayerId, Integer mySeatNo, int currentPlayers, int seatedPlayers,
-                           List<PlayerView> players, boolean canStart) {}
+                           List<PlayerView> players, boolean canStart) {
+        public boolean isTestGame() { return players.stream().anyMatch(PlayerView::isBot); }
+    }
 }

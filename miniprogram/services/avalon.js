@@ -15,7 +15,7 @@ module.exports = {
   timeline: (id) => request({ url: `/api/avalon/game/${id}/timeline` }),
   replay: (id) => request({ url: `/api/avalon/game/${id}/replay` }),
   currentRoom: () => request({ url: '/api/avalon/room/current' }),
-  room: (id) => request({ url: `/api/avalon/room/${id}` }),
+  room: (id, showError = true) => request({ url: `/api/avalon/room/${id}`, showError }),
   createRoom: (data) =>
     request({ url: '/api/avalon/room/create', method: 'POST', data }),
   joinRoom: (data) =>
@@ -30,6 +30,12 @@ module.exports = {
     }),
   stand: (id) =>
     request({ url: `/api/avalon/room/${id}/stand`, method: 'POST' }),
+  addBot: (id) =>
+    request({ url: `/api/avalon/room/${id}/bots`, method: 'POST' }),
+  removeBot: (id, playerId) =>
+    request({ url: `/api/avalon/room/${id}/bots/${playerId}`, method: 'DELETE' }),
+  endGame: (id) =>
+    request({ url: `/api/avalon/game/${id}/end`, method: 'POST' }),
   start: (roomId) =>
     request({ url: `/api/avalon/game/start?roomId=${roomId}`, method: 'POST' }),
   game: (id) => request({ url: `/api/avalon/game/${id}` }),

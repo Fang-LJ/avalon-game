@@ -16,7 +16,9 @@ import java.util.List;
 public class MeService {
     // No left_at filter: archived participants still own their history and statistics.
     static final String FINISHED_FROM = " from t_avalon_game g join t_avalon_game_player p on p.game_id=g.id"
-            + " where p.user_id=? and g.phase='FINISHED' and g.status in ('FINISHED','CLOSED')";
+            + " where p.user_id=? and g.phase='FINISHED' and g.status in ('FINISHED','CLOSED')"
+            + " and not exists (select 1 from t_avalon_game_player test_gp join t_avalon_user test_u on test_u.id=test_gp.user_id"
+            + " where test_gp.game_id=g.id and test_u.provider='BOT')";
     private final AvalonRepository repository;
     private final JdbcTemplate jdbc;
     public MeService(AvalonRepository repository, JdbcTemplate jdbc) { this.repository = repository; this.jdbc = jdbc; }
@@ -71,9 +73,10 @@ public class MeService {
                         + " order by g.finished_at desc,g.id desc limit ? offset ?", (rs,n) -> {
                     Role role = Role.valueOf(rs.getString("role_code"));
                     Alignment side = Alignment.valueOf(rs.getString("alignment"));
-                    Winner winner = Winner.valueOf(rs.getString("winner_alignment"));
+                    String winnerCode = rs.getString("winner_alignment");
+                    Winner winner = winnerCode == null ? null : Winner.valueOf(winnerCode);
                     return new HistoryGame(rs.getLong("id"), rs.getString("room_code"), rs.getInt("player_count"),
-                            role, role.label(), side, winner, side.name().equals(winner.name()), rs.getString("finish_reason"),
+                            role, role.label(), side, winner, winner != null && side.name().equals(winner.name()), rs.getString("finish_reason"),
                             rs.getObject("started_at", LocalDateTime.class), rs.getObject("finished_at", LocalDateTime.class));
                 }, args.toArray());
         return new GamesPage(items, total == null ? 0 : total, page, size);
@@ -81,7 +84,7 @@ public class MeService {
 
     public Stats stats(long userId) {
         List<RoleCount> counts = jdbc.query("select p.role_code,count(*) games,sum(p.alignment=g.winner_alignment) wins"
-                        + FINISHED_FROM + " group by p.role_code order by games desc,p.role_code", (rs,n) -> {
+                        + FINISHED_FROM + " and g.winner_alignment is not null group by p.role_code order by games desc,p.role_code", (rs,n) -> {
                     Role role = Role.valueOf(rs.getString("role_code"));
                     return new RoleCount(role, role.label(), role.alignment(), rs.getLong("games"), rs.getLong("wins"));
                 }, userId);

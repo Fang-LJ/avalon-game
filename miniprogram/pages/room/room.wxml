@@ -7,6 +7,10 @@
     subtitle="{{game && game.phase === 'ROLE_CONFIRM' ? '仅你自己可见 · 请注意遮挡屏幕' : '房间 ' + room.roomCode + ' · ' + room.maxPlayers + ' 人局'}}"
   />
   <view wx:if="{{error}}" class="error" bindtap="refresh">{{error}}</view>
+  <view wx:if="{{room.testGame}}" class="footer-note">机器人测试局 · 不保存历史/战绩 · 结算保留 2 分钟</view>
+  <view wx:if="{{room.host && (!game || game.phase !== 'FINISHED')}}" class="host-controls">
+    <button class="host-end" disabled="{{busy}}" bindtap="endGame">{{game ? '结束本局' : '关闭房间'}}</button>
+  </view>
   <block wx:if="{{!game}}">
     <view class="card">
       <view class="lobby-title">邀请好友加入</view>
@@ -54,6 +58,13 @@
       </view>
     </view>
     <view class="lobby-actions actions">
+      <button wx:if="{{room.host}}" class="btn ghost" disabled="{{busy || room.currentPlayers >= room.maxPlayers}}" bindtap="addBot">添加机器人</button>
+      <view wx:if="{{room.host && botPlayers.length}}" class="card bot-list">
+        <view class="row bot-row" wx:for="{{botPlayers}}" wx:key="playerId">
+          <text class="muted small">{{item.nickname}} · {{item.seatNo}}号位</text>
+          <button class="bot-remove" disabled="{{busy}}" data-player-id="{{item.playerId}}" bindtap="removeBot">移除</button>
+        </view>
+      </view>
       <button
         class="btn"
         disabled="{{!room.canStart || busy}}"
@@ -75,9 +86,9 @@
     </view>
   </block>
   <block wx:elif="{{game.phase === 'FINISHED'}}">
-    <game-card tone="{{game.winner === 'GOOD' ? 'good' : 'evil'}}">
-      <view class="winner {{game.winner === 'GOOD' ? 'good' : 'evil'}}">
-        {{game.winner === 'GOOD' ? '正义' : '邪恶'}}阵营获胜
+    <game-card tone="{{!game.winner ? 'gold' : game.winner === 'GOOD' ? 'good' : 'evil'}}">
+      <view class="winner {{!game.winner ? 'gold' : game.winner === 'GOOD' ? 'good' : 'evil'}}">
+        {{!game.winner ? '房主已结束本局' : (game.winner === 'GOOD' ? '正义' : '邪恶') + '阵营获胜'}}
       </view>
       <view class="muted">{{finished.reasonText || '正在加载结算…'}}</view>
       <view wx:if="{{finished.targetName}}" class="muted small">
@@ -93,7 +104,7 @@
       </view>
     </view>
     <view class="finish-actions actions">
-      <button class="btn" bindtap="replay">查看完整复盘</button>
+      <button wx:if="{{!room.testGame}}" class="btn" bindtap="replay">查看完整复盘</button>
       <button
         wx:if="{{room.host}}"
         class="btn"

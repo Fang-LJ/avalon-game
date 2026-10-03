@@ -1,7 +1,7 @@
 <view class="page replay-page">
   <page-head
     title="对局复盘"
-    subtitle="{{replay ? replay.playerCount + ' 人局 · ' + (replay.winner === 'GOOD' ? '正义胜利' : '邪恶胜利') + (replay.duration !== null ? ' · ' + replay.duration + ' 分钟' : '') : '仅本局参与者可查看已结束对局'}}"
+    subtitle="{{replay ? replay.playerCount + ' 人局 · ' + (!replay.winner ? '房主结束 · 不计胜负' : replay.winner === 'GOOD' ? '正义胜利' : '邪恶胜利') + (replay.duration !== null ? ' · ' + replay.duration + ' 分钟' : '') : '仅本局参与者可查看已结束对局'}}"
     back="{{true}}"
   />
   <view wx:if="{{error}}" class="error" bindtap="load">
@@ -30,7 +30,7 @@
       <view wx:if="{{replay.targetText}}" class="muted">
         刺杀目标：{{replay.targetText}}
       </view>
-      <view class="{{replay.winner === 'GOOD' ? 'good' : 'evil'}}">
+      <view class="{{!replay.winner ? 'gold' : replay.winner === 'GOOD' ? 'good' : 'evil'}}">
         {{replay.reasonText}}
       </view>
     </view>

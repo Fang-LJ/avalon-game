@@ -17,6 +17,7 @@
     <text wx:if="{{player.me}}" class="seat-badge me-icon">我</text>
   </view>
   <view class="seat-number">{{player.seatNo}}号位</view>
+  <view wx:if="{{player.isBot}}" class="seat-bot">机器人</view>
   <view wx:if="{{!player.empty && !hideNickname}}" class="seat-name">
     {{player.nickname}}
   </view>

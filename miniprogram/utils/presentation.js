@@ -9,6 +9,7 @@ const ROLE_NAMES = {
   OBERON: '奥伯伦',
 };
 const FINISH = {
+  HOST_ENDED: '房主结束对局 · 不计胜负',
   FIVE_REJECTED_TEAMS: '连续五次组队被否决',
   THREE_FAILED_MISSIONS: '三个任务失败',
   MERLIN_ASSASSINATED: '刺客刺中梅林',
@@ -52,7 +53,7 @@ function historyItem(game) {
   return {
     ...game,
     timeText: dateText(game.finishedAt),
-    resultText: (game.winner === 'GOOD' ? '正义' : '邪恶') + '胜利',
+    resultText: game.winner ? (game.winner === 'GOOD' ? '正义' : '邪恶') + '胜利' : '房主结束',
     reasonText: FINISH[game.finishReason] || game.finishReason,
   };
 }
