@@ -43,6 +43,7 @@ Page({
     timeline: { missions: [], proposals: [] },
     entries: [],
     finished: null,
+    finishedIdentities: [],
     board: false,
     viewVotes: false,
     roleOverlay: false,
@@ -140,6 +141,8 @@ Page({
         missionOverlayOpen: false,
         missionOverlayKey: '',
         finished: null,
+        finishedIdentities: [],
+        entries: [],
         draftKey: '',
         viewVotes: false,
         roleOverlay: false,
@@ -199,7 +202,8 @@ Page({
       viewVotes: newPhase ? false : this.data.viewVotes,
       phaseTitle: PHASES[game.phase],
       isLeader: game.leaderPlayerId === room.myPlayerId,
-      entries: ui.logs(timeline, room.players),
+      entries: ui.liveLogs(timeline, room.players),
+      finishedIdentities: game.phase === 'FINISHED' ? ui.finishedIdentities(game.identities) : [],
     });
     this.decoratePlayers();
     this.syncMissionOverlay();

@@ -162,6 +162,17 @@ public class AvalonRepository {
     public List<GamePlayerRow> gamePlayers(long gameId) {
         return jdbc.query("select * from t_avalon_game_player where game_id=? order by seat_no", GAME_PLAYER, gameId);
     }
+    /** Ended-game identities include every participant, including those who have already left. */
+    public List<GamePlayerIdentityRow> gamePlayerIdentities(long gameId) {
+        return jdbc.query("select gp.id,gp.seat_no,gp.nickname_snapshot,u.avatar_url,gp.role_code,gp.alignment,u.provider"
+                        + " from t_avalon_game_player gp join t_avalon_user u on u.id=gp.user_id"
+                        + " where gp.game_id=? order by gp.seat_no,gp.id",
+                (rs,n) -> new GamePlayerIdentityRow(rs.getLong("id"), (Integer) rs.getObject("seat_no"),
+                        rs.getString("nickname_snapshot"), rs.getString("avatar_url"),
+                        rs.getString("role_code") == null ? null : Role.valueOf(rs.getString("role_code")),
+                        rs.getString("alignment") == null ? null : Alignment.valueOf(rs.getString("alignment")),
+                        "BOT".equals(rs.getString("provider"))), gameId);
+    }
     public Optional<GamePlayerRow> gamePlayer(long gameId, long gamePlayerId) {
         return jdbc.query("select * from t_avalon_game_player where game_id=? and id=? and left_at is null", GAME_PLAYER, gameId, gamePlayerId).stream().findFirst();
     }
@@ -305,6 +316,8 @@ public class AvalonRepository {
                           LocalDateTime finishedAt) {}
     public record GamePlayerRow(long id, long gameId, long userId, Integer seatNo, String nickname, Role role,
                                 Alignment alignment, boolean confirmed, boolean online, LocalDateTime leftAt) {}
+    public record GamePlayerIdentityRow(long id, Integer seatNo, String nickname, String avatarUrl,
+                                        Role role, Alignment alignment, boolean isBot) {}
     public record RoomPlayerViewRow(long gamePlayerId, long userId, Integer seatNo, String nickname,
                                     String avatarUrl, boolean online, boolean isBot) {
         public RoomPlayerViewRow(long gamePlayerId, long userId, Integer seatNo, String nickname, String avatarUrl, boolean online) {

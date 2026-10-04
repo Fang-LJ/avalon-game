@@ -1,46 +1,68 @@
-<view class="log-list {{compact ? 'compact-log' : ''}}">
+<template name="proposal-record">
+  <view class="card log-entry {{compact ? 'compact-entry' : ''}}">
+    <view class="log-title">第 {{item.missionNo}} 轮 · 第 {{item.proposalNo}} 次提案</view>
+    <block wx:if="{{compact}}">
+      <view class="muted small log-leader">队长：{{item.leaderText}}</view>
+      <view class="muted small">队伍：{{item.teamSeatText}}</view>
+    </block>
+    <view wx:else class="muted small">队长：{{item.leaderNickname}} · 队伍：{{item.teamText}}</view>
+    <view class="good small" wx:if="{{item.resolved}}">同意：{{item.approveText || '无'}}</view>
+    <view class="evil small" wx:if="{{item.resolved}}">反对：{{item.rejectText || '无'}}</view>
+    <view class="gold small">{{item.statusText}}</view>
+    <view wx:if="{{item.mission}}" class="{{item.mission.status === 'SUCCESS' ? 'good' : 'evil'}} small">
+      任务{{item.mission.status === 'SUCCESS' ? '成功' : '失败'}} · SUCCESS × {{item.mission.successCount}} / FAIL × {{item.mission.failCount}}
+    </view>
+    <view wx:if="{{replay && item.mission}}" class="muted small">
+      任务 {{item.mission.requiredPlayers}} 人 · 失败阈值 {{item.mission.failThreshold}}
+    </view>
+    <view wx:if="{{replay}}" wx:for="{{item.actions}}" wx:for-item="action" wx:key="id"
+      class="small {{action.choice === 'FAIL' ? 'evil' : 'muted'}}">
+      {{action.playerText}} → {{action.choice}}
+    </view>
+    <view wx:if="{{replay && item.ladyText}}" class="lady-log gold small">湖中仙女：{{item.ladyText}}</view>
+  </view>
+</template>
+
+<block wx:if="{{compact && !replay}}">
+  <view wx:if="{{liveEntries.length}}" class="live-history">
+    <view class="history-caption">
+      <text class="muted small">已结束提案</text>
+      <text wx:if="{{liveEntries.length > 1}}" class="muted small">‹ {{historyIndex + 1}} / {{liveEntries.length}} ›</text>
+    </view>
+    <swiper class="history-swiper" current="{{historyIndex}}" bindchange="historyChange" circular="{{false}}">
+      <swiper-item wx:for="{{liveEntries}}" wx:key="proposalId">
+        <template is="proposal-record" data="{{item, compact: true, replay: false}}" />
+      </swiper-item>
+    </swiper>
+    <view wx:if="{{liveEntries.length > 1}}" class="link center small all-history-link" bindtap="openAllHistory">
+      查看全部记录 ›
+    </view>
+  </view>
+  <view wx:if="{{allHistoryOpen && liveEntries.length}}" class="history-overlay" catchtap="ignoreTap" catchtouchmove="ignoreTap">
+    <view class="history-sheet" catchtap="ignoreTap">
+      <view class="history-sheet-head">
+        <view>
+          <view class="gold history-sheet-title">本局提案记录</view>
+          <view class="muted small">最新在上 · 仅公开投票与任务汇总</view>
+        </view>
+        <button class="history-close" bindtap="closeAllHistory">关闭</button>
+      </view>
+      <scroll-view class="history-scroll" scroll-y="{{true}}">
+        <view class="history-scroll-content">
+          <template wx:for="{{allEntries}}" wx:key="proposalId" is="proposal-record" data="{{item, compact: false, replay: false}}" />
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+</block>
+<view wx:else class="log-list">
   <view
     wx:for="{{entries}}"
     wx:key="proposalId"
     wx:if="{{replay || expanded || index === entries.length - 1}}"
-    class="card log-entry"
+    class="record-wrap"
   >
-    <view class="log-title">
-      第 {{item.missionNo}} 轮 · 第 {{item.proposalNo}} 次提案
-    </view>
-    <view class="muted small">
-      队长：{{item.leaderNickname}} · 队伍：{{item.teamText}}
-    </view>
-    <view class="good small" wx:if="{{item.resolved}}">
-      同意：{{item.approveText || '无'}}
-    </view>
-    <view class="evil small" wx:if="{{item.resolved}}">
-      反对：{{item.rejectText || '无'}}
-    </view>
-    <view class="gold small">{{item.statusText}}</view>
-    <view
-      wx:if="{{item.mission}}"
-      class="{{item.mission.status === 'SUCCESS' ? 'good' : 'evil'}} small"
-    >
-      任务{{item.mission.status === 'SUCCESS' ? '成功' : '失败'}} · SUCCESS ×
-      {{item.mission.successCount}} / FAIL × {{item.mission.failCount}}
-    </view>
-    <view wx:if="{{replay && item.mission}}" class="muted small">
-      任务 {{item.mission.requiredPlayers}} 人 · 失败阈值
-      {{item.mission.failThreshold}}
-    </view>
-    <view
-      wx:if="{{replay}}"
-      wx:for="{{item.actions}}"
-      wx:for-item="action"
-      wx:key="id"
-      class="small {{action.choice === 'FAIL' ? 'evil' : 'muted'}}"
-    >
-      {{action.playerText}} → {{action.choice}}
-    </view>
-    <view wx:if="{{replay && item.ladyText}}" class="lady-log gold small">
-      湖中仙女：{{item.ladyText}}
-    </view>
+    <template is="proposal-record" data="{{item, compact: false, replay}}" />
   </view>
   <view wx:if="{{!entries.length}}" class="card muted small">
     组队与任务记录将在这里显示

@@ -83,6 +83,19 @@ class GameHistoryServiceTest {
         when(repository.game(1,false)).thenReturn(Optional.of(game("CLOSED",Phase.FINISHED)));
         assertEquals(1,service.replay(101,1).gameId());
     }
+    @Test void hostEndedReplayRetainsUnfinishedProposalWithoutPublishingUnfinishedVotes() {
+        var ended = new GameRow(1,"123456",101,10,"AVALON_V1","FINISHED",Phase.FINISHED,
+                3,1,11L,0,1,1,12L,null,"HOST_ENDED",null,null,null,null);
+        when(repository.game(1,false)).thenReturn(Optional.of(ended));
+        when(repository.proposals(1)).thenReturn(List.of(new ProposalRow(21,1,3,1,11,List.of(11L,12L),"VOTING",1,0)));
+        var replay = service.replay(101,1);
+        assertEquals("HOST_ENDED", replay.finishReason());
+        assertNull(replay.winner());
+        assertEquals("VOTING", replay.proposals().getFirst().status());
+        assertTrue(replay.proposals().getFirst().votes().isEmpty());
+        assertNull(replay.proposals().getFirst().approveCount());
+        verify(repository,never()).votes(anyLong());
+    }
     GameRow game(String status,Phase phase) {
         return new GameRow(1,"123456",101,10,"AVALON_V1",status,phase,4,1,11L,0,3,1,12L,
                 Winner.EVIL,"MERLIN_ASSASSINATED",11L,null,null,null);

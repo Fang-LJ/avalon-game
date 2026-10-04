@@ -102,11 +102,16 @@
       </view>
     </game-card>
     <view class="card identity-list">
-      <view wx:for="{{game.identities}}" wx:key="playerId" class="identity-row">
-        <text>{{item.seatNo}} {{item.nickname}}</text>
-        <text class="{{item.alignment === 'GOOD' ? 'good' : 'evil'}}">
-          {{item.roleName}}
-        </text>
+      <view wx:for="{{finishedIdentities}}" wx:key="playerId" class="identity-row">
+        <view class="identity-avatar">
+          <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" />
+          <text wx:else>{{item.initial}}</text>
+        </view>
+        <view class="identity-player-info">
+          <text class="identity-seat">{{item.seatNo}}号位 · </text>
+          <text class="identity-nickname">{{item.nickname}}</text>
+        </view>
+        <text class="identity-role {{item.alignment === 'GOOD' ? 'good' : 'evil'}}">{{item.roleName}}</text>
       </view>
     </view>
     <view class="finish-actions actions">
@@ -212,8 +217,9 @@
       </view>
     </block>
     <game-log
-      wx:if="{{board && game.phase !== 'ASSASSINATION'}}"
+      wx:if="{{board && game.phase !== 'ASSASSINATION' && entries.length}}"
       compact="{{true}}"
+      gameId="{{game.gameId}}"
       entries="{{entries}}"
     />
     <view class="phase-actions actions">

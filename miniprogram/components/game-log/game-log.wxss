@@ -12,5 +12,19 @@
   border-top: 1px solid var(--border);
   padding-top: 16rpx;
 }
-.compact-log .log-entry { padding: 20rpx 24rpx; }
-.compact-log .log-title { font-size: 24rpx; }
+.compact-entry { padding: 20rpx 24rpx; height: 100%; margin: 0; box-sizing: border-box; }
+.compact-entry .log-title { font-size: 24rpx; }
+.compact-entry > view { line-height: 32rpx; }
+.compact-entry > view + view { margin-top: 8rpx; }
+.log-leader { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.history-caption { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10rpx; }
+.history-swiper { height: 336rpx; }
+.all-history-link { padding: 16rpx 0; }
+.history-overlay { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,0.82); display: flex; align-items: flex-end; }
+.history-sheet { width: 100%; height: 82vh; display: flex; flex-direction: column; background: var(--bg); border-radius: 28rpx 28rpx 0 0; border: 1px solid var(--border); padding: 24rpx 28rpx calc(20rpx + env(safe-area-inset-bottom)); box-sizing: border-box; }
+.history-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; flex-shrink: 0; padding-bottom: 20rpx; }
+.history-sheet-title { font-size: 30rpx; font-weight: 700; }
+.history-close { flex-shrink: 0; margin: 0; padding: 0 16rpx; font-size: 25rpx; line-height: 88rpx; color: var(--gold); background: transparent; }
+.history-close::after { border: 0; }
+.history-scroll { flex: 1; min-height: 0; height: 0; }
+.history-scroll-content { padding-bottom: 12rpx; }

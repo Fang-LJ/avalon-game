@@ -275,8 +275,9 @@ public class GameService {
         ProposalRow latestResolved = repository.latestResolvedProposal(gameId).orElse(null);
         TeamVoteResult latestVoteResult = latestResolved == null ? null : new TeamVoteResult(latestResolved.missionNo(),
                 latestResolved.proposalNo(), "APPROVED".equals(latestResolved.status()), repository.votes(latestResolved.id()));
-        List<PublicIdentity> identities = c.game.phase() == Phase.FINISHED ? repository.gamePlayers(gameId).stream()
-                .map(gp -> new PublicIdentity(gp.id(), requireSeat(gp), gp.nickname(), gp.role().label(), gp.alignment().name()))
+        List<PublicIdentity> identities = c.game.phase() == Phase.FINISHED ? repository.gamePlayerIdentities(gameId).stream()
+                .map(gp -> new PublicIdentity(gp.id(), Objects.requireNonNull(gp.seatNo()), gp.nickname(), gp.avatarUrl(),
+                        gp.role().label(), gp.alignment().name(), gp.isBot()))
                 .sorted(Comparator.comparingInt(PublicIdentity::seatNo)).toList() : List.of();
         MissionResult result = latestMission == null ? null : new MissionResult(latestMission.missionNo(),
                 latestMission.successCount(), latestMission.failCount(), latestMission.status());
@@ -338,7 +339,8 @@ public class GameService {
                              boolean confirmed, String instruction, List<RoleVisibilityService.VisiblePlayer> visiblePlayers) {}
     public record MissionResult(int missionNo, Integer successCount, Integer failCount, String status) {}
     public record TeamVoteResult(int missionNo, int proposalNo, boolean approved, List<VoteView> votes) {}
-    public record PublicIdentity(long playerId, int seatNo, String nickname, String roleName, String alignment) {}
+    public record PublicIdentity(long playerId, int seatNo, String nickname, String avatarUrl,
+                                 String roleName, String alignment, boolean isBot) {}
     public record LadyInspectionResult(long targetPlayerId, int targetSeatNo, String targetNickname, String alignment) {}
     public record GameState(long gameId, long roomId, String phase, int missionNo, int proposalNo,
                             int consecutiveRejections, int goodScore, int evilScore, long leaderPlayerId,

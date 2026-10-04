@@ -129,7 +129,9 @@ function logs(timeline, players, replay = false) {
     return {
       ...p,
       teamText: p.teamPlayerIds.map(label).join(' · '),
-      resolved: p.status !== 'VOTING',
+      teamSeatText: p.teamPlayerIds.map(id => byId[id]?.seatNo ?? String(id)).join(' · '),
+      leaderText: `${p.leaderSeatNo ?? byId[p.leaderPlayerId]?.seatNo ?? ''}号 ${p.leaderNickname || byId[p.leaderPlayerId]?.nickname || ''}`,
+      resolved: p.status === 'APPROVED' || p.status === 'REJECTED',
       approveText: p.votes
         .filter((v) => v.choice === 'APPROVE')
         .map((v) => v.seatNo)
@@ -165,6 +167,20 @@ function logs(timeline, players, replay = false) {
     };
   });
 }
+// The replay mapper remains complete. Only live history excludes unfinished proposals/tasks.
+function liveLogs(timeline, players) {
+  return logs(timeline, players).filter(entry => entry.resolved).map(entry => ({
+    ...entry,
+    mission: entry.mission && ['SUCCESS', 'FAILED'].includes(entry.mission.status)
+      ? entry.mission : null,
+  }));
+}
+function finishedIdentities(identities = []) {
+  return identities.slice().sort((a, b) => a.seatNo - b.seatNo).map(player => ({
+    ...player,
+    initial: player.isBot ? '机' : initial(player.nickname),
+  }));
+}
 function showRules() {
   wx.showModal({
     title: '规则与角色说明',
@@ -193,6 +209,8 @@ module.exports = {
   seats,
   lobbySeats,
   logs,
+  liveLogs,
+  finishedIdentities,
   showRules,
   showLegal,
 };
