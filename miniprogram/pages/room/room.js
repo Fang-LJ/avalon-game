@@ -31,6 +31,8 @@ Page({
     ladyResult: null,
     ladyResultGameId: null,
     missionChoice: '',
+    missionOverlayOpen: false,
+    missionOverlayKey: '',
     missionSuccessCard: CARDS.actions.SUCCESS,
     missionFailCard: CARDS.actions.FAIL,
     missionCardBack: CARDS.back.ACTION,
@@ -135,6 +137,8 @@ Page({
         ladyResult: null,
         ladyResultGameId: null,
         missionChoice: '',
+        missionOverlayOpen: false,
+        missionOverlayKey: '',
         finished: null,
         draftKey: '',
         viewVotes: false,
@@ -188,6 +192,8 @@ Page({
       draftKey: key,
       selectedIds,
       missionChoice: newPhase ? '' : this.data.missionChoice,
+      missionOverlayOpen: newPhase ? false : this.data.missionOverlayOpen,
+      missionOverlayKey: newPhase ? '' : this.data.missionOverlayKey,
       assassinationTarget: newPhase ? null : this.data.assassinationTarget,
       ladyTarget: newPhase ? null : this.data.ladyTarget,
       viewVotes: newPhase ? false : this.data.viewVotes,
@@ -196,6 +202,7 @@ Page({
       entries: ui.logs(timeline, room.players),
     });
     this.decoratePlayers();
+    this.syncMissionOverlay();
     if (game.phase === 'FINISHED' && !this.data.finished) {
       if (room.testGame) {
         this.setData({ finished: { reasonText: ui.FINISH[game.finishReason] || game.finishReason, targetName: '' } });
@@ -247,6 +254,7 @@ Page({
         selectedIds,
         game.leaderPlayerId,
         room.maxPlayers,
+        game.phase,
       )
       .map((p) => ({
         ...p,
@@ -452,11 +460,43 @@ Page({
           current.proposalNo === game.proposalNo && current.phase === 'MISSION_EXECUTING' &&
           current.onMission && !current.hasSubmittedMission &&
           (missionChoice === 'SUCCESS' || current.evil))
-        return api.mission(game.gameId, missionChoice);
+        return api.mission(game.gameId, missionChoice).then(result => {
+          const latest = this.data.game;
+          if (latest && latest.gameId === game.gameId && latest.missionNo === game.missionNo &&
+              latest.proposalNo === game.proposalNo)
+            this.setData({ missionOverlayOpen: false, missionChoice: '' });
+          return result;
+        });
     });
   },
+  syncMissionOverlay() {
+    const { game, missionOverlayKey } = this.data;
+    if (!game || game.phase !== 'MISSION_EXECUTING' || !game.onMission || game.hasSubmittedMission) {
+      this.setData({ missionOverlayOpen: false });
+      return;
+    }
+    const key = `${game.gameId}-${game.missionNo}-${game.proposalNo}`;
+    if (key !== missionOverlayKey)
+      this.setData({ missionOverlayKey: key, missionOverlayOpen: true, roleOverlay: false, viewVotes: false });
+  },
+  openMissionOverlay() {
+    const { game, busy } = this.data;
+    if (!game || game.phase !== 'MISSION_EXECUTING' || !game.onMission || game.hasSubmittedMission || busy) return;
+    this.setData({
+      missionOverlayOpen: true,
+      missionOverlayKey: `${game.gameId}-${game.missionNo}-${game.proposalNo}`,
+      viewVotes: false,
+      roleOverlay: false,
+    });
+  },
+  closeMissionOverlay() {
+    if (!this.data.busy) this.setData({ missionOverlayOpen: false });
+  },
   toggleVotes() {
-    this.setData({ viewVotes: !this.data.viewVotes });
+    if (this.data.busy) return;
+    const viewVotes = !this.data.viewVotes;
+    this.setData({ viewVotes, missionOverlayOpen: false });
+    if (!viewVotes) this.openMissionOverlay();
     this.decoratePlayers();
   },
   inspectLady() {
@@ -471,7 +511,8 @@ Page({
     this.setData({ ladyResult: null });
   },
   openRoleOverlay() {
-    if (this.data.role) this.setData({ roleOverlay: true });
+    if (this.data.role && !this.data.busy)
+      this.setData({ roleOverlay: true, missionOverlayOpen: false });
   },
   closeRoleOverlay() {
     this.setData({ roleOverlay: false });
@@ -500,6 +541,21 @@ Page({
   },
   copyCode() {
     wx.setClipboardData({ data: this.data.room.roomCode });
+  },
+  confirmLeaveRoom() {
+    if (this.data.busy || !this.data.room) return;
+    const roomId = this.data.roomId;
+    const gameId = this.data.game && this.data.game.gameId;
+    wx.showModal({
+      title: '退出当前房间？',
+      content: '退出后你将暂时离线，对局仍会继续；如果有待完成的操作，可能影响其他玩家。确认退出吗？',
+      confirmText: '确认退出',
+      success: result => {
+        if (result.confirm && this.data.roomId === roomId &&
+            this.data.game && this.data.game.gameId === gameId)
+          this.leaveRoom();
+      },
+    });
   },
   leaveRoom() {
     if (this.data.busy) return;

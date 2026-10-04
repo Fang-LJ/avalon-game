@@ -1,4 +1,4 @@
-<view class="log-list">
+<view class="log-list {{compact ? 'compact-log' : ''}}">
   <view
     wx:for="{{entries}}"
     wx:key="proposalId"

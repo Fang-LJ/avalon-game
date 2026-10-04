@@ -3,12 +3,22 @@
   wx:if="{{room}}"
 >
   <page-head
+    compact="{{board}}"
     title="{{game && (game.phase === 'TEAM_BUILDING' || game.phase === 'TEAM_VOTING' || game.phase === 'MISSION_EXECUTING') ? '第 ' + game.missionNo + ' 轮 · ' + phaseTitle : phaseTitle}}"
     subtitle="{{game && game.phase === 'ROLE_CONFIRM' ? '仅你自己可见 · 请注意遮挡屏幕' : '房间 ' + room.roomCode + ' · ' + room.maxPlayers + ' 人局'}}"
   />
   <view wx:if="{{error}}" class="error" bindtap="refresh">{{error}}</view>
-  <view wx:if="{{room.host && (!game || game.phase !== 'FINISHED')}}" class="host-controls">
+  <view wx:if="{{room.host && !game}}" class="host-controls">
     <button class="host-end" disabled="{{busy}}" bindtap="endGame">{{game ? '结束本局' : '关闭房间'}}</button>
+  </view>
+  <view wx:if="{{game && game.phase !== 'FINISHED'}}" class="game-status-row">
+    <mission-track wx:if="{{board}}" missions="{{timeline.missions}}" current="{{game.missionNo}}" />
+    <text wx:else class="muted small">确认身份</text>
+    <view class="room-quick-actions">
+      <button wx:if="{{board}}" class="quick-action private-role-trigger" disabled="{{busy}}" bindtap="openRoleOverlay">我的身份</button>
+      <button class="quick-action" disabled="{{busy}}" bindtap="confirmLeaveRoom">退出</button>
+      <button wx:if="{{room.host}}" class="quick-action" disabled="{{busy}}" bindtap="endGame">结束</button>
+    </view>
   </view>
   <block wx:if="{{!game}}">
     <view class="card">
@@ -121,14 +131,6 @@
     </view>
   </block>
   <block wx:else>
-    <view class="private-role-trigger" bindtap="openRoleOverlay">我的身份</view>
-    <mission-track
-      wx:if="{{game.phase !== 'LADY_OF_LAKE' && game.phase !== 'ASSASSINATION'}}"
-      missions="{{timeline.missions}}"
-      current="{{game.missionNo}}"
-      good="{{game.goodScore}}"
-      evil="{{game.evilScore}}"
-    />
     <view wx:if="{{game.phase === 'ASSASSINATION'}}" class="card">
       <view class="evil">
         {{game.assassin ? '轮到你选择刺杀目标' : '等待刺客选择目标'}}
@@ -148,7 +150,7 @@
         <player-seat
           compact="{{room.maxPlayers >= 9}}"
           formal="{{true}}"
-          hideNickname="{{room.maxPlayers >= 9}}"
+          hideNickname="{{room.maxPlayers >= 8}}"
           player="{{item}}"
           bind:select="togglePlayer"
         />
@@ -191,39 +193,6 @@
         </block>
       </view>
     </view>
-    <block
-      wx:if="{{game.phase === 'MISSION_EXECUTING' && game.onMission && !viewVotes}}"
-    >
-      <view class="card mission-info">
-        <view class="gold">你已被选入本轮任务</view>
-        <view class="muted">本轮共 {{game.requiredTeamSize}} 名任务成员</view>
-        <view class="link small" bindtap="toggleVotes">查看组队投票结果 ›</view>
-      </view>
-      <view wx:if="{{!game.hasSubmittedMission}}" class="mission-select">
-        <view class="section-title">请选择任务牌</view>
-        <view class="muted small mission-hint">{{game.evil ? '选择成功或失败，确认后秘密提交' : '正义阵营只能提交成功牌'}}</view>
-        <view class="mission-cards">
-          <view class="mission-card-option">
-            <play-card front="{{missionSuccessCard}}" back="{{missionCardBack}}" flipped="{{true}}"
-              size="action" selected="{{missionChoice === 'SUCCESS'}}" disabled="{{busy}}" bind:select="missionSuccess" />
-            <view class="mission-card-label {{missionChoice === 'SUCCESS' ? 'gold' : 'muted'}}">{{missionChoice === 'SUCCESS' ? '已选择 · 成功' : '成功'}}</view>
-          </view>
-          <view wx:if="{{game.evil}}" class="mission-card-option">
-            <play-card front="{{missionFailCard}}" back="{{missionCardBack}}" flipped="{{true}}"
-              size="action" selected="{{missionChoice === 'FAIL'}}" disabled="{{busy}}" bind:select="missionFail" />
-            <view class="mission-card-label {{missionChoice === 'FAIL' ? 'gold' : 'muted'}}">{{missionChoice === 'FAIL' ? '已选择 · 失败' : '失败'}}</view>
-          </view>
-        </view>
-      </view>
-      <view wx:else class="empty">已秘密提交，等待任务成员</view>
-      <view class="card privacy-note">
-        <view>你的选择不会公开给其他玩家</view>
-        <view class="muted small">
-          当前对局只公开最终 SUCCESS / FAIL
-          数量；完整出票仅在结束后的参与者复盘中显示。
-        </view>
-      </view>
-    </block>
     <block wx:if="{{game.phase === 'LADY_OF_LAKE'}}">
       <view class="card">
         <view class="gold">当前持有者：{{game.ladyHolderNickname}}</view>
@@ -244,6 +213,7 @@
     </block>
     <game-log
       wx:if="{{board && game.phase !== 'ASSASSINATION'}}"
+      compact="{{true}}"
       entries="{{entries}}"
     />
     <view class="phase-actions actions">
@@ -270,22 +240,15 @@
       </view>
       <block wx:elif="{{game.phase === 'MISSION_EXECUTING'}}">
         <button
-          wx:if="{{game.onMission && viewVotes}}"
-          class="btn"
-          bindtap="toggleVotes"
+          wx:if="{{game.onMission && !game.hasSubmittedMission}}"
+          class="btn ghost"
+          disabled="{{busy}}"
+          bindtap="openMissionOverlay"
         >
-          返回秘密任务
-        </button>
-        <button
-          wx:elif="{{game.onMission && !game.hasSubmittedMission}}"
-          class="btn"
-          disabled="{{!missionChoice || busy}}"
-          bindtap="submitMission"
-        >
-          确认提交
+          {{viewVotes ? '返回秘密任务' : '执行秘密任务'}}
         </button>
         <button wx:else class="btn" disabled="{{true}}">
-          等待任务成员提交
+          {{game.hasSubmittedMission ? '已秘密提交 · 等待其他任务成员' : '等待任务成员提交'}}
         </button>
       </block>
       <button
@@ -313,6 +276,13 @@
       </view>
     </view>
   </block>
+  <mission-card-overlay
+    wx:if="{{missionOverlayOpen && game.phase === 'MISSION_EXECUTING' && game.onMission && !game.hasSubmittedMission}}"
+    evil="{{game.evil}}" teamSize="{{game.requiredTeamSize}}" choice="{{missionChoice}}" busy="{{busy}}"
+    successCard="{{missionSuccessCard}}" failCard="{{missionFailCard}}" cardBack="{{missionCardBack}}"
+    bind:success="missionSuccess" bind:fail="missionFail" bind:submit="submitMission"
+    bind:close="closeMissionOverlay" bind:votes="toggleVotes"
+  />
   <view wx:if="{{roleOverlay && role}}" class="private-overlay" catchtap="ignoreTap">
     <view class="card private-result role-overlay-card">
       <view class="muted small">仅你可见</view>

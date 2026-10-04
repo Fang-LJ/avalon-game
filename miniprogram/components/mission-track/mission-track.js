@@ -1,6 +1,6 @@
 Component({
   options: { styleIsolation: 'apply-shared' },
-  properties: { missions: Array, current: Number, good: Number, evil: Number },
+  properties: { missions: Array, current: Number },
   data: { dots: [] },
   observers: {
     'missions,current': function (missions, current) {

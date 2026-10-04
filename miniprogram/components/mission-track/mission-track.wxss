@@ -4,15 +4,15 @@
 .track {
   display: flex;
   align-items: center;
-  gap: 14rpx;
+  gap: 8rpx;
 }
 .dot {
-  width: 58rpx;
-  height: 58rpx;
+  width: 48rpx;
+  height: 48rpx;
   border-radius: 50%;
   background: var(--soft);
   text-align: center;
-  line-height: 58rpx;
+  line-height: 48rpx;
   font-weight: bold;
   flex-shrink: 0;
 }
@@ -26,11 +26,4 @@
 .CURRENT {
   background: var(--gold);
   color: var(--bg);
-}
-.score {
-  margin-left: auto;
-  display: flex;
-  flex-direction: column;
-  font-size: 19rpx;
-  white-space: nowrap;
 }

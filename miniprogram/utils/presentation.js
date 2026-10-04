@@ -57,11 +57,12 @@ function historyItem(game) {
     reasonText: FINISH[game.finishReason] || game.finishReason,
   };
 }
-function seatPosition(seatNo, maxPlayers) {
+function seatPosition(seatNo, maxPlayers, formal = false) {
   const angle = -Math.PI / 2 + ((seatNo - 1) * 2 * Math.PI) / maxPlayers;
   const x = 50 + 42 * Math.cos(angle);
-  const y =
-    maxPlayers >= 9
+  const y = formal
+    ? (maxPlayers >= 9 ? 39 + 36 * Math.sin(angle) : 37 + 34 * Math.sin(angle))
+    : maxPlayers >= 9
       ? 41 + 39 * Math.sin(angle)
       : 38.5 + 36.5 * Math.sin(angle);
   return `left:${x.toFixed(2)}%;top:${y.toFixed(2)}%;`;
@@ -76,14 +77,17 @@ function privateKnowledge(player) {
       type === 'MERLIN_OR_MORGANA' ? 'knowledge-candidate' : 'knowledge-evil',
   };
 }
-function seats(players, selected = [], leaderId, maxPlayers = players.length) {
+function seats(players, selected = [], leaderId, maxPlayers = players.length, phase = 'TEAM_BUILDING') {
+  const selectionClass = phase === 'ASSASSINATION' ? 'selected-danger'
+    : phase === 'LADY_OF_LAKE' ? 'selected-lady' : 'selected-team';
   return players.filter((p) => p.seatNo != null).map((p) => {
     return {
       ...privateKnowledge(p),
       initial: initial(p.nickname),
       selected: selected.includes(p.playerId),
+      selectionClass: selected.includes(p.playerId) ? selectionClass : '',
       leader: p.playerId === leaderId,
-      position: seatPosition(p.seatNo, maxPlayers),
+      position: seatPosition(p.seatNo, maxPlayers, true),
     };
   });
 }

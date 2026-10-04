@@ -43,12 +43,12 @@
 }
 .role-progress { margin: 30rpx 0 20rpx; }
 .board {
-  height: 890rpx;
-  margin-top: 50rpx;
+  height: 720rpx;
+  margin-top: 14rpx;
   position: relative;
 }
 .board.large-table {
-  height: 960rpx;
+  height: 900rpx;
 }
 .positioned-seat {
   position: absolute;
@@ -56,35 +56,20 @@
 }
 .board-center {
   position: absolute;
-  top: 35%;
-  left: 21%;
-  width: 58%;
-  padding: 25rpx 16rpx;
+  top: 43%;
+  left: 25%;
+  width: 50%;
+  padding: 8rpx 12rpx;
   text-align: center;
 }
+.board-center > view { font-size: 21rpx; line-height: 1.3; }
+.board-center > view + view { margin-top: 4rpx; }
 .board-center > view:first-child {
   font-weight: bold;
-  font-size: 28rpx;
+  font-size: 24rpx;
 }
 .phase-actions {
   margin-top: 25rpx;
-}
-.mission-info {
-  margin-top: 40rpx;
-}
-.mission-select {
-  margin-top: 32rpx;
-}
-.mission-select .section-title {
-  margin-bottom: 10rpx;
-}
-.mission-hint { margin-bottom: 28rpx; }
-.mission-cards { display: flex; justify-content: center; gap: 38rpx; padding: 12rpx 0; }
-.mission-card-option { text-align: center; }
-.mission-card-label { margin-top: 20rpx; font-size: 24rpx; }
-.privacy-note {
-  margin-top: 28rpx;
-  margin-bottom: 32rpx;
 }
 .lady-grid {
   display: grid;
@@ -132,16 +117,7 @@
   margin-top: 35rpx;
 }
 .private-role-trigger {
-  position: fixed;
-  top: calc(env(safe-area-inset-top) + 20rpx);
-  right: 38rpx;
-  z-index: 25;
-  padding: 11rpx 20rpx;
-  border: 1px solid var(--gold);
-  border-radius: 999rpx;
   color: var(--gold);
-  background: var(--elevated);
-  font-size: 21rpx;
 }
 .role-overlay-card {
   max-height: 82vh;
@@ -187,13 +163,6 @@
 .has-phase-actions {
   padding-bottom: calc(220rpx + env(safe-area-inset-bottom));
 }
-.room-page .board {
-  height: 820rpx;
-  margin-top: 36rpx;
-}
-.room-page .board.large-table {
-  height: 960rpx;
-}
 .room-page .phase-actions {
   position: fixed;
   left: 38rpx;
@@ -218,3 +187,10 @@
 .bot-tools { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-bottom: 20rpx; }
 .bot-add { flex-shrink: 0; background: var(--soft); color: var(--gold); font-size: 23rpx; border: 1px solid var(--border); border-radius: 999rpx; margin: 0; padding: 0 20rpx; line-height: 60rpx; }
 button.bot-add[disabled] { background: var(--soft) !important; color: var(--muted) !important; opacity: 0.45; }
+.game-status-row { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; }
+.game-status-row mission-track { flex-shrink: 0; }
+.room-quick-actions { display: flex; align-items: center; gap: 4rpx; }
+.quick-action { min-width: 72rpx; min-height: 88rpx; padding: 0 8rpx; margin: 0; line-height: 88rpx; font-size: 21rpx; color: var(--muted); background: transparent; }
+.quick-action::after { border: 0; }
+button.quick-action.private-role-trigger { color: var(--gold); }
+button.quick-action[disabled] { background: transparent !important; color: var(--muted) !important; opacity: 0.45; }

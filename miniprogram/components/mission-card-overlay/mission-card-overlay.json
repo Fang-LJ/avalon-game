@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "play-card": "/components/play-card/play-card"
+  }
+}

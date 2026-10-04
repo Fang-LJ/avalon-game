@@ -12,3 +12,5 @@
   border-top: 1px solid var(--border);
   padding-top: 16rpx;
 }
+.compact-log .log-entry { padding: 20rpx 24rpx; }
+.compact-log .log-title { font-size: 24rpx; }

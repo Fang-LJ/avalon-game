@@ -1,4 +1,4 @@
-<view class="page-head" style="padding-top: {{top}}px;">
+<view class="page-head {{compact ? 'compact-head' : ''}}" style="padding-top: {{top}}px;">
   <view class="heading-row">
     <view class="title" bindtap="{{back ? 'goBack' : ''}}">
       {{back ? '‹ ' : ''}}{{title}}

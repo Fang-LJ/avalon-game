@@ -3,7 +3,7 @@
   bindtap="choose"
 >
   <view
-    class="seat-avatar {{player.empty ? 'empty-avatar' : ''}}"
+    class="seat-avatar {{player.empty ? 'empty-avatar' : ''}} {{player.selected ? player.selectionClass : ''}}"
   >
     <image
       wx:if="{{player.avatarUrl}}"
@@ -12,7 +12,6 @@
     />
     <text wx:else>{{player.initial}}</text>
     <text wx:if="{{player.leader}}" class="seat-badge leader-icon">♛</text>
-    <text wx:if="{{player.selected}}" class="seat-badge selected-icon">✓</text>
     <text wx:if="{{player.knowledgeType}}" class="seat-badge knowledge-icon {{player.knowledgeClass}}">{{player.knowledgeSymbol}}</text>
     <text wx:if="{{player.me}}" class="seat-badge me-icon">我</text>
   </view>

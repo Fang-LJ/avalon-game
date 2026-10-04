@@ -362,9 +362,11 @@ test('seat rectangles stay in screen and above log at 375/390/430 widths', () =>
       const scale = width / 750,
         margin = 38 * scale,
         content = 674 * scale,
-        height = (count >= 9 ? 960 : 820) * scale;
-      const seatWidth = (count >= 9 ? 125 : 146) * scale,
-        seatHeight = (count >= 9 ? 182 : 194) * scale;
+        height = (count >= 9 ? 900 : 720) * scale;
+      // Formal avatars, number, bot label, optional nickname and 4rpx gaps.
+      // Include the crown's 12rpx top overhang in every bounding rectangle.
+      const seatWidth = (count >= 9 ? 112 : 128) * scale,
+        seatHeight = ((count >= 9 ? 146 : count === 8 ? 160 : 188) + 12) * scale;
       const boxes = seats(
         Array.from({ length: count }, (_, i) => ({
           playerId: i + 1,
@@ -378,7 +380,7 @@ test('seat rectangles stay in screen and above log at 375/390/430 widths', () =>
         const [x, y] = s.position.match(/[\d.]+/g).map(Number);
         return {
           left: margin + (content * x) / 100 - seatWidth / 2,
-          top: (height * y) / 100,
+          top: (height * y) / 100 - 12 * scale,
           width: seatWidth,
           height: seatHeight,
         };
@@ -386,6 +388,7 @@ test('seat rectangles stay in screen and above log at 375/390/430 widths', () =>
       for (const b of boxes) {
         assert.ok(b.left >= 0);
         assert.ok(b.left + b.width <= width);
+        assert.ok(b.top >= 0);
         assert.ok(b.top + b.height <= height);
       }
       for (let i = 0; i < boxes.length; i++)
@@ -400,6 +403,11 @@ test('seat rectangles stay in screen and above log at 375/390/430 widths', () =>
             `${width}px / ${count} players: ${i},${j}`,
           );
         }
+      const center = { left: margin + content * 0.25, top: height * 0.43, width: content * 0.5, height: 116 * scale };
+      for (const b of boxes)
+        assert.ok(center.left + center.width <= b.left || b.left + b.width <= center.left ||
+          center.top + center.height <= b.top || b.top + b.height <= center.top,
+        `${width}px / ${count} players: center overlaps seat`);
     }
 });
 test('all core room phase controls still invoke existing API methods', async () => {

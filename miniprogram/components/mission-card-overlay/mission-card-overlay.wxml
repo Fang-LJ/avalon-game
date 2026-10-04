@@ -1,0 +1,31 @@
+<view class="mission-overlay" catchtap="ignoreTouch" catchtouchmove="ignoreTouch">
+  <view class="card mission-panel">
+    <view class="mission-heading">
+      <view class="mission-title gold">秘密任务</view>
+      <view class="muted">你已被选入本轮任务 · 共 {{teamSize}} 名成员</view>
+      <view class="mission-private-note">你的选择不会公开给其他玩家</view>
+    </view>
+    <scroll-view scroll-y="{{true}}" class="mission-content">
+      <view class="muted small mission-hint">{{evil ? '选择成功或失败，确认后秘密提交' : '正义阵营只能提交成功牌'}}</view>
+      <view class="mission-cards">
+        <view class="mission-card-option {{choice === 'SUCCESS' ? 'choice-active' : choice ? 'choice-muted' : ''}}">
+          <play-card front="{{successCard}}" back="{{cardBack}}" flipped="{{true}}"
+            size="action" selected="{{choice === 'SUCCESS'}}" disabled="{{busy}}" bind:select="chooseSuccess" />
+          <view class="mission-card-label {{choice === 'SUCCESS' ? 'gold' : 'muted'}}">{{choice === 'SUCCESS' ? '已选择 · 成功' : '成功'}}</view>
+        </view>
+        <view wx:if="{{evil}}" class="mission-card-option {{choice === 'FAIL' ? 'choice-active' : choice ? 'choice-muted' : ''}}">
+          <play-card front="{{failCard}}" back="{{cardBack}}" flipped="{{true}}"
+            size="action" selected="{{choice === 'FAIL'}}" disabled="{{busy}}" bind:select="chooseFail" />
+          <view class="mission-card-label {{choice === 'FAIL' ? 'gold' : 'muted'}}">{{choice === 'FAIL' ? '已选择 · 失败' : '失败'}}</view>
+        </view>
+      </view>
+    </scroll-view>
+    <view class="mission-footer">
+      <button class="btn" disabled="{{busy || !choice}}" loading="{{busy}}" bindtap="submit">确认提交</button>
+      <view class="mission-secondary-actions">
+        <button class="mission-votes" disabled="{{busy}}" bindtap="votes">查看组队投票结果 ›</button>
+        <button class="mission-close" disabled="{{busy}}" bindtap="close">暂时收起</button>
+      </view>
+    </view>
+  </view>
+</view>

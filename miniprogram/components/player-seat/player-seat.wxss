@@ -77,12 +77,9 @@
   color: var(--bg);
   background: var(--gold);
 }
-.selected-icon {
-  top: -5rpx;
-  right: -5rpx;
-  color: var(--bg);
-  background: var(--good);
-}
+.selected-team { box-shadow: 0 0 0 4rpx var(--bg), 0 0 0 8rpx var(--good); }
+.selected-danger { box-shadow: 0 0 0 4rpx var(--bg), 0 0 0 8rpx var(--evil); }
+.selected-lady { box-shadow: 0 0 0 4rpx var(--bg), 0 0 0 8rpx var(--gold); }
 .knowledge-icon {
   right: -5rpx;
   bottom: -5rpx;
@@ -137,3 +134,10 @@
   font-size: 21rpx;
 }
 .seat-bot { font-size: 18rpx; line-height: 22rpx; color: var(--gold); }
+.formal { width: 128rpx; gap: 4rpx; }
+.formal .seat-avatar { width: 96rpx; height: 96rpx; }
+.formal .seat-number { font-size: 26rpx; line-height: 34rpx; }
+.formal .seat-name { max-width: 128rpx; font-size: 18rpx; line-height: 24rpx; }
+.formal.compact { width: 112rpx; }
+.formal.compact .seat-avatar { width: 84rpx; height: 84rpx; }
+.formal.compact .seat-number { font-size: 24rpx; line-height: 32rpx; }

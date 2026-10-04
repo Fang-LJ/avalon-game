@@ -16,3 +16,7 @@
 .subtitle {
   margin-top: 3rpx;
 }
+.compact-head { padding-bottom: 12rpx; }
+.compact-head .heading-row { min-height: 44rpx; }
+.compact-head .title { font-size: 32rpx; }
+.compact-head .subtitle { font-size: 21rpx; }

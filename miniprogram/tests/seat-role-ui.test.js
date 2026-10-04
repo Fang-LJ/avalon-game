@@ -45,7 +45,7 @@ test('seat positions use seatNo and maxPlayers rather than response array index'
     { playerId: 1, seatNo: 1, nickname: '甲' },
   ], [], null, 8);
   assert.equal(ordered.find((p) => p.seatNo === 3).position, shuffled[0].position);
-  assert.equal(ui.seatPosition(1, 8), ordered.find((p) => p.seatNo === 1).position);
+  assert.equal(ui.seatPosition(1, 8, true), ordered.find((p) => p.seatNo === 1).position);
 });
 
 test('waiting lobby always renders every fixed seat and marks empty seats', () => {
@@ -157,7 +157,8 @@ test('leader selected private knowledge and me badges use independent layers', (
   assert.match(markup, /player\.knowledgeType/);
   assert.match(markup, /player\.me/);
   assert.match(markup, /leader-icon/);
-  assert.match(markup, /selected-icon/);
+  assert.match(markup, /player\.selectionClass/);
+  assert.doesNotMatch(markup, /selected-icon/);
   assert.match(markup, /knowledge-icon/);
   assert.match(markup, /me-icon/);
 });

@@ -1,0 +1,32 @@
+:host { display: block; }
+.mission-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(env(safe-area-inset-top) + 24rpx) 28rpx calc(env(safe-area-inset-bottom) + 24rpx);
+}
+.mission-panel { width: 100%; max-height: 100%; padding: 24rpx; border-color: var(--border); display: flex; flex-direction: column; }
+.mission-heading { flex-shrink: 0; text-align: center; }
+.mission-title { font-size: 34rpx; font-weight: 700; }
+.mission-heading > view + view { margin-top: 10rpx; }
+.mission-private-note { font-size: 22rpx; color: var(--text); }
+.mission-panel > view + view { margin-top: 0; }
+.mission-content { height: 500rpx; max-height: calc(100vh - 460rpx - env(safe-area-inset-top) - env(safe-area-inset-bottom)); margin-top: 16rpx; }
+.mission-hint { text-align: center; padding-top: 4rpx; }
+.mission-cards { display: flex; justify-content: center; gap: 28rpx; padding: 30rpx 12rpx 16rpx; }
+.mission-card-option { text-align: center; transition: transform 180ms ease, opacity 180ms ease; }
+.choice-active { transform: translateY(-10rpx); }
+.choice-active play-card { filter: drop-shadow(0 0 10rpx rgba(216, 178, 92, 0.35)); }
+.choice-muted { opacity: 0.6; transform: scale(0.97); }
+.mission-card-label { margin-top: 18rpx; font-size: 24rpx; }
+.mission-footer { flex-shrink: 0; padding-top: 16rpx; }
+.mission-votes, .mission-close { margin: 0; padding: 0 12rpx; background: transparent; font-size: 23rpx; line-height: 68rpx; }
+.mission-secondary-actions { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; }
+.mission-votes { color: var(--gold); text-align: left; }
+.mission-close { min-width: 112rpx; color: var(--muted); text-align: right; }
+.mission-votes::after, .mission-close::after { border: 0; }
+.mission-close[disabled], .mission-votes[disabled] { opacity: 0.45; background: transparent; color: var(--muted); }
