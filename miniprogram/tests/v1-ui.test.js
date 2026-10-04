@@ -337,7 +337,7 @@ test('GOOD cannot select FAIL; mission waits for confirm', async () => {
     },
     '../../utils/socket': {},
   });
-  page.setData({ game: { gameId: 1, evil: false } });
+  page.setData({ game: { gameId: 1, phase: 'MISSION_EXECUTING', onMission: true, evil: false } });
   page.run = (t) => t();
   page.missionFail();
   assert.equal(page.data.missionChoice, '');
@@ -427,6 +427,7 @@ test('all core room phase controls still invoke existing API methods', async () 
   await p.submitTeam();
   await p.approve();
   await p.reject();
+  p.setData({ game: { ...p.data.game, phase: 'MISSION_EXECUTING', onMission: true } });
   await p.submitMission();
   await p.restart();
   assert.equal(

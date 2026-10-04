@@ -7,7 +7,6 @@
     subtitle="{{game && game.phase === 'ROLE_CONFIRM' ? '仅你自己可见 · 请注意遮挡屏幕' : '房间 ' + room.roomCode + ' · ' + room.maxPlayers + ' 人局'}}"
   />
   <view wx:if="{{error}}" class="error" bindtap="refresh">{{error}}</view>
-  <view wx:if="{{room.testGame}}" class="footer-note">机器人测试局 · 不保存历史/战绩 · 结算保留 2 分钟</view>
   <view wx:if="{{room.host && (!game || game.phase !== 'FINISHED')}}" class="host-controls">
     <button class="host-end" disabled="{{busy}}" bindtap="endGame">{{game ? '结束本局' : '关闭房间'}}</button>
   </view>
@@ -58,12 +57,9 @@
       </view>
     </view>
     <view class="lobby-actions actions">
-      <button wx:if="{{room.host}}" class="btn ghost" disabled="{{busy || room.currentPlayers >= room.maxPlayers}}" bindtap="addBot">添加机器人</button>
-      <view wx:if="{{room.host && botPlayers.length}}" class="card bot-list">
-        <view class="row bot-row" wx:for="{{botPlayers}}" wx:key="playerId">
-          <text class="muted small">{{item.nickname}} · {{item.seatNo}}号位</text>
-          <button class="bot-remove" disabled="{{busy}}" data-player-id="{{item.playerId}}" bindtap="removeBot">移除</button>
-        </view>
+      <view wx:if="{{room.host}}" class="bot-tools">
+        <text class="muted small">{{botPlayers.length ? '点击机器人头像可移除' : '可添加机器人补充空位'}}</text>
+        <button class="bot-add" disabled="{{busy || room.currentPlayers >= room.maxPlayers}}" bindtap="addBot">＋ 添加机器人</button>
       </view>
       <button
         class="btn"
@@ -203,30 +199,20 @@
         <view class="muted">本轮共 {{game.requiredTeamSize}} 名任务成员</view>
         <view class="link small" bindtap="toggleVotes">查看组队投票结果 ›</view>
       </view>
-      <view class="card mission-role">
-        <view class="gold">秘密任务操作</view>
-        <view class="muted small">
-          {{game.evil ? '邪恶阵营可以选择 SUCCESS 或 FAIL' : '正义阵营只能选择 SUCCESS'}}
-        </view>
-      </view>
       <view wx:if="{{!game.hasSubmittedMission}}" class="mission-select">
         <view class="section-title">请选择任务牌</view>
-        <view class="two-buttons">
-          <button
-            class="btn success {{missionChoice === 'SUCCESS' ? 'chosen' : ''}}"
-            disabled="{{busy}}"
-            bindtap="missionSuccess"
-          >
-            SUCCESS · 成功
-          </button>
-          <button
-            wx:if="{{game.evil}}"
-            class="btn danger {{missionChoice === 'FAIL' ? 'chosen' : ''}}"
-            disabled="{{busy}}"
-            bindtap="missionFail"
-          >
-            FAIL · 失败
-          </button>
+        <view class="muted small mission-hint">{{game.evil ? '选择成功或失败，确认后秘密提交' : '正义阵营只能提交成功牌'}}</view>
+        <view class="mission-cards">
+          <view class="mission-card-option">
+            <play-card front="{{missionSuccessCard}}" back="{{missionCardBack}}" flipped="{{true}}"
+              size="action" selected="{{missionChoice === 'SUCCESS'}}" disabled="{{busy}}" bind:select="missionSuccess" />
+            <view class="mission-card-label {{missionChoice === 'SUCCESS' ? 'gold' : 'muted'}}">{{missionChoice === 'SUCCESS' ? '已选择 · 成功' : '成功'}}</view>
+          </view>
+          <view wx:if="{{game.evil}}" class="mission-card-option">
+            <play-card front="{{missionFailCard}}" back="{{missionCardBack}}" flipped="{{true}}"
+              size="action" selected="{{missionChoice === 'FAIL'}}" disabled="{{busy}}" bind:select="missionFail" />
+            <view class="mission-card-label {{missionChoice === 'FAIL' ? 'gold' : 'muted'}}">{{missionChoice === 'FAIL' ? '已选择 · 失败' : '失败'}}</view>
+          </view>
         </view>
       </view>
       <view wx:else class="empty">已秘密提交，等待任务成员</view>

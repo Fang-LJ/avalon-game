@@ -6,6 +6,7 @@
   border-radius: 22rpx;
 }
 .size-small { width: 180rpx; height: 322rpx; }
+.size-action { width: 254rpx; height: 354rpx; }
 .size-large { width: 400rpx; height: 715rpx; }
 .card-inner {
   width: 100%;

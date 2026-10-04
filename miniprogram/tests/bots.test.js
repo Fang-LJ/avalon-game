@@ -42,12 +42,73 @@ test('host can add a bot only in a non-full waiting lobby', async () => {
 test('bot removal cannot remove humans or operate after game start', async () => {
   const calls = [];
   const page = pageAt({ removeBot: async (...args) => calls.push(args) });
-  page.setData({ botPlayers: [{ playerId: 3, isBot: true }] });
-  await page.removeBot({ currentTarget: { dataset: { playerId: 3 } } });
-  await page.removeBot({ currentTarget: { dataset: { playerId: 2 } } });
+  page.data.room.players = [{ playerId: 3, isBot: true }, { playerId: 2, isBot: false }];
+  await page.removeBot(3);
+  await page.removeBot(2);
   page.data.game = { phase: 'ROLE_CONFIRM' };
-  await page.removeBot({ currentTarget: { dataset: { playerId: 3 } } });
+  await page.removeBot(3);
   assert.deepEqual(calls, [[7, 3]]);
+});
+test('host removes a bot through its lobby avatar menu rather than a separate list', async () => {
+  let menu;
+  const calls = [];
+  const page = pageAt({ removeBot: async (...args) => calls.push(args) }, {
+    showActionSheet: options => { menu = options; },
+  });
+  page.data.room.players = [{ playerId: 3, seatNo: 2, isBot: true }];
+  page.handleLobbySeat({ detail: { playerId: 3, seatNo: 2 } });
+  assert.equal(menu.itemList.length, 1);
+  assert.equal(menu.itemList[0], '移除2号机器人');
+  assert.equal(calls.length, 0);
+  menu.success({ tapIndex: 0 });
+  await new Promise(setImmediate);
+  assert.deepEqual(calls, [[7, 3]]);
+  const markup = fs.readFileSync(path.join(__dirname, '../pages/room/room.wxml'), 'utf8');
+  assert.doesNotMatch(markup, /bot-list|bot-row|机器人测试局/);
+  assert.match(markup, /点击机器人头像可移除/);
+});
+test('bot avatar actions are unavailable for guests humans busy and playing states', () => {
+  let menus = 0;
+  const page = pageAt({}, { showActionSheet() { menus++; } });
+  page.data.room.players = [{ playerId: 3, seatNo: 2, isBot: true }, { playerId: 2, isBot: false }];
+  page.data.room.host = false;
+  page.handleLobbySeat({ detail: { playerId: 3 } });
+  page.data.room.host = true;
+  page.handleLobbySeat({ detail: { playerId: 2 } });
+  page.data.busy = true;
+  page.handleLobbySeat({ detail: { playerId: 3 } });
+  page.data.busy = false;
+  page.data.game = { phase: 'ROLE_CONFIRM' };
+  page.handleLobbySeat({ detail: { playerId: 3 } });
+  assert.equal(menus, 0);
+});
+test('open bot menu rechecks lobby room owner and membership before removal', async () => {
+  for (const change of [
+    page => { page.data.game = { phase: 'ROLE_CONFIRM' }; },
+    page => { page.data.roomId = 8; },
+    page => { page.data.room.host = false; },
+    page => { page.data.room.players = []; },
+  ]) {
+    let menu;
+    const calls = [];
+    const page = pageAt({ removeBot: async () => calls.push('removed') }, {
+      showActionSheet: options => { menu = options; },
+    });
+    page.data.room.players = [{ playerId: 3, seatNo: 2, isBot: true }];
+    page.handleLobbySeat({ detail: { playerId: 3 } });
+    change(page);
+    menu.success({ tapIndex: 0 });
+    await new Promise(setImmediate);
+    assert.equal(calls.length, 0);
+  }
+});
+test('a refresh completing before bot removal rechecks current owner and game', async () => {
+  const calls = [];
+  const page = pageAt({ removeBot: async () => calls.push('removed') });
+  page.data.room.players = [{ playerId: 3, isBot: true }];
+  page.refreshing = Promise.resolve().then(() => { page.data.room.host = false; });
+  await page.removeBot(3);
+  assert.equal(calls.length, 0);
 });
 test('bot marker survives table decoration without disclosing identities', () => {
   const player = { playerId: 4, seatNo: 2, nickname: '机器人1', isBot: true, seated: true };

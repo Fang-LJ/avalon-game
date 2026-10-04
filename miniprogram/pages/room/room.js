@@ -31,6 +31,9 @@ Page({
     ladyResult: null,
     ladyResultGameId: null,
     missionChoice: '',
+    missionSuccessCard: CARDS.actions.SUCCESS,
+    missionFailCard: CARDS.actions.FAIL,
+    missionCardBack: CARDS.back.ACTION,
     isLeader: false,
     phaseTitle: '',
     busy: false,
@@ -283,6 +286,19 @@ Page({
     const detail = e.detail || {};
     if (detail.empty)
       return this.run(() => api.seat(this.data.roomId, Number(detail.seatNo)));
+    const room = this.data.room;
+    const player = (room.players || []).find(p => p.playerId === Number(detail.playerId));
+    if (room.host && player && player.isBot) {
+      const roomId = room.roomId;
+      wx.showActionSheet({
+        itemList: [`移除${player.seatNo}号机器人`],
+        success: result => {
+          if (result.tapIndex === 0 && this.data.roomId === roomId)
+            this.removeBot(player.playerId);
+        },
+      });
+      return;
+    }
     if (detail.me)
       wx.showActionSheet({
         itemList: ['起立'],
@@ -344,12 +360,15 @@ Page({
       if (!this.data.game && this.data.roomId === room.roomId) return api.addBot(room.roomId);
     });
   },
-  removeBot(e) {
-    const { room, game, busy, botPlayers } = this.data;
-    const playerId = Number(e.currentTarget.dataset.playerId);
-    if (!room || !room.host || game || busy || !botPlayers.some(p => p.playerId === playerId)) return;
+  removeBot(playerId) {
+    const { room, game, busy } = this.data;
+    if (!room || !room.host || game || busy ||
+        !room.players.some(p => p.playerId === playerId && p.isBot)) return;
     return this.run(() => {
-      if (!this.data.game && this.data.roomId === room.roomId) return api.removeBot(room.roomId, playerId);
+      const current = this.data.room;
+      if (!this.data.game && this.data.roomId === room.roomId && current.host &&
+          current.players.some(p => p.playerId === playerId && p.isBot))
+        return api.removeBot(room.roomId, playerId);
     });
   },
   endGame() {
@@ -410,16 +429,31 @@ Page({
     return this.run(() => api.vote(this.data.game.gameId, 'REJECT'));
   },
   missionSuccess() {
+    if (!this.canChooseMission()) return;
     this.setData({ missionChoice: 'SUCCESS' });
   },
   missionFail() {
-    if (this.data.game.evil) this.setData({ missionChoice: 'FAIL' });
+    if (this.canChooseMission() && this.data.game.evil)
+      this.setData({ missionChoice: 'FAIL' });
+  },
+  canChooseMission() {
+    const { game, busy, viewVotes } = this.data;
+    return !!(game && game.phase === 'MISSION_EXECUTING' && game.onMission &&
+      !game.hasSubmittedMission && !busy && !viewVotes);
   },
   submitMission() {
-    if (!this.data.missionChoice) return;
-    return this.run(() =>
-      api.mission(this.data.game.gameId, this.data.missionChoice),
-    );
+    if (!this.canChooseMission() || !this.data.missionChoice) return;
+    const { game, missionChoice } = this.data;
+    if (missionChoice !== 'SUCCESS' && (missionChoice !== 'FAIL' || !game.evil)) return;
+    return this.run(() => {
+      const current = this.data.game;
+      // A websocket refresh may complete while run() waits. Never submit an old choice to a new round.
+      if (current && current.gameId === game.gameId && current.missionNo === game.missionNo &&
+          current.proposalNo === game.proposalNo && current.phase === 'MISSION_EXECUTING' &&
+          current.onMission && !current.hasSubmittedMission &&
+          (missionChoice === 'SUCCESS' || current.evil))
+        return api.mission(game.gameId, missionChoice);
+    });
   },
   toggleVotes() {
     this.setData({ viewVotes: !this.data.viewVotes });

@@ -117,6 +117,74 @@ test('play-card ignores disabled and noninteractive taps without changing flippe
   assert.equal(instance.data.flipped, false);
 });
 
+test('mission selection uses the supplied success and fail artworks with an action-card size', () => {
+  const page = pageAt({});
+  assert.equal(page.data.missionSuccessCard, cards.actionCard('SUCCESS'));
+  assert.equal(page.data.missionFailCard, cards.actionCard('FAIL'));
+  assert.equal(page.data.missionCardBack, cards.CARDS.back.ACTION);
+  const markup = read('pages/room/room.wxml');
+  assert.match(markup, /front="\{\{missionSuccessCard\}\}"/);
+  assert.match(markup, /front="\{\{missionFailCard\}\}"/);
+  assert.match(markup, /selected="\{\{missionChoice === 'SUCCESS'\}\}"[^>]*bind:select="missionSuccess"/);
+  assert.match(markup, /selected="\{\{missionChoice === 'FAIL'\}\}"[^>]*bind:select="missionFail"/);
+  assert.match(markup, /wx:if="\{\{game.evil\}\}" class="mission-card-option"/);
+  assert.doesNotMatch(markup, /SUCCESS · 成功|FAIL · 失败|mission-role/);
+  assert.match(read('components/play-card/play-card.wxss'), /size-action/);
+});
+
+test('mission cards select locally; only explicit confirm submits and GOOD cannot choose FAIL', async () => {
+  const calls = [];
+  const page = pageAt({ mission: async (...args) => calls.push(args) });
+  page.setData({ game: { gameId: 7, phase: 'MISSION_EXECUTING', onMission: true, evil: true } });
+  page.missionFail();
+  assert.equal(page.data.missionChoice, 'FAIL');
+  assert.equal(calls.length, 0);
+  page.missionSuccess();
+  assert.equal(page.data.missionChoice, 'SUCCESS');
+  await page.submitMission();
+  assert.deepEqual(calls, [[7, 'SUCCESS']]);
+  page.data.game.evil = false;
+  page.missionFail();
+  assert.equal(page.data.missionChoice, 'SUCCESS');
+  page.data.missionChoice = 'FAIL';
+  await page.submitMission();
+  assert.equal(calls.length, 1);
+});
+
+test('hidden or disabled mission cards ignore taps and cannot submit', async () => {
+  for (const patch of [
+    { busy: true }, { viewVotes: true },
+    { game: null }, { game: { phase: 'TEAM_BUILDING', onMission: true } },
+    { game: { phase: 'MISSION_EXECUTING', onMission: false } },
+    { game: { phase: 'MISSION_EXECUTING', onMission: true, hasSubmittedMission: true } },
+  ]) {
+    const calls = [];
+    const page = pageAt({ mission: async () => calls.push('submitted') });
+    page.setData({ game: { gameId: 7, phase: 'MISSION_EXECUTING', onMission: true, evil: true }, ...patch });
+    page.missionSuccess();
+    page.missionFail();
+    assert.equal(page.data.missionChoice, '');
+    page.data.missionChoice = 'SUCCESS';
+    await page.submitMission();
+    assert.equal(calls.length, 0);
+  }
+});
+
+test('a refresh switching phase game or mission cannot submit a stale selected card', async () => {
+  for (const patch of [
+    { phase: 'TEAM_BUILDING' }, { gameId: 8 }, { missionNo: 2 },
+    { proposalNo: 2 }, { hasSubmittedMission: true }, { onMission: false },
+  ]) {
+    const calls = [];
+    const page = pageAt({ mission: async () => calls.push('submitted') });
+    page.setData({ game: { gameId: 7, missionNo: 1, proposalNo: 1, phase: 'MISSION_EXECUTING', onMission: true } });
+    page.missionSuccess();
+    page.run = async task => { page.data.game = { ...page.data.game, ...patch }; return task(); };
+    await page.submitMission();
+    assert.equal(calls.length, 0);
+  }
+});
+
 test('identity deal starts with only backs and completes shuffle then dealing then BACK', () => {
   const { instance, tick, definition } = deal();
   definition.pageLifetimes.show.call(instance);

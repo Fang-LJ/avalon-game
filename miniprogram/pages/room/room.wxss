@@ -39,7 +39,7 @@
   margin-top: 55rpx;
 }
 .lobby-actions {
-  margin-top: 55rpx;
+  margin-top: 28rpx;
 }
 .role-progress { margin: 30rpx 0 20rpx; }
 .board {
@@ -72,22 +72,19 @@
 .mission-info {
   margin-top: 40rpx;
 }
-.mission-role {
-  margin-top: 55rpx;
-}
 .mission-select {
-  margin-top: 65rpx;
+  margin-top: 32rpx;
 }
 .mission-select .section-title {
-  margin-bottom: 44rpx;
+  margin-bottom: 10rpx;
 }
-.chosen {
-  outline: 3px solid var(--gold);
-  outline-offset: 4px;
-}
+.mission-hint { margin-bottom: 28rpx; }
+.mission-cards { display: flex; justify-content: center; gap: 38rpx; padding: 12rpx 0; }
+.mission-card-option { text-align: center; }
+.mission-card-label { margin-top: 20rpx; font-size: 24rpx; }
 .privacy-note {
-  margin-top: 90rpx;
-  margin-bottom: 100rpx;
+  margin-top: 28rpx;
+  margin-bottom: 32rpx;
 }
 .lady-grid {
   display: grid;
@@ -217,7 +214,7 @@
 }
 .host-controls { display: flex; justify-content: flex-end; margin-bottom: 16rpx; }
 .host-end { background: transparent; color: var(--muted); font-size: 24rpx; padding: 0 20rpx; margin: 0; line-height: 64rpx; }
-.host-end::after, .bot-remove::after { border: none; }
-.bot-list { margin-top: 16rpx; }
-.bot-row { justify-content: space-between; }
-.bot-remove { background: transparent; color: var(--gold); font-size: 24rpx; margin: 0; padding: 0 16rpx; line-height: 60rpx; }
+.host-end::after, .bot-add::after { border: none; }
+.bot-tools { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-bottom: 20rpx; }
+.bot-add { flex-shrink: 0; background: var(--soft); color: var(--gold); font-size: 23rpx; border: 1px solid var(--border); border-radius: 999rpx; margin: 0; padding: 0 20rpx; line-height: 60rpx; }
+button.bot-add[disabled] { background: var(--soft) !important; color: var(--muted) !important; opacity: 0.45; }
