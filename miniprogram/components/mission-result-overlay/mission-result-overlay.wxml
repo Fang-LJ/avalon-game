@@ -1,0 +1,24 @@
+<view wx:if="{{visible}}" class="result-overlay" catchtap="ignoreTouch" catchtouchmove="ignoreTouch">
+  <view class="result-panel">
+    <view class="result-heading">
+      <view class="result-mission">第 {{missionNo}} 个任务</view>
+      <view class="result-step">{{stage === 'COLLECT' ? '任务牌已收齐' : stage === 'SHUFFLE' ? '正在混洗任务牌' : stage === 'SPREAD' ? '准备揭晓任务牌' : stage === 'REVEAL' ? '正在揭晓任务牌' : '任务结果已揭晓'}}</view>
+      <view class="result-note">{{stage === 'COLLECT' ? '正在混洗任务牌' : '匿名揭晓 · 不对应玩家座位'}}</view>
+    </view>
+    <view class="result-table result-count-{{cardCount}} stage-{{stage}}">
+      <view wx:for="{{cards}}" wx:key="index" class="result-card card-{{index}}" style="--card-index: {{index}};">
+        <play-card size="result" resultCount="{{cardCount}}" interactive="{{false}}"
+          front="{{stage === 'REVEAL' || stage === 'RESULT' ? (item.type === 'SUCCESS' ? successCard : failCard) : ''}}"
+          back="{{cardBack}}" flipped="{{item.flipped}}" />
+      </view>
+    </view>
+    <view class="result-footer">
+      <block wx:if="{{stage === 'RESULT'}}">
+        <view class="result-title {{status === 'SUCCESS' ? 'result-good' : 'result-evil'}}">第 {{missionNo}} 个任务{{status === 'SUCCESS' ? '成功' : '失败'}}</view>
+        <view class="result-summary">成功 {{successCount}} · 失败 {{failCount}}</view>
+        <button class="result-confirm" bindtap="confirm">确认结果</button>
+      </block>
+      <view wx:else class="result-wait">请稍候，任务牌即将揭晓</view>
+    </view>
+  </view>
+</view>

@@ -14,6 +14,7 @@ function pageAt(api = {}, wx = {}) {
       '../../utils/socket': {},
       '../../utils/presentation': ui,
       '../../utils/cards': require('../utils/cards'),
+      '../../utils/mission-result': require('../utils/mission-result'),
     })[name],
     wx, Page: value => { page = value; }, clearInterval() {},
   });

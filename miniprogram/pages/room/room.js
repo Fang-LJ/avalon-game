@@ -3,6 +3,7 @@ const auth = require('../../services/auth');
 const socket = require('../../utils/socket');
 const ui = require('../../utils/presentation');
 const { roleCard, CARDS } = require('../../utils/cards');
+const { normalizeResult, storageKey } = require('../../utils/mission-result');
 const PHASES = {
   ROLE_CONFIRM: '身份揭晓',
   TEAM_BUILDING: '队长选人',
@@ -33,6 +34,10 @@ Page({
     missionChoice: '',
     missionOverlayOpen: false,
     missionOverlayKey: '',
+    missionResultOpen: false,
+    missionResult: null,
+    missionResultKey: '',
+    acknowledgedMissionResultKey: '',
     missionSuccessCard: CARDS.actions.SUCCESS,
     missionFailCard: CARDS.actions.FAIL,
     missionCardBack: CARDS.back.ACTION,
@@ -140,6 +145,10 @@ Page({
         missionChoice: '',
         missionOverlayOpen: false,
         missionOverlayKey: '',
+        missionResultOpen: false,
+        missionResult: null,
+        missionResultKey: '',
+        acknowledgedMissionResultKey: '',
         finished: null,
         finishedIdentities: [],
         entries: [],
@@ -204,6 +213,8 @@ Page({
       isLeader: game.leaderPlayerId === room.myPlayerId,
       entries: ui.liveLogs(timeline, room.players),
       finishedIdentities: game.phase === 'FINISHED' ? ui.finishedIdentities(game.identities) : [],
+      // Set the covering overlay in the same render as the advanced server phase.
+      ...this.missionResultUpdate(game),
     });
     this.decoratePlayers();
     this.syncMissionOverlay();
@@ -226,6 +237,41 @@ Page({
           },
         });
     }
+  },
+  missionResultUpdate(game) {
+    const result = normalizeResult(game.latestMissionResult);
+    if (!result) return {};
+    const key = `${game.gameId}-${result.missionNo}`;
+    let stored = 0;
+    try {
+      if (typeof wx.getStorageSync === 'function') stored = wx.getStorageSync(storageKey(game.gameId));
+    } catch (_) { /* Storage failure must never stop synchronization. */ }
+    const memory = (this.missionResultAcks || {})[game.gameId] || 0;
+    const acknowledged = Math.max(Number.isInteger(stored) && stored >= 0 && stored <= 5 ? stored : 0, memory);
+    if (result.missionNo <= acknowledged)
+      return { acknowledgedMissionResultKey: `${game.gameId}-${acknowledged}` };
+    // Keep an already visible reveal stable; a newer result is shown after its confirmation.
+    if (this.data.missionResultOpen) return {};
+    return {
+      missionResultOpen: true, missionResult: result, missionResultKey: key,
+      missionOverlayOpen: false, missionChoice: '', roleOverlay: false, viewVotes: false,
+      acknowledgedMissionResultKey: acknowledged ? `${game.gameId}-${acknowledged}` : '',
+    };
+  },
+  confirmMissionResult(e) {
+    const { game, missionResult, missionResultOpen, missionResultKey } = this.data;
+    if (!game || !missionResultOpen || !missionResult ||
+        missionResultKey !== `${game.gameId}-${missionResult.missionNo}` ||
+        !e || !e.detail || e.detail.missionNo !== missionResult.missionNo) return;
+    this.missionResultAcks = this.missionResultAcks || {};
+    this.missionResultAcks[game.gameId] = Math.max(this.missionResultAcks[game.gameId] || 0, missionResult.missionNo);
+    try {
+      if (typeof wx.setStorageSync === 'function')
+        wx.setStorageSync(storageKey(game.gameId), this.missionResultAcks[game.gameId]);
+    } catch (_) { /* Keep in-memory acknowledgment if the device storage is full. */ }
+    this.setData({ missionResultOpen: false, acknowledgedMissionResultKey: missionResultKey });
+    this.setData(this.missionResultUpdate(game));
+    this.syncMissionOverlay();
   },
   decoratePlayers() {
     const { room, game, role, selectedIds } = this.data;
@@ -322,7 +368,7 @@ Page({
   },
   togglePlayer(e) {
     const game = this.data.game;
-    if (!game || this.data.busy) return;
+    if (!game || this.data.busy || this.data.missionResultOpen) return;
     const id = Number(e.detail.playerId);
     if (game.phase === 'TEAM_BUILDING' && this.data.isLeader) {
       const ids = this.data.selectedIds.slice(),
@@ -449,9 +495,9 @@ Page({
       this.setData({ missionChoice: 'FAIL' });
   },
   canChooseMission() {
-    const { game, busy, viewVotes } = this.data;
+    const { game, busy, viewVotes, missionResultOpen } = this.data;
     return !!(game && game.phase === 'MISSION_EXECUTING' && game.onMission &&
-      !game.hasSubmittedMission && !busy && !viewVotes);
+      !game.hasSubmittedMission && !busy && !viewVotes && !missionResultOpen);
   },
   submitMission() {
     if (!this.canChooseMission() || !this.data.missionChoice) return;
@@ -475,7 +521,7 @@ Page({
   },
   syncMissionOverlay() {
     const { game, missionOverlayKey } = this.data;
-    if (!game || game.phase !== 'MISSION_EXECUTING' || !game.onMission || game.hasSubmittedMission) {
+    if (this.data.missionResultOpen || !game || game.phase !== 'MISSION_EXECUTING' || !game.onMission || game.hasSubmittedMission) {
       this.setData({ missionOverlayOpen: false });
       return;
     }
@@ -485,7 +531,7 @@ Page({
   },
   openMissionOverlay() {
     const { game, busy } = this.data;
-    if (!game || game.phase !== 'MISSION_EXECUTING' || !game.onMission || game.hasSubmittedMission || busy) return;
+    if (this.data.missionResultOpen || !game || game.phase !== 'MISSION_EXECUTING' || !game.onMission || game.hasSubmittedMission || busy) return;
     this.setData({
       missionOverlayOpen: true,
       missionOverlayKey: `${game.gameId}-${game.missionNo}-${game.proposalNo}`,
@@ -497,7 +543,7 @@ Page({
     if (!this.data.busy) this.setData({ missionOverlayOpen: false });
   },
   toggleVotes() {
-    if (this.data.busy) return;
+    if (this.data.busy || this.data.missionResultOpen) return;
     const viewVotes = !this.data.viewVotes;
     this.setData({ viewVotes, missionOverlayOpen: false });
     if (!viewVotes) this.openMissionOverlay();
@@ -515,7 +561,7 @@ Page({
     this.setData({ ladyResult: null });
   },
   openRoleOverlay() {
-    if (this.data.role && !this.data.busy)
+    if (this.data.role && !this.data.busy && !this.data.missionResultOpen)
       this.setData({ roleOverlay: true, missionOverlayOpen: false });
   },
   closeRoleOverlay() {

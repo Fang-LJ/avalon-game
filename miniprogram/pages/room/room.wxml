@@ -289,6 +289,13 @@
     bind:success="missionSuccess" bind:fail="missionFail" bind:submit="submitMission"
     bind:close="closeMissionOverlay" bind:votes="toggleVotes"
   />
+  <mission-result-overlay
+    wx:if="{{missionResultOpen && missionResult}}" visible="{{missionResultOpen}}"
+    missionNo="{{missionResult.missionNo}}" successCount="{{missionResult.successCount}}"
+    failCount="{{missionResult.failCount}}" status="{{missionResult.status}}"
+    successCard="{{missionSuccessCard}}" failCard="{{missionFailCard}}" cardBack="{{missionCardBack}}"
+    bind:confirm="confirmMissionResult"
+  />
   <view wx:if="{{roleOverlay && role}}" class="private-overlay" catchtap="ignoreTap">
     <view class="card private-result role-overlay-card">
       <view class="muted small">仅你可见</view>

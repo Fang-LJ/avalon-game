@@ -8,6 +8,7 @@ Component({
     selected: Boolean,
     disabled: Boolean,
     size: { type: String, value: 'medium' },
+    resultCount: { type: Number, value: 2 },
     interactive: { type: Boolean, value: true },
   },
   methods: {

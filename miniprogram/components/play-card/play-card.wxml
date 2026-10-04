@@ -1,5 +1,5 @@
 <view
-  class="card-scene size-{{size}} {{selected ? 'is-selected' : ''}} {{disabled ? 'is-disabled' : ''}}"
+  class="card-scene size-{{size}} result-count-{{resultCount}} {{selected ? 'is-selected' : ''}} {{disabled ? 'is-disabled' : ''}}"
   bindtap="choose"
 >
   <view class="card-inner {{flipped ? 'is-flipped' : ''}}">

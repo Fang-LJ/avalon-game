@@ -2,6 +2,7 @@
   "navigationBarTitleText": "阿瓦隆房间",
   "enablePullDownRefresh": true,
   "usingComponents": {
+    "mission-result-overlay": "/components/mission-result-overlay/mission-result-overlay",
     "mission-card-overlay": "/components/mission-card-overlay/mission-card-overlay",
     "play-card": "/components/play-card/play-card",
     "card-deal-stage": "/components/card-deal-stage/card-deal-stage"
