@@ -87,7 +87,8 @@ for (const [phase, className, color] of [
       new RegExp(`\\.${className} \\{ box-shadow:[^}]*var\\(--${color}\\)`));
     const markup = read('components/player-seat/player-seat.wxml');
     assert.match(markup, /player\.selected \? player\.selectionClass/);
-    assert.doesNotMatch(markup, /selected-icon|>✓</);
+    assert.doesNotMatch(markup, /selected-icon/);
+    assert.match(markup, /wx:if="\{\{player.actionDone\}\}" class="seat-badge action-done-icon">✓</);
     ['leader-icon', 'knowledge-icon', 'me-icon'].forEach(name => assert.match(markup, new RegExp(name)));
   });
 }

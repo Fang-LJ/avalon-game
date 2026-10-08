@@ -12,13 +12,24 @@
   border-top: 1px solid var(--border);
   padding-top: 16rpx;
 }
-.compact-entry { padding: 20rpx 24rpx; height: 100%; margin: 0; box-sizing: border-box; }
-.compact-entry .log-title { font-size: 24rpx; }
-.compact-entry > view { line-height: 32rpx; }
-.compact-entry > view + view { margin-top: 8rpx; }
+.live-proposal { padding: 18rpx 20rpx; box-sizing: border-box; }
+.compact-entry { height: 100%; margin: 0; }
+.live-proposal .log-title { font-size: 23rpx; line-height: 32rpx; white-space: nowrap; }
+.proposal-heading { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; }
+.proposal-status { flex-shrink: 0; font-size: 21rpx; line-height: 32rpx; }
+.proposal-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20rpx; }
+.live-proposal > .proposal-columns { margin-top: 12rpx; }
+.proposal-team > view, .proposal-votes > view { line-height: 30rpx; font-size: 21rpx; }
+.proposal-team > view + view, .proposal-votes > view + view { margin-top: 4rpx; }
+.proposal-mission { display: flex; align-items: center; gap: 16rpx; }
+.live-proposal > .proposal-mission { margin-top: 12rpx; }
+.proposal-mission > text { flex-shrink: 0; }
+.mission-thumbnails { display: flex; align-items: center; gap: 8rpx; }
+.mission-thumbnail { display: block; width: 52rpx; height: 72.28rpx; flex-shrink: 0; }
 .log-leader { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .history-caption { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10rpx; }
-.history-swiper { height: 336rpx; }
+.history-swiper { height: 244rpx; }
+.history-swiper.without-mission { height: 156rpx; }
 .all-history-link { padding: 16rpx 0; }
 .history-overlay { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,0.82); display: flex; align-items: flex-end; }
 .history-sheet { width: 100%; height: 82vh; display: flex; flex-direction: column; background: var(--bg); border-radius: 28rpx 28rpx 0 0; border: 1px solid var(--border); padding: 24rpx 28rpx calc(20rpx + env(safe-area-inset-bottom)); box-sizing: border-box; }

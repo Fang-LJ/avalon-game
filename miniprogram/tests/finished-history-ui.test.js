@@ -15,7 +15,10 @@ const proposal = (id, status = 'APPROVED') => ({
 const history = ids => ui.liveLogs({ proposals: ids.map(id => proposal(id)) }, players);
 function component() {
   let definition;
-  vm.runInNewContext(read('components/game-log/game-log.js'), { Component: value => { definition = value; } });
+  vm.runInNewContext(read('components/game-log/game-log.js'), {
+    Component: value => { definition = value; },
+    require: name => require(path.resolve(root,'components/game-log',name)),
+  });
   const c = { data: { ...structuredClone(definition.data), compact: true, replay: false, gameId: 1 }, ...definition.methods };
   c.setData = value => Object.assign(c.data, value);
   c.refresh = (entries, gameId = c.data.gameId) => {
@@ -157,9 +160,9 @@ test('all-history sheet opens only for multiple resolved entries and survives re
   const markup = read('components/game-log/game-log.wxml');
   assert.match(markup, /查看全部记录 ›/);
   assert.match(markup, /scroll-view[^>]*scroll-y="\{\{true\}\}"/);
-  assert.match(markup, /compact: false, replay: false/);
+  assert.match(markup, /is="live-proposal-record" data="\{\{item, compact: false\}\}"/);
   assert.match(markup, /wx:if="\{\{replay\}\}"[^>]*wx:for="\{\{item.actions\}\}"/);
-  assert.doesNotMatch(read('components/game-log/game-log.js'), /require\(|triggerEvent\(|wx\.|api\./);
+  assert.doesNotMatch(read('components/game-log/game-log.js'), /services|triggerEvent\(|wx\.|api\./);
 });
 test('replay remains full vertical history with secret actions and Lady only behind replay flag', () => {
   assert.match(read('pages/replay/replay.js'), /ui.logs\(replay, replay.players, true\)/);

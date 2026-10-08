@@ -249,6 +249,9 @@ public class AvalonRepository {
     public int voteCount(long proposalId) { return jdbc.queryForObject("select count(*) from t_avalon_vote where proposal_id=?", Integer.class, proposalId); }
     public int approveCount(long proposalId) { return jdbc.queryForObject("select count(*) from t_avalon_vote where proposal_id=? and vote_choice='APPROVE'", Integer.class, proposalId); }
     public boolean hasVote(long proposalId, long gamePlayerId) { return Boolean.TRUE.equals(jdbc.queryForObject("select count(*)>0 from t_avalon_vote where proposal_id=? and game_player_id=?", Boolean.class, proposalId, gamePlayerId)); }
+    public List<Long> votedPlayerIds(long proposalId) {
+        return jdbc.queryForList("select game_player_id from t_avalon_vote where proposal_id=? order by game_player_id", Long.class, proposalId);
+    }
     public List<VoteView> votes(long proposalId) {
         return jdbc.query("select v.game_player_id,gp.seat_no,gp.nickname_snapshot,v.vote_choice from t_avalon_vote v join t_avalon_game_player gp on gp.id=v.game_player_id where v.proposal_id=? order by gp.seat_no",
                 (rs,n) -> new VoteView(rs.getLong(1), rs.getInt(2), rs.getString(3), VoteChoice.valueOf(rs.getString(4))), proposalId);
@@ -276,6 +279,9 @@ public class AvalonRepository {
     public int actionCount(long missionId) { return jdbc.queryForObject("select count(*) from t_avalon_mission_action where mission_id=?", Integer.class, missionId); }
     public int failCount(long missionId) { return jdbc.queryForObject("select count(*) from t_avalon_mission_action where mission_id=? and action_choice='FAIL'", Integer.class, missionId); }
     public boolean hasAction(long missionId, long gamePlayerId) { return Boolean.TRUE.equals(jdbc.queryForObject("select count(*)>0 from t_avalon_mission_action where mission_id=? and game_player_id=?", Boolean.class, missionId, gamePlayerId)); }
+    public List<Long> missionSubmittedPlayerIds(long missionId) {
+        return jdbc.queryForList("select game_player_id from t_avalon_mission_action where mission_id=? order by game_player_id", Long.class, missionId);
+    }
 
     public int ladyActionCount(long gameId) { return jdbc.queryForObject("select count(*) from t_avalon_lady_action where game_id=?", Integer.class, gameId); }
     public Set<Long> ladyHolderHistory(long gameId) {

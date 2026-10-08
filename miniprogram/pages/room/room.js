@@ -297,6 +297,7 @@ Page({
     const privatePlayers = room.players.map((player) => ({
       ...player,
       ...(privateByPlayer[player.playerId] || {}),
+      actionDone: ui.actionDone(game, player.playerId),
     }));
     const players = ui
       .seats(

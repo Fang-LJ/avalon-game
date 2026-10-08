@@ -1,3 +1,6 @@
+const { CARDS } = require('../../utils/cards');
+const { resultCards } = require('../../utils/mission-result');
+
 Component({
   options: { styleIsolation: 'apply-shared' },
   properties: { entries: Array, replay: Boolean, compact: Boolean, gameId: Number },
@@ -9,7 +12,12 @@ Component({
     'entries,gameId,compact,replay'(entries, gameId, compact, replay) {
       if (!compact || replay) return;
       const liveEntries = (entries || []).filter(entry =>
-        entry.status === 'APPROVED' || entry.status === 'REJECTED');
+        entry.status === 'APPROVED' || entry.status === 'REJECTED').map(entry => ({
+          ...entry,
+          missionCards: entry.status === 'APPROVED' ? resultCards(entry.mission).map(card => ({
+            index: card.index, src: CARDS.actions[card.type],
+          })) : [],
+        }));
       const previous = this.data.liveEntries;
       const changedGame = this.data.historyGameId !== gameId;
       const followingLatest = previous.length &&

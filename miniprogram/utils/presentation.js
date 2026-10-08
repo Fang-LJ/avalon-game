@@ -77,6 +77,13 @@ function privateKnowledge(player) {
       type === 'MERLIN_OR_MORGANA' ? 'knowledge-candidate' : 'knowledge-evil',
   };
 }
+function actionDone(game, playerId) {
+  if (!game) return false;
+  if (game.phase === 'TEAM_VOTING') return (game.votedPlayerIds || []).includes(playerId);
+  if (game.phase === 'MISSION_EXECUTING')
+    return (game.selectedPlayerIds || []).includes(playerId) && (game.missionSubmittedPlayerIds || []).includes(playerId);
+  return false;
+}
 function seats(players, selected = [], leaderId, maxPlayers = players.length, phase = 'TEAM_BUILDING') {
   const selectionClass = phase === 'ASSASSINATION' ? 'selected-danger'
     : phase === 'LADY_OF_LAKE' ? 'selected-lady' : 'selected-team';
@@ -206,6 +213,7 @@ module.exports = {
   historyItem,
   seatPosition,
   privateKnowledge,
+  actionDone,
   seats,
   lobbySeats,
   logs,

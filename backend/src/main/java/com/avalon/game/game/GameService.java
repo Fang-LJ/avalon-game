@@ -272,6 +272,11 @@ public class GameService {
         List<VoteView> votes = proposal != null && voteCount == players.size() ? repository.votes(proposal.id()) : List.of();
         boolean hasVoted = proposal != null && repository.hasVote(proposal.id(), c.player.id());
         boolean hasSubmittedMission = mission != null && repository.hasAction(mission.id(), c.player.id());
+        // Completion only: never select choices or encode submission order in live progress.
+        List<Long> votedPlayerIds = c.game.phase() == Phase.TEAM_VOTING && proposal != null
+                ? repository.votedPlayerIds(proposal.id()) : List.of();
+        List<Long> missionSubmittedPlayerIds = c.game.phase() == Phase.MISSION_EXECUTING && mission != null
+                ? repository.missionSubmittedPlayerIds(mission.id()) : List.of();
         ProposalRow latestResolved = repository.latestResolvedProposal(gameId).orElse(null);
         TeamVoteResult latestVoteResult = latestResolved == null ? null : new TeamVoteResult(latestResolved.missionNo(),
                 latestResolved.proposalNo(), "APPROVED".equals(latestResolved.status()), repository.votes(latestResolved.id()));
@@ -294,7 +299,8 @@ public class GameService {
         return new GameState(gameId, gameId, c.game.phase().name(), c.game.missionNo(), c.game.proposalNo(), c.game.rejections(),
                 c.game.goodScore(), c.game.evilScore(), leader.id(), requireSeat(leader), leader.nickname(),
                 c.game.missionNo() <= 5 ? config.teamSize(c.game.missionNo()) : 0, config.rejectedTeamsToEvilWin(),
-                repository.confirmedCount(gameId), players.size(), team, voteCount, votes, hasVoted, hasSubmittedMission,
+                repository.confirmedCount(gameId), players.size(), team, voteCount, votes, votedPlayerIds,
+                missionSubmittedPlayerIds, hasVoted, hasSubmittedMission,
                 team.contains(c.player.id()), latestVoteResult, c.player.alignment() == Alignment.EVIL,
                 c.player.role() == Role.ASSASSIN, result, config.ladyOfLake(), c.game.ladyHolderGamePlayerId(),
                 ladyHolder == null ? null : requireSeat(ladyHolder), ladyHolder == null ? null : ladyHolder.nickname(),
@@ -346,7 +352,8 @@ public class GameService {
                             int consecutiveRejections, int goodScore, int evilScore, long leaderPlayerId,
                             int leaderSeatNo, String leaderNickname, int requiredTeamSize, int maxRejections,
                             int confirmedCount, int playerCount, List<Long> selectedPlayerIds, int voteCount,
-                            List<VoteView> votes, boolean hasVoted, boolean hasSubmittedMission, boolean onMission,
+                            List<VoteView> votes, List<Long> votedPlayerIds, List<Long> missionSubmittedPlayerIds,
+                            boolean hasVoted, boolean hasSubmittedMission, boolean onMission,
                             TeamVoteResult latestVoteResult, boolean evil, boolean assassin,
                             MissionResult latestMissionResult, boolean ladyEnabled, Long ladyHolderPlayerId,
                             Integer ladyHolderSeatNo, String ladyHolderNickname, boolean ladyHolder,

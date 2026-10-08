@@ -69,6 +69,7 @@
   font-size: 18rpx;
   font-weight: 900;
   line-height: 1;
+  box-sizing: border-box;
 }
 .leader-icon {
   top: -11rpx;
@@ -76,6 +77,8 @@
   transform: translateX(-50%);
   color: var(--bg);
   background: var(--gold);
+  width: 30rpx;
+  padding: 0;
 }
 .selected-team { box-shadow: 0 0 0 4rpx var(--bg), 0 0 0 8rpx var(--good); }
 .selected-danger { box-shadow: 0 0 0 4rpx var(--bg), 0 0 0 8rpx var(--evil); }
@@ -83,6 +86,14 @@
 .knowledge-icon {
   right: -5rpx;
   bottom: -5rpx;
+}
+.action-done-icon {
+  top: -5rpx;
+  right: -5rpx;
+  width: 30rpx;
+  padding: 0;
+  color: var(--bg);
+  background: var(--good);
 }
 .knowledge-evil {
   color: var(--text);
@@ -140,4 +151,5 @@
 .formal .seat-name { max-width: 128rpx; font-size: 18rpx; line-height: 24rpx; }
 .formal.compact { width: 112rpx; }
 .formal.compact .seat-avatar { width: 84rpx; height: 84rpx; }
+.formal.compact .action-done-icon { right: -9rpx; }
 .formal.compact .seat-number { font-size: 24rpx; line-height: 32rpx; }

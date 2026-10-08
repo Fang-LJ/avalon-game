@@ -12,6 +12,7 @@
     />
     <text wx:else>{{player.initial}}</text>
     <text wx:if="{{player.leader}}" class="seat-badge leader-icon">♛</text>
+    <text wx:if="{{player.actionDone}}" class="seat-badge action-done-icon">✓</text>
     <text wx:if="{{player.knowledgeType}}" class="seat-badge knowledge-icon {{player.knowledgeClass}}">{{player.knowledgeSymbol}}</text>
     <text wx:if="{{player.me}}" class="seat-badge me-icon">我</text>
   </view>

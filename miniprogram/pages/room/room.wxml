@@ -172,14 +172,12 @@
           <view class="gold">是否同意这支队伍？</view>
           <view class="muted small">队伍：{{selectedText}}</view>
           <view class="muted small">
-            {{game.hasVoted ? '你已投票' : '请投票'}} · {{game.voteCount}} /
-            {{game.playerCount}}
+            {{game.hasVoted ? '已投票，等待其他玩家' : '请投票'}}
           </view>
         </block>
         <block wx:elif="{{game.phase === 'MISSION_EXECUTING'}}">
-          <view class="good">组队通过</view>
-          <view class="good small">同意：{{voteResult.approveText}}</view>
-          <view class="evil small">反对：{{voteResult.rejectText}}</view>
+          <view class="gold">任务执行中</view>
+          <view class="muted small">{{!game.onMission ? '等待任务成员完成' : game.hasSubmittedMission ? '已完成任务，等待其他任务成员' : '请做任务'}}</view>
         </block>
         <block wx:elif="{{game.phase === 'ASSASSINATION'}}">
           <view class="gold">

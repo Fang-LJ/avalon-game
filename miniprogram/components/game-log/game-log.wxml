@@ -1,3 +1,29 @@
+<template name="live-proposal-record">
+  <view class="card log-entry live-proposal {{compact ? 'compact-entry' : ''}}">
+    <view class="proposal-heading">
+      <view class="log-title">第 {{item.missionNo}} 轮 · 第 {{item.proposalNo}} 次提案</view>
+      <view class="proposal-status {{item.status === 'APPROVED' ? 'good' : 'evil'}}">{{item.statusText}}</view>
+    </view>
+    <view class="proposal-columns">
+      <view class="proposal-team">
+        <view class="muted small log-leader">队长：{{item.leaderText}}</view>
+        <view class="muted small">队伍：{{item.teamSeatText}}</view>
+      </view>
+      <view class="proposal-votes">
+        <view class="good small">同意：{{item.approveText || '无'}}</view>
+        <view class="evil small">反对：{{item.rejectText || '无'}}</view>
+      </view>
+    </view>
+    <view wx:if="{{item.missionCards.length}}" class="proposal-mission">
+      <text class="small {{item.mission.status === 'SUCCESS' ? 'good' : 'evil'}}">任务{{item.mission.status === 'SUCCESS' ? '成功' : '失败'}}</text>
+      <view class="mission-thumbnails">
+        <image wx:for="{{item.missionCards}}" wx:for-item="card" wx:key="index"
+          src="{{card.src}}" mode="aspectFit" class="mission-thumbnail" />
+      </view>
+    </view>
+  </view>
+</template>
+
 <template name="proposal-record">
   <view class="card log-entry {{compact ? 'compact-entry' : ''}}">
     <view class="log-title">第 {{item.missionNo}} 轮 · 第 {{item.proposalNo}} 次提案</view>
@@ -29,9 +55,9 @@
       <text class="muted small">已结束提案</text>
       <text wx:if="{{liveEntries.length > 1}}" class="muted small">‹ {{historyIndex + 1}} / {{liveEntries.length}} ›</text>
     </view>
-    <swiper class="history-swiper" current="{{historyIndex}}" bindchange="historyChange" circular="{{false}}">
+    <swiper class="history-swiper {{liveEntries[historyIndex].missionCards.length ? '' : 'without-mission'}}" current="{{historyIndex}}" bindchange="historyChange" circular="{{false}}">
       <swiper-item wx:for="{{liveEntries}}" wx:key="proposalId">
-        <template is="proposal-record" data="{{item, compact: true, replay: false}}" />
+        <template is="live-proposal-record" data="{{item, compact: true}}" />
       </swiper-item>
     </swiper>
     <view wx:if="{{liveEntries.length > 1}}" class="link center small all-history-link" bindtap="openAllHistory">
@@ -49,7 +75,7 @@
       </view>
       <scroll-view class="history-scroll" scroll-y="{{true}}">
         <view class="history-scroll-content">
-          <template wx:for="{{allEntries}}" wx:key="proposalId" is="proposal-record" data="{{item, compact: false, replay: false}}" />
+          <template wx:for="{{allEntries}}" wx:key="proposalId" is="live-proposal-record" data="{{item, compact: false}}" />
         </view>
       </scroll-view>
     </view>
