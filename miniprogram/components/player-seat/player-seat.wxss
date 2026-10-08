@@ -80,7 +80,7 @@
   width: 30rpx;
   padding: 0;
 }
-.selected-team { box-shadow: 0 0 0 4rpx var(--bg), 0 0 0 8rpx var(--good); }
+.selected-team { box-shadow: 0 0 0 4rpx var(--bg), 0 0 0 8rpx var(--selection); }
 .selected-danger { box-shadow: 0 0 0 4rpx var(--bg), 0 0 0 8rpx var(--evil); }
 .selected-lady { box-shadow: 0 0 0 4rpx var(--bg), 0 0 0 8rpx var(--gold); }
 .knowledge-icon {

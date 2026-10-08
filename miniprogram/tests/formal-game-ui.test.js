@@ -72,7 +72,7 @@ test('mission track renders five status dots without duplicated GOOD/EVIL scores
 });
 
 for (const [phase, className, color] of [
-  ['TEAM_BUILDING', 'selected-team', 'good'], ['ASSASSINATION', 'selected-danger', 'evil'],
+  ['TEAM_BUILDING', 'selected-team', 'selection'], ['ASSASSINATION', 'selected-danger', 'evil'],
   ['LADY_OF_LAKE', 'selected-lady', 'gold'],
 ]) {
   test(`${phase} selects an avatar ring using ${color} without a tick badge`, () => {

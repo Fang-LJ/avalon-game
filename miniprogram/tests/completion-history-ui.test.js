@@ -106,15 +106,15 @@ test('live proposal template is a two-column card with status beside title and i
   const heading=live.split('class="proposal-heading">')[1].split('class="proposal-columns">')[0];
   assert.match(heading,/log-title/); assert.match(heading,/proposal-status/);
   const left=live.split('class="proposal-team">')[1].split('class="proposal-votes">')[0];
-  assert.match(left,/队长：/); assert.match(left,/队伍：/); assert.doesNotMatch(left,/同意|反对/);
+  assert.match(left,/proposal-label">队长/); assert.match(left,/proposal-label">队伍/); assert.doesNotMatch(left,/同意|反对/);
   const right=live.split('class="proposal-votes">')[1].split('class="proposal-mission">')[0];
-  assert.match(right,/同意：/); assert.match(right,/反对：/);
+  assert.match(right,/proposal-label">同意/); assert.match(right,/proposal-label">反对/);
   assert.match(live,/<image wx:for="\{\{item.missionCards\}\}"/);
   assert.match(live,/mode="aspectFit"/); assert.doesNotMatch(live,/SUCCESS ×|FAIL ×|item.actions|<play-card/);
   const css=read('components/game-log/game-log.wxss');
-  assert.match(css,/grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/);
-  assert.match(css,/\.history-swiper \{ height: 244rpx/);
-  assert.match(css,/\.history-swiper.without-mission \{ height: 156rpx/);
+  assert.match(css,/grid-template-columns: minmax\(0, 1.08fr\) minmax\(0, 0.92fr\)/);
+  assert.match(css,/\.history-swiper \{ height: 276rpx/);
+  assert.doesNotMatch(css,/without-mission/);
 });
 test('live carousel and all-history reuse identical anonymous success-first thumbnail data', () => {
   const c=logComponent(), input=entry(); c.refresh([input]);

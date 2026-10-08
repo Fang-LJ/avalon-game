@@ -376,6 +376,10 @@ Page({
         i = ids.indexOf(id);
       if (i >= 0) ids.splice(i, 1);
       else if (ids.length < game.requiredTeamSize) ids.push(id);
+      else {
+        ids.pop();
+        ids.push(id);
+      }
       this.setData({ selectedIds: ids });
     } else if (
       game.phase === 'ASSASSINATION' &&

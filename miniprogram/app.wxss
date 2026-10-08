@@ -6,6 +6,7 @@ page {
   --text: #f5f1e8;
   --muted: #b8b7af;
   --good: #46c2a3;
+  --selection: #55c8ff;
   --evil: #c95d68;
   --gold: #d8b25c;
   --border: #324238;
