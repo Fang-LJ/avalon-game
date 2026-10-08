@@ -100,20 +100,19 @@ test('leader actionDone self knowledge and selection each retain their independe
   // Reserve the avatar border as well as the full badge boxes at the smallest size.
   for (const width of [84,96,100,112]) assert.ok(width/2+15<width-4+(width===84?9:5)-30);
 });
-test('live proposal template is a two-column card with status beside title and images below', () => {
+test('live proposal template shares two rows in one four-column grid with status and images', () => {
   const markup=read('components/game-log/game-log.wxml');
   const live=markup.split('<template name="live-proposal-record">')[1].split('</template>')[0];
-  const heading=live.split('class="proposal-heading">')[1].split('class="proposal-columns">')[0];
+  const heading=live.split('class="proposal-heading">')[1].split('class="proposal-info-grid">')[0];
   assert.match(heading,/log-title/); assert.match(heading,/proposal-status/);
-  const left=live.split('class="proposal-team">')[1].split('class="proposal-votes">')[0];
-  assert.match(left,/proposal-label">队长/); assert.match(left,/proposal-label">队伍/); assert.doesNotMatch(left,/同意|反对/);
-  const right=live.split('class="proposal-votes">')[1].split('class="proposal-mission">')[0];
-  assert.match(right,/proposal-label">同意/); assert.match(right,/proposal-label">反对/);
+  const grid=live.split('class="proposal-info-grid">')[1].split('</view>')[0];
+  assert.deepEqual(Array.from(grid.matchAll(/proposal-label">([^<]+)/g),match=>match[1]),['队长','同意','队伍','反对']);
+  assert.doesNotMatch(live,/proposal-team|proposal-votes|proposal-columns|proposal-field/);
   assert.match(live,/<image wx:for="\{\{item.missionCards\}\}"/);
   assert.match(live,/mode="aspectFit"/); assert.doesNotMatch(live,/SUCCESS ×|FAIL ×|item.actions|<play-card/);
   const css=read('components/game-log/game-log.wxss');
-  assert.match(css,/grid-template-columns: minmax\(0, 1.08fr\) minmax\(0, 0.92fr\)/);
-  assert.match(css,/\.history-swiper \{ height: 276rpx/);
+  assert.match(css,/grid-template-columns: 54rpx minmax\(0, 1.25fr\) 54rpx minmax\(0, 1fr\)/);
+  assert.match(css,/\.history-swiper \{ height: 284rpx/);
   assert.doesNotMatch(css,/without-mission/);
 });
 test('live carousel and all-history reuse identical anonymous success-first thumbnail data', () => {
@@ -139,13 +138,13 @@ test('fourth-mission success with a FAIL keeps success title and still renders t
   assert.equal(c.data.liveEntries[0].mission.status,'SUCCESS');
   assert.equal(c.data.liveEntries[0].missionCards.at(-1).src,CARDS.actions.FAIL);
 });
-test('52rpx thumbnails retain original ratio and five cards fit 375 390 430px', () => {
+test('58rpx thumbnails retain original ratio and five cards fit 375 390 430px', () => {
   const css=read('components/game-log/game-log.wxss');
-  assert.match(css,/width: 52rpx; height: 72.28rpx/); assert.match(css,/gap: 8rpx/);
-  assert.ok(Math.abs(52/72.28-600/834)<0.0001);
+  assert.match(css,/width: 58rpx; height: 80.62rpx/); assert.match(css,/gap: 8rpx/);
+  assert.ok(Math.abs(58/80.62-600/834)<0.0001);
   for (const width of [375,390,430]) {
     const scale=width/750;
-    assert.ok((5*52+4*8+16+4*21)*scale<(750-2*38-2*20)*scale-2);
+    assert.ok((5*58+4*8+16+4*23)*scale<(750-2*38-2*20)*scale-2);
   }
 });
 test('Replay retains complete text actions and Lady information behind its existing flags', () => {

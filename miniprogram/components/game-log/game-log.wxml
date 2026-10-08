@@ -4,27 +4,15 @@
       <view class="log-title">第 {{item.missionNo}} 轮 · 第 {{item.proposalNo}} 次提案</view>
       <view class="proposal-status {{item.status === 'APPROVED' ? 'good' : 'evil'}}">{{item.statusText}}</view>
     </view>
-    <view class="proposal-columns">
-      <view class="proposal-team">
-        <view class="proposal-field">
-          <text class="proposal-label">队长</text>
-          <text class="proposal-value log-leader">{{item.leaderText}}</text>
-        </view>
-        <view class="proposal-field">
-          <text class="proposal-label">队伍</text>
-          <text class="proposal-value">{{item.teamSeatText}}</text>
-        </view>
-      </view>
-      <view class="proposal-votes">
-        <view class="proposal-field">
-          <text class="proposal-label">同意</text>
-          <text class="proposal-value good">{{item.approveText || '无'}}</text>
-        </view>
-        <view class="proposal-field">
-          <text class="proposal-label">反对</text>
-          <text class="proposal-value evil">{{item.rejectText || '无'}}</text>
-        </view>
-      </view>
+    <view class="proposal-info-grid">
+      <text class="proposal-label">队长</text>
+      <text class="proposal-value proposal-leader">{{item.leaderText}}</text>
+      <text class="proposal-label">同意</text>
+      <text class="proposal-value good">{{item.approveText || '无'}}</text>
+      <text class="proposal-label">队伍</text>
+      <text class="proposal-value">{{item.teamSeatText}}</text>
+      <text class="proposal-label">反对</text>
+      <text class="proposal-value evil">{{item.rejectText || '无'}}</text>
     </view>
     <view class="proposal-mission">
       <text wx:if="{{item.missionCards.length}}" class="{{item.mission.status === 'SUCCESS' ? 'good' : 'evil'}}">任务{{item.mission.status === 'SUCCESS' ? '成功' : '失败'}}</text>
