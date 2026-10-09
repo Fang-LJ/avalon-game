@@ -80,6 +80,12 @@ cd backend && mvn test
 cd ../miniprogram && npm test && npm run check
 ```
 
+## 微信邀请与操作同步
+
+等待大厅“邀请好友”使用微信原生分享，入口是 `/pages/join/join?roomCode=六位房间号`。好友确认后才加入；没有登录或资料尚未完善时，邀请码保存在 `AVALON_PENDING_INVITE_ROOM_CODE`，登录/首次保存资料后恢复加入页面，加入成功才清除。开局后分享回退到普通首页，不再发送无效入房邀请。
+
+投票与任务提交使用独立的 GameState mutation 处理：服务器确认后立即更新自己的完成标记，再等待旧刷新结束并拉取提交后的完整状态。已确认 mutation 会使此前开始的 GET 失效，避免机器人/WebSocket 事件下旧响应抹掉自己的 ✓；新轮次不继承上一轮的完成标记。角色、任务出票和湖中仙女规则均未改变。
+
 ## API 概览
 
 - `POST /api/auth/wx-login`

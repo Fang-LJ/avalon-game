@@ -101,8 +101,7 @@
   background: transparent;
 }
 .knowledge-candidate {
-  color: var(--bg);
-  background: var(--gold);
+  background: transparent;
 }
 .me-icon {
   bottom: -5rpx;

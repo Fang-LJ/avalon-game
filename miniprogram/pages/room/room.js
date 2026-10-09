@@ -1,6 +1,7 @@
 const api = require('../../services/avalon');
 const auth = require('../../services/auth');
 const socket = require('../../utils/socket');
+const invite = require('../../utils/invite');
 const ui = require('../../utils/presentation');
 const { roleCard, CARDS } = require('../../utils/cards');
 const { normalizeResult, storageKey } = require('../../utils/mission-result');
@@ -60,6 +61,14 @@ Page({
   },
   onLoad(options) {
     this.setData({ roomId: Number(options.roomId) });
+    if (typeof wx.showShareMenu === 'function') wx.showShareMenu({ menus: ['shareAppMessage'] });
+  },
+  onShareAppMessage() {
+    const { room, game } = this.data;
+    const code = room && invite.validRoomCode(room.roomCode);
+    if (room && room.status === 'WAITING' && !game && code)
+      return { title: `邀请你加入圆桌迷境 · ${room.maxPlayers} 人局`, path: invite.joinPath(code) };
+    return { title: '圆桌迷境 · 阿瓦隆', path: '/pages/index/index' };
   },
   onShow() {
     if (!auth.requireSession()) return;
@@ -101,9 +110,10 @@ Page({
   },
   refresh() {
     if (this.refreshing) return this.refreshing;
+    const epoch = this.stateEpoch || 0;
     this.refreshing = this.fetchState()
       .catch((error) => {
-        if (!this.active) return;
+        if (!this.active || epoch !== (this.stateEpoch || 0)) return;
         this.setData({ error: '同步失败，点击重试' });
         if (error.code === 'FORBIDDEN' || error.code === 'NOT_FOUND')
           wx.reLaunch({ url: '/pages/index/index' });
@@ -113,13 +123,22 @@ Page({
       });
     return this.refreshing;
   },
+  async refreshAfterMutation() {
+    // Wait for the old single-flight request to settle, then fetch again after the POST completed.
+    // A socket callback may already have started that fresh request; sharing it is safe.
+    const pending = this.refreshing;
+    if (pending) { try { await pending; } catch (_) { /* Still request authoritative post-mutation data. */ } }
+    return this.refresh();
+  },
   async fetchState() {
     const requestedRoomId = this.data.roomId;
+    const epoch = this.stateEpoch || 0;
+    const currentRead = () => this.active && requestedRoomId === this.data.roomId && epoch === (this.stateEpoch || 0);
     let room;
     try {
       room = await api.room(requestedRoomId, false);
     } catch (error) {
-      if (!this.active || requestedRoomId !== this.data.roomId) return;
+      if (!currentRead()) return;
       if (error.code !== 'NOT_FOUND') throw error;
       // The client may have missed REMATCH_CREATED while offline. Old test games are deleted.
       room = await api.currentRoom();
@@ -128,7 +147,7 @@ Page({
         return;
       }
     }
-    if (!this.active || requestedRoomId !== this.data.roomId) return;
+    if (!currentRead()) return;
     if (room.status === 'CLOSED') {
       this.exitClosedRoom();
       return;
@@ -179,22 +198,13 @@ Page({
       api.timeline(gameId),
       api.myRole(gameId),
     ]).catch(error => {
-      if (!this.active || room.roomId !== this.data.roomId) return null;
+      if (!this.active || room.roomId !== this.data.roomId || epoch !== (this.stateEpoch || 0)) return null;
       throw error;
     });
-    if (!snapshot || !this.active || room.roomId !== this.data.roomId) return;
+    if (!snapshot || !this.active || room.roomId !== this.data.roomId || epoch !== (this.stateEpoch || 0)) return;
     const [game, timeline, role] = snapshot;
-    const key = `${gameId}-${game.missionNo}-${game.proposalNo}-${game.phase}`;
-    const newPhase = key !== this.data.draftKey;
-    let selectedIds = game.selectedPlayerIds || [];
-    if (game.phase === 'TEAM_BUILDING')
-      selectedIds = newPhase ? [] : this.data.selectedIds;
-    if (game.phase === 'ASSASSINATION')
-      selectedIds = newPhase ? [] : this.data.selectedIds;
-    if (game.phase === 'LADY_OF_LAKE')
-      selectedIds = newPhase ? [] : this.data.selectedIds;
     this.setData({
-      game,
+      ...this.gameStateUpdate(game),
       timeline,
       roleCardFront: roleCard(role.roleCode),
       role: {
@@ -205,22 +215,7 @@ Page({
           initial: ui.initial(p.nickname),
         })),
       },
-      draftKey: key,
-      selectedIds,
-      missionChoice: newPhase ? '' : this.data.missionChoice,
-      missionOverlayOpen: newPhase ? false : this.data.missionOverlayOpen,
-      missionOverlayKey: newPhase ? '' : this.data.missionOverlayKey,
-      assassinationTarget: newPhase ? null : this.data.assassinationTarget,
-      ladyTarget: newPhase ? null : this.data.ladyTarget,
-      viewVotes: newPhase ? false : this.data.viewVotes,
-      phaseTitle: PHASES[game.phase],
-      isLeader: game.leaderPlayerId === room.myPlayerId,
       entries: ui.liveLogs(timeline, room.players),
-      finishedIdentities: game.phase === 'FINISHED' ? ui.finishedIdentities(game.identities) : [],
-      finishedGroups: game.phase === 'FINISHED' ? ui.finishedGroups(game.identities, game.winner) : [],
-      missionDetail: ['ROLE_CONFIRM', 'FINISHED'].includes(game.phase) ? null : this.data.missionDetail,
-      // Set the covering overlay in the same render as the advanced server phase.
-      ...this.missionResultUpdate(game),
     });
     this.decoratePlayers();
     this.syncMissionOverlay();
@@ -230,7 +225,7 @@ Page({
         return;
       }
       const replay = await api.replay(gameId);
-      if (this.active && this.data.game && this.data.game.gameId === gameId)
+      if (this.active && epoch === (this.stateEpoch || 0) && this.data.game && this.data.game.gameId === gameId)
         this.setData({
           finished: {
             ...replay,
@@ -242,6 +237,71 @@ Page({
             ).nickname,
           },
         });
+    }
+  },
+  gameStateUpdate(game) {
+    const key = `${game.gameId}-${game.missionNo}-${game.proposalNo}-${game.phase}`;
+    const newPhase = key !== this.data.draftKey;
+    const selecting = ['TEAM_BUILDING', 'ASSASSINATION', 'LADY_OF_LAKE'].includes(game.phase);
+    return {
+      game, draftKey: key,
+      selectedIds: selecting ? (newPhase ? [] : this.data.selectedIds) : game.selectedPlayerIds || [],
+      phaseTitle: PHASES[game.phase],
+      isLeader: game.leaderPlayerId === this.data.room.myPlayerId,
+      missionChoice: newPhase ? '' : this.data.missionChoice,
+      missionOverlayOpen: newPhase ? false : this.data.missionOverlayOpen,
+      missionOverlayKey: newPhase ? '' : this.data.missionOverlayKey,
+      assassinationTarget: newPhase ? null : this.data.assassinationTarget,
+      ladyTarget: newPhase ? null : this.data.ladyTarget,
+      viewVotes: newPhase ? false : this.data.viewVotes,
+      finishedIdentities: game.phase === 'FINISHED' ? ui.finishedIdentities(game.identities) : [],
+      finishedGroups: game.phase === 'FINISHED' ? ui.finishedGroups(game.identities, game.winner) : [],
+      missionDetail: ['ROLE_CONFIRM', 'FINISHED'].includes(game.phase) ? null : this.data.missionDetail,
+      // Keep the existing result reveal authoritative and atomic with the advanced server phase.
+      ...this.missionResultUpdate(game),
+    };
+  },
+  applyGameMutationResult(result, context) {
+    const current = this.data.game;
+    if (this.active === false || !current || this.data.roomId !== context.roomId ||
+        current.gameId !== context.gameId || !result || result.gameId !== context.gameId || !PHASES[result.phase]) return false;
+    // Invalidate every GET that began before this confirmed POST response, including late errors.
+    this.stateEpoch = (this.stateEpoch || 0) + 1;
+    const phases = Object.keys(PHASES);
+    const older = current.phase === 'FINISHED' && result.phase !== 'FINISHED' ||
+      result.phase !== 'FINISHED' && (result.missionNo < current.missionNo ||
+        result.missionNo === current.missionNo && (result.proposalNo < current.proposalNo ||
+          result.proposalNo === current.proposalNo && phases.indexOf(result.phase) < phases.indexOf(current.phase)));
+    if (older) return false; // A bot may have advanced the game while the POST response travelled back.
+    if (result.phase === current.phase && result.missionNo === current.missionNo && result.proposalNo === current.proposalNo) {
+      // Completed actions cannot be undone within the same proposal. Preserve newer observed bot ticks.
+      const union = key => [...new Set([...(current[key] || []), ...(result[key] || [])])].sort((a,b) => a-b);
+      result = { ...result,
+        votedPlayerIds: result.phase === 'TEAM_VOTING' ? union('votedPlayerIds') : result.votedPlayerIds,
+        missionSubmittedPlayerIds: result.phase === 'MISSION_EXECUTING' ? union('missionSubmittedPlayerIds') : result.missionSubmittedPlayerIds,
+        hasVoted: result.phase === 'TEAM_VOTING' ? current.hasVoted === true || result.hasVoted === true : result.hasVoted,
+        hasSubmittedMission: result.phase === 'MISSION_EXECUTING' ? current.hasSubmittedMission === true || result.hasSubmittedMission === true : result.hasSubmittedMission,
+      };
+    }
+    this.setData(this.gameStateUpdate(result));
+    this.decoratePlayers();
+    this.syncMissionOverlay();
+    return true;
+  },
+  async runGameMutation(task, { waitForCurrent = false } = {}) {
+    if (this.data.busy || !this.data.game) return;
+    const context = { roomId: this.data.roomId, gameId: this.data.game.gameId };
+    this.setData({ busy: true });
+    try {
+      if (waitForCurrent) await this.refreshing;
+      const result = await task();
+      if (this.active === false) return;
+      this.applyGameMutationResult(result, context);
+      await this.refreshAfterMutation();
+    } catch (_) {
+      /* No completion tick before server success. The request helper reports errors. */
+    } finally {
+      this.setData({ busy: false });
     }
   },
   missionResultUpdate(game) {
@@ -492,10 +552,15 @@ Page({
     );
   },
   approve() {
-    return this.run(() => api.vote(this.data.game.gameId, 'APPROVE'));
+    return this.vote('APPROVE');
   },
   reject() {
-    return this.run(() => api.vote(this.data.game.gameId, 'REJECT'));
+    return this.vote('REJECT');
+  },
+  vote(choice) {
+    const game = this.data.game;
+    if (!game || game.phase !== 'TEAM_VOTING' || game.hasVoted || this.data.missionResultOpen) return;
+    return this.runGameMutation(() => api.vote(game.gameId, choice));
   },
   missionSuccess() {
     if (!this.canChooseMission()) return;
@@ -514,9 +579,9 @@ Page({
     if (!this.canChooseMission() || !this.data.missionChoice) return;
     const { game, missionChoice } = this.data;
     if (missionChoice !== 'SUCCESS' && (missionChoice !== 'FAIL' || !game.evil)) return;
-    return this.run(() => {
+    return this.runGameMutation(() => {
       const current = this.data.game;
-      // A websocket refresh may complete while run() waits. Never submit an old choice to a new round.
+      // A websocket refresh may complete while the mutation runner waits. Never submit an old choice to a new round.
       if (current && current.gameId === game.gameId && current.missionNo === game.missionNo &&
           current.proposalNo === game.proposalNo && current.phase === 'MISSION_EXECUTING' &&
           current.onMission && !current.hasSubmittedMission &&
@@ -528,7 +593,7 @@ Page({
             this.setData({ missionOverlayOpen: false, missionChoice: '' });
           return result;
         });
-    });
+    }, { waitForCurrent: true });
   },
   syncMissionOverlay() {
     const { game, missionOverlayKey } = this.data;

@@ -28,9 +28,12 @@
         {{room.seatedPlayers}} / {{room.maxPlayers}} · {{room.canStart ?
         '房主可以开始游戏' : '等待全员入座'}}
       </view>
-      <view class="row" bindtap="copyCode">
+      <view class="row">
         <text class="room-code gold">{{room.roomCode}}</text>
-        <text class="muted small">点击复制房间号</text>
+      </view>
+      <view class="lobby-invite-actions">
+        <button wx:if="{{room.status === 'WAITING'}}" class="invite-button" open-type="share">邀请好友</button>
+        <button class="copy-code-button" bindtap="copyCode">复制房间号</button>
       </view>
     </view>
     <view class="section-title lobby-label">固定座位</view>

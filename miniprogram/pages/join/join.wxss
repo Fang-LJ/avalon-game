@@ -1,19 +1,15 @@
-.join-example {
-  padding: 74rpx 0;
-}
-.example-code {
-  font-size: 62rpx;
-  font-weight: 700;
-}
 .join-input {
-  margin-top: 90rpx;
+  margin-top: 48rpx;
 }
 .input-hint {
   margin-top: 14rpx;
 }
 .join-actions {
-  margin-top: 76rpx;
+  margin-top: 44rpx;
 }
 .join-hint {
-  margin-top: 110rpx;
+  margin-top: 30rpx;
+  line-height: 1.6;
 }
+.other-code { margin-top: 22rpx; min-height: 48rpx; line-height: 48rpx; }
+.join-page .input { letter-spacing: 8rpx; font-size: 34rpx; }

@@ -2,6 +2,7 @@ const api = require('../../services/avalon');
 const auth = require('../../services/auth');
 const files = require('../../services/file');
 const ui = require('../../utils/presentation');
+const invite = require('../../utils/invite');
 
 Page({
   data: {
@@ -100,7 +101,7 @@ Page({
           fail: () => wx.reLaunch({ url: '/pages/me/me' }),
         });
       } else {
-        wx.reLaunch({ url: '/pages/index/index' });
+        wx.reLaunch({ url: invite.destinationOrHome() });
       }
     } catch (error) {
       this.setData({ error: error.message || '保存失败，请重试' });

@@ -1,13 +1,9 @@
-<view class="page">
+<view class="page join-page">
   <page-head
     title="加入房间"
-    subtitle="输入好友分享的 6 位房间号"
+    subtitle="{{fromInvite ? '好友邀请你加入房间' : '输入好友分享的 6 位房间号'}}"
     back="{{true}}"
   />
-  <view class="card join-example center">
-    <view class="example-code gold">464349</view>
-    <view class="muted small">示例房间号</view>
-  </view>
   <view class="join-input">
     <view class="input-label">房间号</view>
     <input
@@ -15,12 +11,16 @@
       value="{{roomCode}}"
       type="number"
       maxlength="6"
+      disabled="{{loading}}"
+      focus="{{inputFocus}}"
       placeholder="请输入 6 位房间号"
       placeholder-class="muted"
       bindinput="codeInput"
     />
     <view class="muted small input-hint">仅支持加入等待中的房间</view>
+    <view wx:if="{{fromInvite}}" class="link small other-code" bindtap="editCode">输入其他房间号</view>
   </view>
+  <view wx:if="{{error}}" class="error small">{{error}}</view>
   <view class="join-actions actions">
     <button
       class="btn"
@@ -30,10 +30,6 @@
     >
       加入房间
     </button>
-    <button class="btn ghost" disabled="{{true}}">扫码加入（暂未开放）</button>
   </view>
-  <view class="card join-hint">
-    <view>没有房间号？</view>
-    <view class="muted small">让房主在微信里分享房间邀请给你。</view>
-  </view>
+  <view class="muted small join-hint center">也可以让房主直接通过微信分享邀请给你。</view>
 </view>

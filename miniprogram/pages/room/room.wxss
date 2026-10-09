@@ -174,8 +174,7 @@
   background: transparent;
 }
 .knowledge-inline.knowledge-candidate {
-  color: var(--bg);
-  background: var(--gold);
+  background: transparent;
 }
 .has-phase-actions {
   padding-bottom: calc(220rpx + env(safe-area-inset-bottom));
@@ -211,3 +210,7 @@ button.bot-add[disabled] { background: var(--soft) !important; color: var(--mute
 .quick-action::after { border: 0; }
 button.quick-action.private-role-trigger { color: var(--gold); }
 button.quick-action[disabled] { background: transparent !important; color: var(--muted) !important; opacity: 0.45; }
+.lobby-invite-actions { display: flex; align-items: center; gap: 20rpx; margin-top: 16rpx; }
+.invite-button { margin: 0; padding: 0 28rpx; line-height: 64rpx; font-size: 24rpx; color: var(--bg); background: var(--gold); border-radius: 999rpx; }
+.copy-code-button { margin: 0; padding: 0 8rpx; line-height: 64rpx; font-size: 23rpx; color: var(--muted); background: transparent; }
+.invite-button::after, .copy-code-button::after { border: 0; }

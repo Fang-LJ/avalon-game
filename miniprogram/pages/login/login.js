@@ -1,4 +1,5 @@
 const auth = require('../../services/auth');
+const invite = require('../../utils/invite');
 const { showLegal } = require('../../utils/presentation');
 Page({
   data: {
@@ -46,7 +47,7 @@ Page({
       (result.profileComplete === false ||
         (result.profileComplete == null && !result.avatarUrl));
     wx.reLaunch({
-      url: needsProfile ? '/pages/profile/profile' : '/pages/index/index',
+      url: needsProfile ? '/pages/profile/profile' : invite.destinationOrHome(),
     });
   },
   selectMockUser(e) {

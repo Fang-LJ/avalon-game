@@ -184,7 +184,7 @@ test('a refresh switching phase game or mission cannot submit a stale selected c
     const page = pageAt({ mission: async () => calls.push('submitted') });
     page.setData({ game: { gameId: 7, missionNo: 1, proposalNo: 1, phase: 'MISSION_EXECUTING', onMission: true } });
     page.missionSuccess();
-    page.run = async task => { page.data.game = { ...page.data.game, ...patch }; return task(); };
+    page.runGameMutation = async task => { page.data.game = { ...page.data.game, ...patch }; return task(); };
     await page.submitMission();
     assert.equal(calls.length, 0);
   }

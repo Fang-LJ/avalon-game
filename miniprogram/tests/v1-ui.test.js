@@ -430,9 +430,11 @@ test('all core room phase controls still invoke existing API methods', async () 
     missionChoice: 'SUCCESS',
   });
   p.run = (t) => t();
+  p.runGameMutation = (t) => t();
   await p.startGame();
   await p.confirmRole({ detail: { gameId: 9 } });
   await p.submitTeam();
+  p.setData({ game: { ...p.data.game, phase: 'TEAM_VOTING' } });
   await p.approve();
   await p.reject();
   p.setData({ game: { ...p.data.game, phase: 'MISSION_EXECUTING', onMission: true } });

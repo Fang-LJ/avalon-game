@@ -3,4 +3,4 @@
 .evil-mark { background: #26171c; border: 1rpx solid #9b4653; }
 .evil-crescent { position: relative; width: 68%; height: 68%; border-radius: 50%; overflow: hidden; background: #e47a86; }
 .crescent-cutout { position: absolute; width: 92%; height: 92%; border-radius: 50%; background: #26171c; top: -18%; right: -18%; }
-.candidate-mark { background: #d8b25c; color: #101713; font-size: 20rpx; font-weight: 900; line-height: 1; }
+.candidate-mark { background: #b69cff; color: #ffffff; font-size: 20rpx; font-weight: 900; line-height: 1; box-shadow: 0 0 10rpx rgba(182,156,255,.35); }
