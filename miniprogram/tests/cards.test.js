@@ -65,7 +65,7 @@ for (const [code, name] of Object.entries({
   MORDRED: 'mordred', OBERON: 'oberon',
 })) {
   test(`${code} maps to its supplied role artwork`, () => {
-    assert.equal(cards.roleCard(code), `/assets/cards/roles/${name}.webp`);
+    assert.equal(cards.roleCard(code), `/assets/cards/roles/${name}.jpg`);
   });
 }
 
@@ -77,39 +77,50 @@ test('unknown card codes including inherited object keys use safe fallbacks', ()
   }
 });
 
-test('all 19 mapped images exist as 17 WebP and 2 JPEG files and role back exists', () => {
+test('all 19 mapped images exist as nonempty JPEG files below 200KB', () => {
   const images = Object.values(cards.CARDS).flatMap(Object.values);
   assert.equal(images.length, 19);
   assert.equal(new Set(images).size, 19);
-  assert.equal(images.filter(image => image.endsWith('.webp')).length, 17);
-  assert.equal(images.filter(image => image.endsWith('.jpg')).length, 2);
   for (const image of images) {
     const bytes = fs.readFileSync(path.join(root, image));
-    if (image.endsWith('.jpg')) {
-      assert.equal(bytes.readUInt16BE(0), 0xffd8, image);
-      assert.equal(bytes.readUInt16BE(bytes.length - 2), 0xffd9, image);
-      assert.ok(bytes.length > 1024 && bytes.length < 200 * 1024, image);
-    } else {
-      assert.ok(image.endsWith('.webp'), image);
-      assert.equal(bytes.toString('ascii', 0, 4), 'RIFF', image);
-      assert.equal(bytes.toString('ascii', 8, 12), 'WEBP', image);
-      assert.ok(bytes.length > 1000 && bytes.length < 300 * 1024, image);
-    }
+    assert.ok(image.endsWith('.jpg'), image);
+    assert.equal(bytes.readUInt16BE(0), 0xffd8, image);
+    assert.equal(bytes.readUInt16BE(bytes.length - 2), 0xffd9, image);
+    assert.ok(bytes.length > 1024 && bytes.length <= 200_000, image);
   }
 });
 
-test('mission mappings select JPG only; duplicate mission WebP assets are absent', () => {
+test('all action mappings select JPG; no unmapped or duplicate files remain in cards/', () => {
   assert.equal(cards.actionCard('SUCCESS'), '/assets/cards/actions/mission-success.jpg');
   assert.equal(cards.actionCard('FAIL'), '/assets/cards/actions/mission-fail.jpg');
-  assert.equal(cards.actionCard('APPROVE'), '/assets/cards/actions/approve.webp');
-  assert.equal(cards.actionCard('REJECT'), '/assets/cards/actions/reject.webp');
-  for (const name of ['mission-success', 'mission-fail'])
-    assert.equal(fs.existsSync(path.join(root, `assets/cards/actions/${name}.webp`)), false);
+  assert.equal(cards.actionCard('APPROVE'), '/assets/cards/actions/approve.jpg');
+  assert.equal(cards.actionCard('REJECT'), '/assets/cards/actions/reject.jpg');
+  const actual = [];
+  function walk(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const file = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(file);
+      else actual.push('/' + path.relative(root, file).split(path.sep).join('/'));
+    }
+  }
+  walk(path.join(root, 'assets/cards'));
+  assert.deepEqual(actual.sort(), Object.values(cards.CARDS).flatMap(Object.values).sort());
 });
 
-for (const [name, height] of [['mission-success', 834], ['mission-fail', 832]]) {
-  test(`${name} JPEG is progressive RGB with preserved 600x${height} dimensions`, () => {
-    const bytes = fs.readFileSync(path.join(root, `assets/cards/actions/${name}.jpg`));
+const CARD_HEIGHTS = {
+  'roles/merlin': 740, 'roles/percival': 819, 'roles/loyal-servant': 809,
+  'roles/assassin': 775, 'roles/morgana': 963, 'roles/mordred': 956,
+  'roles/oberon': 981, 'roles/minion': 967,
+  'back/role-back': 880, 'back/action-back': 699,
+  'actions/mission-success': 723, 'actions/mission-fail': 721,
+  'actions/approve': 723, 'actions/reject': 708,
+  'special/lady-of-the-lake': 705, 'special/assassinate': 712,
+  'special/good-victory': 710, 'special/evil-victory': 690,
+  'special/generic-emblem': 696,
+};
+for (const [name, height] of Object.entries(CARD_HEIGHTS)) {
+  test(`${name} JPEG is progressive RGB with proportionate 520x${height} dimensions`, () => {
+    const bytes = fs.readFileSync(path.join(root, `assets/cards/${name}.jpg`));
     let position = 2;
     let frame;
     // Parse JPEG segments before entropy data; SOF2 proves progressive encoding.
@@ -126,18 +137,31 @@ for (const [name, height] of [['mission-success', 834], ['mission-fail', 832]]) 
       };
       position += length + 2;
     }
-    assert.deepEqual(frame, { height, width: 600, channels: 3 });
+    assert.deepEqual(frame, { height, width: 520, channels: 3 });
   });
 }
 
-test('export script keeps mission JPG and extension-based mixed encoding settings', () => {
+test('export script outputs all 19 mapped JPGs with bounded JPEG settings', () => {
   const script = fs.readFileSync(path.join(root, '../scripts/export-cards.py'), 'utf8');
-  for (const name of ['mission-success', 'mission-fail'])
-    assert.ok(script.includes(`actions/${name}.jpg`));
-  assert.match(script, /destination\.suffix\.lower\(\) in \("\.jpg", "\.jpeg"\)/);
-  assert.match(script, /"JPEG", quality=88, optimize=True, progressive=True/);
-  assert.match(script, /"WEBP", quality=quality, method=6/);
+  const exported = [...script.matchAll(/"((?:roles|actions|back|special)\/[^"\s]+\.jpg)"/g)]
+    .map(match => '/assets/cards/' + match[1]);
+  assert.deepEqual(exported.sort(), Object.values(cards.CARDS).flatMap(Object.values).sort());
+  assert.match(script, /"JPEG", quality=quality, optimize=True, progressive=True/);
+  assert.match(script, /for quality in \(85, 82, 80\)/);
+  assert.match(script, /MAX_CARD_BYTES = 200_000/);
+  assert.match(script, /encoded\.tell\(\) <= MAX_CARD_BYTES/);
+  assert.match(script, /CARD_WIDTH = 520/);
+  assert.doesNotMatch(script, /"WEBP"|\.webp/);
   assert.match(script, /save_card\(card, destination\)/);
+});
+
+test('identity dealing and generic play-card defaults both use the JPEG role back', () => {
+  assert.equal(cards.CARDS.back.ROLE, '/assets/cards/back/role-back.jpg');
+  assert.equal(cards.CARDS.back.ACTION, '/assets/cards/back/action-back.jpg');
+  const generic = componentAt('components/play-card/play-card.js');
+  assert.equal(generic.definition.properties.back.value, cards.CARDS.back.ROLE);
+  const identity = deal();
+  assert.equal(identity.instance.data.back, cards.CARDS.back.ROLE);
 });
 
 function imageFixture(envVersion) {
