@@ -20,7 +20,7 @@ function logComponent() {
   });
   const c={data:{...structuredClone(definition.data),gameId:1,compact:true,replay:false},...definition.methods};
   c.setData=value=>Object.assign(c.data,value);
-  c.refresh=entries=>definition.observers['entries,gameId,compact,replay'].call(c,entries,1,true,false);
+  c.refresh=entries=>definition.observers['entries,gameId,compact,replay,maxMissionSlots'].call(c,entries,1,true,false);
   return c;
 }
 function pageAt() {
@@ -108,11 +108,12 @@ test('live proposal template shares two rows in one four-column grid with status
   const grid=live.split('class="proposal-info-grid">')[1].split('</view>')[0];
   assert.deepEqual(Array.from(grid.matchAll(/proposal-label">([^<]+)/g),match=>match[1]),['队长','同意','队伍','反对']);
   assert.doesNotMatch(live,/proposal-team|proposal-votes|proposal-columns|proposal-field/);
-  assert.match(live,/<image wx:for="\{\{item.missionCards\}\}"/);
+  assert.match(live,/wx:for="\{\{item.missionSlotIndexes\}\}"/);
+  assert.match(live,/<image wx:if="\{\{item.missionSlots\[slotIndex\]\}\}" src="\{\{item.missionSlots\[slotIndex\].src\}\}"/);
   assert.match(live,/mode="aspectFit"/); assert.doesNotMatch(live,/SUCCESS ×|FAIL ×|item.actions|<play-card/);
   const css=read('components/game-log/game-log.wxss');
-  assert.match(css,/grid-template-columns: 54rpx minmax\(0, 1.25fr\) 54rpx minmax\(0, 1fr\)/);
-  assert.match(css,/\.history-swiper \{ height: 284rpx/);
+  assert.match(css,/grid-template-columns: 54rpx minmax\(0, 1fr\) 54rpx minmax\(0, 1.25fr\)/);
+  assert.match(css,/\.history-swiper \{ height: 312rpx/);
   assert.doesNotMatch(css,/without-mission/);
 });
 test('live carousel and all-history reuse identical anonymous success-first thumbnail data', () => {
@@ -138,13 +139,13 @@ test('fourth-mission success with a FAIL keeps success title and still renders t
   assert.equal(c.data.liveEntries[0].mission.status,'SUCCESS');
   assert.equal(c.data.liveEntries[0].missionCards.at(-1).src,CARDS.actions.FAIL);
 });
-test('58rpx thumbnails retain original ratio and five cards fit 375 390 430px', () => {
+test('62rpx thumbnails retain original ratio and five fixed slots fit the narrower carousel at 375 390 430px', () => {
   const css=read('components/game-log/game-log.wxss');
-  assert.match(css,/width: 58rpx; height: 80.62rpx/); assert.match(css,/gap: 8rpx/);
-  assert.ok(Math.abs(58/80.62-600/834)<0.0001);
+  assert.match(css,/width: 62rpx; height: 86.18rpx/);
+  assert.ok(Math.abs(62/86.18-600/834)<0.0001);
   for (const width of [375,390,430]) {
     const scale=width/750;
-    assert.ok((5*58+4*8+16+4*23)*scale<(750-2*38-2*20)*scale-2);
+    assert.ok((5*62+12+116)*scale<(750-2*38-2*28-2*6-2*20)*scale-2);
   }
 });
 test('Replay retains complete text actions and Lady information behind its existing flags', () => {

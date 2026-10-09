@@ -39,6 +39,7 @@ function rules(n) {
     goodRoles: '梅林 · 派西维尔 · 忠臣 × ' + (good - 2),
     evilRoles: ['莫甘娜', '刺客'].concat(extra).join(' · '),
     teamText: TEAMS[n].join(' / '),
+    maxMissionSlots: Math.max(...TEAMS[n]),
     fourth: n >= 7 ? 2 : 1,
     lady: n === 10,
   };

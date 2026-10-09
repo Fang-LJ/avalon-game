@@ -2,7 +2,7 @@
   <view class="card log-entry live-proposal {{compact ? 'compact-entry' : ''}}">
     <view class="proposal-heading">
       <view class="log-title">第 {{item.missionNo}} 轮 · 第 {{item.proposalNo}} 次提案</view>
-      <view class="proposal-status {{item.status === 'APPROVED' ? 'good' : 'evil'}}">{{item.statusText}}</view>
+      <view class="proposal-status {{item.status === 'APPROVED' ? 'approved' : 'rejected'}}">{{item.statusText}}</view>
     </view>
     <view class="proposal-info-grid">
       <text class="proposal-label">队长</text>
@@ -15,12 +15,13 @@
       <text class="proposal-value evil">{{item.rejectText || '无'}}</text>
     </view>
     <view class="proposal-mission">
-      <text wx:if="{{item.missionCards.length}}" class="{{item.mission.status === 'SUCCESS' ? 'good' : 'evil'}}">任务{{item.mission.status === 'SUCCESS' ? '成功' : '失败'}}</text>
-      <text wx:elif="{{item.status === 'APPROVED'}}" class="muted">任务进行中</text>
-      <text wx:else class="muted">未执行任务</text>
-      <view wx:if="{{item.missionCards.length}}" class="mission-thumbnails">
-        <image wx:for="{{item.missionCards}}" wx:for-item="card" wx:key="index"
-          src="{{card.src}}" mode="aspectFit" class="mission-thumbnail" />
+      <text wx:if="{{item.missionCards.length}}" class="mission-result-label {{item.mission.status === 'SUCCESS' ? 'good' : 'evil'}}">任务{{item.mission.status === 'SUCCESS' ? '成功' : '失败'}}</text>
+      <text wx:elif="{{item.status === 'APPROVED'}}" class="mission-result-label muted">任务进行中</text>
+      <text wx:else class="mission-result-label muted">未执行任务</text>
+      <view class="mission-slots slots-{{item.missionSlotCount}}">
+        <view wx:for="{{item.missionSlotIndexes}}" wx:for-item="slotIndex" wx:key="*this" class="mission-slot {{item.missionSlots[slotIndex] ? '' : 'empty'}}">
+          <image wx:if="{{item.missionSlots[slotIndex]}}" src="{{item.missionSlots[slotIndex].src}}" mode="aspectFit" class="mission-thumbnail" />
+        </view>
       </view>
     </view>
   </view>
@@ -57,9 +58,11 @@
       <text class="muted small">已结束提案</text>
       <text wx:if="{{liveEntries.length > 1}}" class="muted small">‹ {{historyIndex + 1}} / {{liveEntries.length}} ›</text>
     </view>
-    <swiper class="history-swiper" current="{{historyIndex}}" bindchange="historyChange" circular="{{false}}">
+    <swiper class="history-swiper" current="{{historyIndex}}" previous-margin="28rpx" next-margin="28rpx" bindchange="historyChange" circular="{{false}}">
       <swiper-item wx:for="{{liveEntries}}" wx:key="proposalId">
-        <template is="live-proposal-record" data="{{item, compact: true}}" />
+        <view class="proposal-slide {{historyIndex === index ? 'active' : 'inactive'}}">
+          <template is="live-proposal-record" data="{{item, compact: true}}" />
+        </view>
       </swiper-item>
     </swiper>
     <view wx:if="{{liveEntries.length > 1}}" class="link center small all-history-link" bindtap="openAllHistory">

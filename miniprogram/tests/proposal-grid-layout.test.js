@@ -20,7 +20,7 @@ test('one flat four-column grid orders leader/approve then team/reject in shared
   assert.equal((live.match(/proposal-info-grid/g) || []).length, 1);
   assert.doesNotMatch(live + css, /proposal-team|proposal-votes|proposal-columns|proposal-field|1\.08fr|0\.92fr/);
   assert.match(rule('.proposal-info-grid'), /display: grid/);
-  assert.match(rule('.proposal-info-grid'), /grid-template-columns: 54rpx minmax\(0, 1.25fr\) 54rpx minmax\(0, 1fr\)/);
+  assert.match(rule('.proposal-info-grid'), /grid-template-columns: 54rpx minmax\(0, 1fr\) 54rpx minmax\(0, 1.25fr\)/);
   assert.match(rule('.proposal-info-grid'), /align-items: center/);
   assert.match(rule('.proposal-info-grid'), /row-gap: 8rpx/);
   assert.match(rule('.proposal-info-grid'), /font-size: 24rpx; line-height: 34rpx/);
@@ -43,15 +43,15 @@ test('mission divider follows the grid with a fixed gap, never auto-pushed to bo
   assert.ok(live.indexOf('proposal-info-grid') < live.indexOf('proposal-mission'));
   assert.match(rule('.proposal-mission'), /border-top: 1px solid var\(--border\)/);
   assert.match(rule('.proposal-mission'), /padding-top: 12rpx/);
-  assert.match(rule('.proposal-mission'), /height: 82rpx; box-sizing: content-box/);
+  assert.match(rule('.proposal-mission'), /height: 88rpx; box-sizing: content-box/);
   assert.match(rule('.live-proposal > .proposal-mission'), /margin-top: 12rpx/);
   assert.doesNotMatch(rule('.live-proposal > .proposal-mission'), /auto/);
-  assert.match(rule('.live-proposal'), /height: 284rpx/);
-  assert.match(rule('.history-swiper'), /height: 284rpx/);
+  assert.match(rule('.live-proposal'), /height: 296rpx/);
+  assert.match(rule('.history-swiper'), /height: 312rpx/);
   assert.match(rule('.compact-entry'), /height: 100%/);
   // At the narrowest 375px viewport, borders + padding + fixed content fit the card.
-  assert.ok(4 + 40 + 36 + 12 + 2 * 34 + 8 + 12 + 2 + 12 + 82 <= 284);
-  assert.ok(80.62 <= 82, 'larger cards fit within the reserved content height');
+  assert.ok(4 + 40 + 40 + 12 + 2 * 34 + 8 + 12 + 2 + 12 + 88 <= 296);
+  assert.ok(86.18 <= 88, 'larger cards fit within the reserved content height');
 });
 
 test('fixed card structure covers rejected pending success and failed entries in both live views', () => {
@@ -67,7 +67,7 @@ test('fixed card structure covers rejected pending success and failed entries in
     { proposalId: 4, status: 'APPROVED', mission: { missionNo: 4, status: 'FAILED', successCount: 3, failCount: 2 } },
   ];
   const instance = { data: structuredClone(definition.data), setData(value) { Object.assign(this.data, value); } };
-  definition.observers['entries,gameId,compact,replay'].call(instance, entries, 1, true, false);
+  definition.observers['entries,gameId,compact,replay,maxMissionSlots'].call(instance, entries, 1, true, false);
   assert.deepEqual(Array.from(instance.data.liveEntries, entry => entry.missionCards.length), [0,0,5,5]);
   assert.deepEqual(Array.from(instance.data.allEntries, entry => entry.proposalId), [4,3,2,1]);
   for (const entry of instance.data.liveEntries) {
@@ -76,7 +76,7 @@ test('fixed card structure covers rejected pending success and failed entries in
     const firstFail = sources.findIndex(source => source.includes('mission-fail'));
     if (firstFail >= 0) assert.ok(sources.slice(firstFail).every(source => source.includes('mission-fail')));
   }
-  assert.match(markup, /<swiper class="history-swiper" current="\{\{historyIndex\}\}" bindchange="historyChange" circular="\{\{false\}\}"/);
+  assert.match(markup, /<swiper class="history-swiper" current="\{\{historyIndex\}\}"[^>]*bindchange="historyChange" circular="\{\{false\}\}"/);
   assert.doesNotMatch(markup + css, /without-mission/);
   assert.match(markup, /is="live-proposal-record" data="\{\{item, compact: true\}\}"/);
   assert.match(markup, /is="live-proposal-record" data="\{\{item, compact: false\}\}"/);
@@ -88,14 +88,14 @@ test('fixed card structure covers rejected pending success and failed entries in
 for (const playerCount of [5,6,7,8,9,10]) {
   test(`${playerCount}-player team and larger task thumbnails fit 375/390/430px widths`, () => {
     for (const width of [375,390,430]) {
-      const scale = width / 750, inner = width - (2 * 38 + 2 * 20) * scale - 2;
+      const scale = width / 750, inner = width - (2 * 38 + 2 * 28 + 2 * 6 + 2 * 20) * scale - 2;
       const valuesWidth = inner - (2 * 54 + 3 * 8) * scale;
-      const teamWidth = valuesWidth * 1.25 / 2.25;
+      const teamWidth = valuesWidth / 2.25;
       assert.ok(teamWidth > 5 * 24 * scale, 'team seats have usable space');
-      assert.ok((4 * 23 + 16 + 5 * 58 + 4 * 8) * scale <= inner);
+      assert.ok((116 + 12 + 5 * 62) * scale <= inner);
     }
-    assert.match(rule('.mission-thumbnail'), /width: 58rpx; height: 80.62rpx/);
-    assert.ok(Math.abs(58 / 80.62 - 600 / 834) < 0.0001);
+    assert.match(rule('.mission-thumbnail'), /width: 62rpx; height: 86.18rpx/);
+    assert.ok(Math.abs(62 / 86.18 - 600 / 834) < 0.0001);
     assert.match(live, /mode="aspectFit"/);
   });
 }

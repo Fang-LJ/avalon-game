@@ -218,6 +218,7 @@
       wx:if="{{board && game.phase !== 'ASSASSINATION' && entries.length}}"
       compact="{{true}}"
       gameId="{{game.gameId}}"
+      maxMissionSlots="{{rule.maxMissionSlots}}"
       entries="{{entries}}"
     />
     <view class="phase-actions actions">

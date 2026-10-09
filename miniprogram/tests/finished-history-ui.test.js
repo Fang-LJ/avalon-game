@@ -24,7 +24,7 @@ function component() {
   c.refresh = (entries, gameId = c.data.gameId) => {
     c.data.entries = entries;
     c.data.gameId = gameId;
-    definition.observers['entries,gameId,compact,replay'].call(c, entries, gameId, true, false);
+    definition.observers['entries,gameId,compact,replay,maxMissionSlots'].call(c, entries, gameId, true, false);
   };
   return c;
 }
@@ -148,7 +148,7 @@ test('zero resolved proposals leave no live history card and no empty placeholde
   const live = read('components/game-log/game-log.wxml').split('<block wx:if="{{compact && !replay}}">')[1].split('<view wx:else class="log-list">')[0];
   assert.match(live, /wx:if="\{\{liveEntries.length\}\}"/);
   assert.doesNotMatch(live, /组队与任务记录将在这里显示/);
-  assert.match(live, /current="\{\{historyIndex\}\}" bindchange="historyChange" circular="\{\{false\}\}"/);
+  assert.match(live, /current="\{\{historyIndex\}\}"[^>]*bindchange="historyChange" circular="\{\{false\}\}"/);
 });
 test('all-history sheet opens only for multiple resolved entries and survives refresh, closes explicitly', () => {
   const c = component(); c.refresh(history([1])); c.openAllHistory(); assert.equal(c.data.allHistoryOpen,false);

@@ -168,11 +168,11 @@ test('resolved pending and rejected proposals share a fixed carousel and reserve
   const live = markup.split('<template name="live-proposal-record">')[1].split('</template>')[0];
   assert.match(markup, /<swiper class="history-swiper" current="\{\{historyIndex\}\}"/);
   assert.doesNotMatch(markup + css, /without-mission/);
-  assert.match(css, /\.history-swiper \{ height: 284rpx/);
-  assert.match(css, /\.live-proposal \{[^}]*height: 284rpx/);
+  assert.match(css, /\.history-swiper \{ height: 312rpx/);
+  assert.match(css, /\.live-proposal \{[^}]*height: 296rpx/);
   assert.match(css, /\.compact-entry \{ height: 100%/);
   assert.match(live, /<view class="proposal-mission">/);
-  assert.match(css, /\.proposal-mission \{[^}]*height: 82rpx/);
+  assert.match(css, /\.proposal-mission \{[^}]*height: 88rpx/);
   assert.match(live, /wx:elif="\{\{item.status === 'APPROVED'\}\}"[^>]*>任务进行中/);
   assert.match(live, /wx:else[^>]*>未执行任务/);
   assert.match(live, /任务\{\{item.mission.status === 'SUCCESS' \? '成功' : '失败'\}\}/);
@@ -186,10 +186,10 @@ test('live proposal labels use fixed width and values align independently from l
   assert.equal((live.match(/class="proposal-info-grid"/g) || []).length, 1);
   assert.doesNotMatch(live, /proposal-field|proposal-team|proposal-votes|proposal-columns/);
   assert.equal((live.match(/class="proposal-value/g) || []).length, 4);
-  assert.match(css, /grid-template-columns: 54rpx minmax\(0, 1.25fr\) 54rpx minmax\(0, 1fr\)/);
+  assert.match(css, /grid-template-columns: 54rpx minmax\(0, 1fr\) 54rpx minmax\(0, 1.25fr\)/);
   assert.match(css, /\.proposal-value \{[^}]*overflow: hidden; text-overflow: ellipsis; white-space: nowrap/);
   assert.match(css, /\.live-proposal \.log-title \{[^}]*font-size: 26rpx/);
   assert.match(css, /\.proposal-info-grid \{[^}]*font-size: 24rpx/);
-  assert.match(css, /\.proposal-status \{[^}]*font-size: 23rpx[^}]*white-space: nowrap/);
+  assert.match(css, /\.proposal-status \{[^}]*font-size: 20rpx[^}]*white-space: nowrap/);
   assert.doesNotMatch(live, /队长：|队伍：|同意：|反对：|SUCCESS ×|FAIL ×/);
 });
