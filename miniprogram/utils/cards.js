@@ -11,8 +11,8 @@ const CARDS = {
     OBERON: '/assets/cards/roles/oberon.webp',
   },
   actions: {
-    SUCCESS: '/assets/cards/actions/mission-success.webp',
-    FAIL: '/assets/cards/actions/mission-fail.webp',
+    SUCCESS: '/assets/cards/actions/mission-success.jpg',
+    FAIL: '/assets/cards/actions/mission-fail.jpg',
     APPROVE: '/assets/cards/actions/approve.webp',
     REJECT: '/assets/cards/actions/reject.webp',
   },

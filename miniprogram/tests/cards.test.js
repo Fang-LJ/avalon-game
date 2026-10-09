@@ -8,7 +8,7 @@ const ui = require('../utils/presentation');
 const root = path.join(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 
-function componentAt(file, data = {}) {
+function componentAt(file, data = {}, globals = {}) {
   let definition;
   let now = 0;
   let serial = 0;
@@ -22,6 +22,7 @@ function componentAt(file, data = {}) {
       return id;
     },
     clearTimeout: (id) => timers.delete(id),
+    ...globals,
   });
   const instance = {
     data: { ...structuredClone(definition.data || {}), ...data },
@@ -76,16 +77,157 @@ test('unknown card codes including inherited object keys use safe fallbacks', ()
   }
 });
 
-test('all 19 mapped images exist as nonempty WebP files and role back exists', () => {
+test('all 19 mapped images exist as 17 WebP and 2 JPEG files and role back exists', () => {
   const images = Object.values(cards.CARDS).flatMap(Object.values);
   assert.equal(images.length, 19);
   assert.equal(new Set(images).size, 19);
+  assert.equal(images.filter(image => image.endsWith('.webp')).length, 17);
+  assert.equal(images.filter(image => image.endsWith('.jpg')).length, 2);
   for (const image of images) {
     const bytes = fs.readFileSync(path.join(root, image));
-    assert.equal(bytes.toString('ascii', 0, 4), 'RIFF', image);
-    assert.equal(bytes.toString('ascii', 8, 12), 'WEBP', image);
-    assert.ok(bytes.length > 1000 && bytes.length < 300 * 1024, image);
+    if (image.endsWith('.jpg')) {
+      assert.equal(bytes.readUInt16BE(0), 0xffd8, image);
+      assert.equal(bytes.readUInt16BE(bytes.length - 2), 0xffd9, image);
+      assert.ok(bytes.length > 1024 && bytes.length < 200 * 1024, image);
+    } else {
+      assert.ok(image.endsWith('.webp'), image);
+      assert.equal(bytes.toString('ascii', 0, 4), 'RIFF', image);
+      assert.equal(bytes.toString('ascii', 8, 12), 'WEBP', image);
+      assert.ok(bytes.length > 1000 && bytes.length < 300 * 1024, image);
+    }
   }
+});
+
+test('mission mappings select JPG only; duplicate mission WebP assets are absent', () => {
+  assert.equal(cards.actionCard('SUCCESS'), '/assets/cards/actions/mission-success.jpg');
+  assert.equal(cards.actionCard('FAIL'), '/assets/cards/actions/mission-fail.jpg');
+  assert.equal(cards.actionCard('APPROVE'), '/assets/cards/actions/approve.webp');
+  assert.equal(cards.actionCard('REJECT'), '/assets/cards/actions/reject.webp');
+  for (const name of ['mission-success', 'mission-fail'])
+    assert.equal(fs.existsSync(path.join(root, `assets/cards/actions/${name}.webp`)), false);
+});
+
+for (const [name, height] of [['mission-success', 834], ['mission-fail', 832]]) {
+  test(`${name} JPEG is progressive RGB with preserved 600x${height} dimensions`, () => {
+    const bytes = fs.readFileSync(path.join(root, `assets/cards/actions/${name}.jpg`));
+    let position = 2;
+    let frame;
+    // Parse JPEG segments before entropy data; SOF2 proves progressive encoding.
+    while (position < bytes.length) {
+      assert.equal(bytes[position], 0xff);
+      const marker = bytes[position + 1];
+      if (marker === 0xda || marker === 0xd9) break;
+      const length = bytes.readUInt16BE(position + 2);
+      assert.ok(length >= 2 && position + 2 + length <= bytes.length);
+      if (marker === 0xc2) frame = {
+        height: bytes.readUInt16BE(position + 5),
+        width: bytes.readUInt16BE(position + 7),
+        channels: bytes[position + 9],
+      };
+      position += length + 2;
+    }
+    assert.deepEqual(frame, { height, width: 600, channels: 3 });
+  });
+}
+
+test('export script keeps mission JPG and extension-based mixed encoding settings', () => {
+  const script = fs.readFileSync(path.join(root, '../scripts/export-cards.py'), 'utf8');
+  for (const name of ['mission-success', 'mission-fail'])
+    assert.ok(script.includes(`actions/${name}.jpg`));
+  assert.match(script, /destination\.suffix\.lower\(\) in \("\.jpg", "\.jpeg"\)/);
+  assert.match(script, /"JPEG", quality=88, optimize=True, progressive=True/);
+  assert.match(script, /"WEBP", quality=quality, method=6/);
+  assert.match(script, /save_card\(card, destination\)/);
+});
+
+function imageFixture(envVersion) {
+  const logs = [];
+  const wx = { getAccountInfoSync: () => ({ miniProgram: { envVersion } }) };
+  const console = {
+    info: (...args) => logs.push(['info', ...args]),
+    error: (...args) => logs.push(['error', ...args]),
+  };
+  const { instance } = componentAt('components/play-card/play-card.js', {
+    front: cards.CARDS.actions.FAIL, flipped: true, selected: true,
+  }, { wx, console });
+  return { instance, logs, wx, console };
+}
+
+function imageEvent(side, src, errMsg = 'image:fail decode error') {
+  return { currentTarget: { dataset: { side, src } }, detail: { errMsg } };
+}
+
+test('both image faces bind load/error with source and side diagnostics', () => {
+  const markup = read('components/play-card/play-card.wxml');
+  assert.equal((markup.match(/bindload="imageLoaded"/g) || []).length, 2);
+  assert.equal((markup.match(/binderror="imageError"/g) || []).length, 2);
+  for (const [side, property] of [['front', 'front'], ['back', 'back']])
+    assert.ok(markup.includes(`data-side="${side}" data-src="{{${property}}}"`));
+});
+
+for (const version of ['develop', 'trial']) {
+  test(`${version}: front/back image logs identify actual source without changing UI`, () => {
+    const f = imageFixture(version);
+    const previous = JSON.stringify(f.instance.data);
+    for (const [side, src] of [
+      ['front', cards.CARDS.actions.SUCCESS], ['back', cards.CARDS.back.ACTION],
+    ]) {
+      f.instance.imageLoaded(imageEvent(side, src));
+      f.instance.imageError(imageEvent(side, src));
+      const [load, error] = f.logs.slice(-2);
+      assert.equal(load[0], 'info');
+      assert.equal(load[1], '[CARD IMAGE LOAD]');
+      assert.equal(error[0], 'error');
+      assert.equal(error[1], '[CARD IMAGE ERROR]');
+      assert.equal(error[2].errMsg, 'image:fail decode error');
+      for (const log of [load, error]) {
+        assert.equal(log[2].type, side);
+        assert.equal(log[2].src, src);
+        assert.equal(log[2].envVersion, version);
+      }
+    }
+    assert.equal(JSON.stringify(f.instance.data), previous);
+    assert.equal(f.instance.events.length, 0);
+  });
+}
+
+for (const version of ['release', '', undefined, 'unknown']) {
+  test(`${String(version)}: image diagnostics stay silent`, () => {
+    const f = imageFixture(version);
+    f.instance.imageLoaded(imageEvent('front', cards.CARDS.actions.SUCCESS));
+    f.instance.imageError(imageEvent('back', cards.CARDS.back.ACTION));
+    assert.equal(f.logs.length, 0);
+  });
+}
+
+test('card diagnostics omit arbitrary URLs, event payloads and credentials', () => {
+  const f = imageFixture('trial');
+  f.instance.imageError(imageEvent('front', 'https://private.example/avatar?token=private'));
+  f.instance.imageLoaded(imageEvent('other', cards.CARDS.actions.SUCCESS));
+  assert.equal(f.logs.length, 0);
+  const event = imageEvent('front', cards.CARDS.actions.SUCCESS,
+    'image:fail Bearer private-jwt eyJtest.payload.signature AppSecret=secret-value password=db-password https://private.example?token=query-private');
+  event.detail.token = 'private-event-token';
+  f.instance.imageError(event);
+  const printed = JSON.stringify(f.logs);
+  assert.match(printed, /image:fail/);
+  assert.doesNotMatch(printed, /private-jwt|eyJtest|secret-value|db-password|private\.example|query-private|private-event-token/);
+});
+
+test('missing/throwing SDK or console diagnostics never affect image UI', () => {
+  const f = imageFixture('trial');
+  const event = imageEvent('front', cards.CARDS.actions.SUCCESS);
+  const previous = JSON.stringify(f.instance.data);
+  f.wx.getAccountInfoSync = () => { throw new Error('unavailable'); };
+  assert.doesNotThrow(() => f.instance.imageError(event));
+  delete f.wx.getAccountInfoSync;
+  assert.doesNotThrow(() => f.instance.imageLoaded(event));
+  f.wx.getAccountInfoSync = () => ({ miniProgram: { envVersion: 'trial' } });
+  f.console.error = () => { throw new Error('console unavailable'); };
+  assert.doesNotThrow(() => f.instance.imageError(event));
+  assert.equal(JSON.stringify(f.instance.data), previous);
+  assert.equal(f.instance.events.length, 0);
+  assert.equal(f.logs.length, 0);
 });
 
 test('play-card has back and front faces, native 3D flip and uncropped aspectFit', () => {

@@ -18,7 +18,7 @@ miniprogram/assets/cards/
             evil-victory, generic-emblem
 ```
 
-所有文件都是 `.webp`。资源映射统一放在 `miniprogram/utils/cards.js`，未知身份退回牌背，未知特殊牌退回通用徽记。
+当前资源为 17 张 `.webp` 和 2 张 `.jpg`：仅任务成功/失败牌使用 JPEG，角色、牌背、赞成/反对及特殊牌仍使用 WebP。资源映射统一放在 `miniprogram/utils/cards.js`，未知身份退回牌背，未知特殊牌退回通用徽记。
 
 | 资源（相对 cards/） | 尺寸 px | 字节 | KiB |
 | --- | --- | ---: | ---: |
@@ -31,8 +31,8 @@ miniprogram/assets/cards/
 | roles/oberon.webp | 600 × 1132 | 87072 | 85.0 |
 | roles/minion.webp | 600 × 1115 | 77846 | 76.0 |
 | back/role-back.webp | 600 × 1015 | 82284 | 80.4 |
-| actions/mission-success.webp | 600 × 834 | 85138 | 83.1 |
-| actions/mission-fail.webp | 600 × 832 | 72014 | 70.3 |
+| actions/mission-success.jpg | 600 × 834 | 138399 | 135.2 |
+| actions/mission-fail.jpg | 600 × 832 | 124146 | 121.2 |
 | actions/approve.webp | 600 × 834 | 85548 | 83.5 |
 | actions/reject.webp | 600 × 816 | 72766 | 71.1 |
 | back/action-back.webp | 600 × 806 | 83404 | 81.4 |
@@ -42,11 +42,23 @@ miniprogram/assets/cards/
 | special/evil-victory.webp | 600 × 796 | 67388 | 65.8 |
 | special/generic-emblem.webp | 600 × 803 | 78278 | 76.4 |
 
-总资源 1,564,926 字节，约 1.49 MiB。角色质量参数为 86，其他卡牌为 80；压缩后低于 100 KiB 的文件不刻意增大。原图每张牌实际宽约 270～390 px，输出到 600 px 不会增加原画细节。
+总资源 1,670,319 字节，约 1.59 MiB。WebP 角色质量参数为 86，其他 WebP 卡牌为 80；两张 JPEG 使用 quality=88、optimize=True、progressive=True。原图每张牌实际宽约 270～390 px，输出到 600 px 不会增加原画细节。
 
-`project.config.json` 的 `packOptions.ignore` 排除 `tests/` 和 `package.json`。全包按其余文件未压缩大小保守估算约 1.59 MiB，比 2 MiB 少约 417 KiB。Node 测试会阻止资源增长导致此估算超过 2 MiB；正式上传仍以微信开发者工具计算的编译包大小为准。
+`project.config.json` 的 `packOptions.ignore` 排除 `tests/` 和 `package.json`。本次全包按现有包体测试口径保守估算 1,839,189 字节，约 1.754 MiB，比 2 MiB 少 257,963 字节。对应两个旧 WebP 已删除，未重复打包。Node 测试会阻止资源增长导致此估算超过 2 MiB；正式上传仍以微信开发者工具计算的编译包大小为准。
 
 如需从本地原图重新导出，可使用带 Pillow/WebP 的 Python 执行 `python3 scripts/export-cards.py`。该脚本也在 `design-source/cards/` 生成仅供本地核对的联系表。
+
+## 体验版 JPEG 最小验证
+
+本次仅将现有任务成功/失败 WebP 解码后重新编码为 JPEG，保留 600 × 834 / 600 × 832 的像素尺寸，不重新裁切、缩放或改动构图。首次迁移命令为 `python3 scripts/export-cards.py --convert-mission-jpeg`，仅在旧 WebP 尚存在时使用；默认重新导出会根据目标扩展名输出混合 JPEG/WebP，不会恢复两张任务牌的旧 WebP 路径。
+
+秘密任务选择、结果揭晓、历史提案缩略牌和任务详情继续通过统一 `CARDS.actions.SUCCESS/FAIL` 获取资源，没有组件硬编码 JPEG 路径。
+
+`play-card` 的前后图片均增加 `bindload` / `binderror`，由事件 dataset 区分 front/back 及实际 src。仅 develop/trial 输出 `[CARD IMAGE LOAD]` / `[CARD IMAGE ERROR]`；后者含脱敏 errMsg。release 或环境 API 不可用时不输出，不弹 Toast、不改变卡面或游戏状态。3D、翻牌时序、CSS 和卡牌尺寸完全不变。
+
+这不是已确认的 WebP 根因修复。需要重新上传并设置新的体验版，在 iPhone 微信分别核对任务成功、邪恶玩家任务失败、结果揭晓及历史缩略牌。若 JPG 正常显示，下一阶段再考虑其他 WebP；若 JPG 仍不显示，停止批量转换，结合加载日志检查 image/3D 渲染和真实上传包内容。后端、数据库、Nginx、MinIO 及合法域名均不涉及。
+
+本次验证：`npm test` 304 项全部通过（卡牌相关 42 项），`npm run check` 通过。检查了 JPEG 首尾签名、渐进编码、三色通道、原始尺寸、17 张 WebP 签名、无重复资源、主包预算及仅 develop/trial 输出的前后卡牌诊断。其余 17 张图片字节未改动，未执行 Maven 或后端部署。
 
 ## 组件与流程
 

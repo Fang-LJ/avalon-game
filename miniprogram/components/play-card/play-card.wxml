@@ -4,10 +4,12 @@
 >
   <view class="card-inner {{flipped ? 'is-flipped' : ''}}">
     <view class="card-face card-back" aria-hidden="{{flipped}}">
-      <image src="{{back}}" mode="aspectFit" />
+      <image src="{{back}}" mode="aspectFit" data-side="back" data-src="{{back}}"
+        bindload="imageLoaded" binderror="imageError" />
     </view>
     <view class="card-face card-front" aria-hidden="{{!flipped}}">
-      <image wx:if="{{front}}" src="{{front}}" mode="aspectFit" />
+      <image wx:if="{{front}}" src="{{front}}" mode="aspectFit" data-side="front" data-src="{{front}}"
+        bindload="imageLoaded" binderror="imageError" />
     </view>
   </view>
 </view>

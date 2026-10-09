@@ -1,8 +1,10 @@
-"""Crop the supplied artwork without repainting it; requires Pillow with WebP.
+"""Crop the supplied artwork without repainting it; requires Pillow with WebP/JPEG.
 
 Run from the repository root: python3 scripts/export-cards.py
 The source sheets are local-only. A contact sheet is written there for review.
+Use --convert-mission-jpeg to re-encode only the two existing mission WebP files.
 """
+import argparse
 from pathlib import Path
 from PIL import Image, ImageDraw
 
@@ -21,8 +23,8 @@ CARDS = [
     ("03-roles.png", "roles/oberon.webp", (583, 519, 855, 1032)),
     ("03-roles.png", "roles/minion.webp", (856, 519, 1132, 1032)),
     ("03-roles.png", "back/role-back.webp", (1136, 526, 1435, 1032)),
-    ("01-actions.png", "actions/mission-success.webp", (128, 7, 505, 531)),
-    ("01-actions.png", "actions/mission-fail.webp", (535, 7, 913, 531)),
+    ("01-actions.png", "actions/mission-success.jpg", (128, 7, 505, 531)),
+    ("01-actions.png", "actions/mission-fail.jpg", (535, 7, 913, 531)),
     ("01-actions.png", "actions/approve.webp", (943, 7, 1320, 531)),
     ("01-actions.png", "actions/reject.webp", (128, 528, 505, 1041)),
     ("01-actions.png", "back/action-back.webp", (535, 533, 913, 1041)),
@@ -32,6 +34,27 @@ CARDS = [
     ("02-special.png", "special/evil-victory.webp", (120, 528, 508, 1043)),
     ("02-special.png", "special/generic-emblem.webp", (939, 528, 1324, 1043)),
 ]
+
+
+def save_card(card, destination):
+    if destination.suffix.lower() in (".jpg", ".jpeg"):
+        card.convert("RGB").save(
+            destination, "JPEG", quality=88, optimize=True, progressive=True
+        )
+    else:
+        quality = 86 if destination.parent.name == "roles" else 80
+        card.save(destination, "WEBP", quality=quality, method=6)
+
+
+def convert_mission_jpeg():
+    """One-time format experiment: preserve decoded pixels and dimensions, no crop/resize."""
+    for _, name, _ in CARDS:
+        destination = OUTPUT / name
+        if destination.suffix != ".jpg":
+            continue
+        with Image.open(destination.with_suffix(".webp")) as image:
+            save_card(image, destination)
+            print(f"{name},{image.width},{image.height},{destination.stat().st_size}")
 
 
 def main():
@@ -46,8 +69,7 @@ def main():
         card = card.resize((600, round(card.height * 600 / card.width)), Image.Resampling.LANCZOS)
         destination = OUTPUT / name
         destination.parent.mkdir(parents=True, exist_ok=True)
-        quality = 86 if name.startswith("roles/") else 80
-        card.save(destination, "WEBP", quality=quality, method=6)
+        save_card(card, destination)
         size = destination.stat().st_size
         rows.append((name, card.width, card.height, size))
         preview = card.copy()
@@ -67,4 +89,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--convert-mission-jpeg", action="store_true")
+    args = parser.parse_args()
+    if args.convert_mission_jpeg:
+        convert_mission_jpeg()
+    else:
+        main()
