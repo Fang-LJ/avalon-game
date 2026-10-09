@@ -49,6 +49,8 @@ Page({
     entries: [],
     finished: null,
     finishedIdentities: [],
+    finishedGroups: [],
+    missionDetail: null,
     board: false,
     viewVotes: false,
     roleOverlay: false,
@@ -151,6 +153,8 @@ Page({
         acknowledgedMissionResultKey: '',
         finished: null,
         finishedIdentities: [],
+        finishedGroups: [],
+        missionDetail: null,
         entries: [],
         draftKey: '',
         viewVotes: false,
@@ -213,6 +217,8 @@ Page({
       isLeader: game.leaderPlayerId === room.myPlayerId,
       entries: ui.liveLogs(timeline, room.players),
       finishedIdentities: game.phase === 'FINISHED' ? ui.finishedIdentities(game.identities) : [],
+      finishedGroups: game.phase === 'FINISHED' ? ui.finishedGroups(game.identities, game.winner) : [],
+      missionDetail: ['ROLE_CONFIRM', 'FINISHED'].includes(game.phase) ? null : this.data.missionDetail,
       // Set the covering overlay in the same render as the advanced server phase.
       ...this.missionResultUpdate(game),
     });
@@ -254,7 +260,7 @@ Page({
     if (this.data.missionResultOpen) return {};
     return {
       missionResultOpen: true, missionResult: result, missionResultKey: key,
-      missionOverlayOpen: false, missionChoice: '', roleOverlay: false, viewVotes: false,
+      missionOverlayOpen: false, missionChoice: '', roleOverlay: false, viewVotes: false, missionDetail: null,
       acknowledgedMissionResultKey: acknowledged ? `${game.gameId}-${acknowledged}` : '',
     };
   },
@@ -297,7 +303,7 @@ Page({
     const privatePlayers = room.players.map((player) => ({
       ...player,
       ...(privateByPlayer[player.playerId] || {}),
-      actionDone: ui.actionDone(game, player.playerId),
+      actionDone: ui.actionDone(game, player),
     }));
     const players = ui
       .seats(
@@ -567,8 +573,20 @@ Page({
   },
   openRoleOverlay() {
     if (this.data.role && !this.data.busy && !this.data.missionResultOpen)
-      this.setData({ roleOverlay: true, missionOverlayOpen: false });
+      this.setData({ roleOverlay: true, missionOverlayOpen: false, missionDetail: null });
   },
+  openMissionDetail(event) {
+    const { game, room, timeline, missionResultOpen } = this.data;
+    if (!game || !room || missionResultOpen ||
+      !['TEAM_BUILDING','TEAM_VOTING','MISSION_EXECUTING','LADY_OF_LAKE','ASSASSINATION'].includes(game.phase)) return;
+    const detail = ui.missionDetail(timeline, room.players, Number(event.detail.missionNo));
+    if (!detail) {
+      wx.showToast({ title: '任务记录暂不可用', icon: 'none' });
+      return;
+    }
+    this.setData({ missionDetail: detail, roleOverlay: false, missionOverlayOpen: false });
+  },
+  closeMissionDetail() { this.setData({ missionDetail: null }); },
   closeRoleOverlay() {
     this.setData({ roleOverlay: false });
   },

@@ -1,0 +1,16 @@
+:host { display: block; }
+.mission-detail-mask { position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,.82); display: flex; align-items: center; justify-content: center; }
+.mission-detail-card { width: 88vw; max-height: 76vh; display: flex; flex-direction: column; padding: 28rpx; box-sizing: border-box; }
+.detail-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16rpx; flex-shrink: 0; }
+.detail-title { font-size: 32rpx; font-weight: 700; }
+.detail-result { font-size: 26rpx; margin-top: 4rpx; }
+.detail-close { flex-shrink: 0; width: 64rpx; height: 64rpx; margin: -12rpx -12rpx 0 0; padding: 0; background: transparent; color: var(--muted); font-size: 36rpx; line-height: 64rpx; }
+.detail-close::after { border: 0; }
+.detail-scroll { min-height: 0; max-height: 56vh; }
+.detail-scroll-content { padding-top: 22rpx; padding-bottom: 4rpx; }
+.detail-proposal-title { font-size: 26rpx; font-weight: 700; }
+.detail-fields { display: grid; grid-template-columns: 66rpx minmax(0,1fr); gap: 18rpx 16rpx; margin-top: 22rpx; font-size: 25rpx; }
+.detail-value { min-width: 0; overflow-wrap: anywhere; white-space: normal; }
+.detail-cards-title { border-top: 1px solid var(--border); padding-top: 20rpx; margin-top: 24rpx; }
+.detail-cards { display: flex; gap: 12rpx; margin-top: 14rpx; justify-content: center; }
+.detail-card-image { width: 86rpx; height: 119.54rpx; flex-shrink: 0; }

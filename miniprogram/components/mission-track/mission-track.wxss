@@ -27,3 +27,5 @@
   background: var(--gold);
   color: var(--bg);
 }
+.completed { cursor: pointer; transition: transform 120ms ease, opacity 120ms ease; }
+.dot-pressed { transform: scale(.94); opacity: .85; }

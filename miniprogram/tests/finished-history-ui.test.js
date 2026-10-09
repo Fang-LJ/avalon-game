@@ -189,14 +189,15 @@ test('settlement grid keeps avatar seat nickname and right-aligned role in one r
   const identity = markup.split('class="identity-row">')[1].split('</view>\n    </view>')[0];
   for (const text of ['identity-avatar','item.avatarUrl','aspectFill','item.initial','identity-seat','item.seatNo','identity-nickname','item.nickname','identity-role','item.roleName'])
     assert.ok(identity.includes(text), text);
-  assert.match(identity, /item.alignment === 'GOOD' \? 'good' : 'evil'/);
+  assert.match(identity, /item.roleClass/);
   // Text nodes must not contain leading newlines that displace the visible role glyphs.
   assert.match(identity, /class="identity-role[^>]*">\{\{item.roleName\}\}<\/text>/);
   const css = read('pages/room/room.wxss');
   assert.match(css, /grid-template-columns: 68rpx minmax\(0, 1fr\) max-content/);
   assert.match(css, /text-overflow: ellipsis/);
   assert.match(css, /\.identity-role \{[^}]*white-space: nowrap[^}]*text-align: right/);
-  assert.match(css, /\.identity-list \{\s*margin-top: 36rpx/);
+  assert.match(css, /\.settlement-groups \{ margin-top: 36rpx/);
+  assert.match(css, /\.identity-list \{\s*margin-top: 24rpx/);
   assert.match(css, /\.finish-actions \{\s*margin-top: 56rpx/);
   for (const count of [5,6,7,8,9,10]) for (const width of [375,390,430]) {
     // Independent avatar, seat label and longest role remain visible; only nickname truncates.

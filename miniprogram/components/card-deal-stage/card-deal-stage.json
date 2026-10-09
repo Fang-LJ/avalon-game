@@ -1,4 +1,4 @@
 {
   "component": true,
-  "usingComponents": { "play-card": "/components/play-card/play-card" }
+  "usingComponents": { "play-card": "/components/play-card/play-card", "knowledge-mark": "/components/knowledge-mark/knowledge-mark" }
 }

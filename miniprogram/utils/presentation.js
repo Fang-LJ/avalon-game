@@ -73,16 +73,20 @@ function privateKnowledge(player) {
   if (!type) return player;
   return {
     ...player,
-    knowledgeSymbol: type === 'MERLIN_OR_MORGANA' ? '?' : '●',
+    knowledgeSymbol: type === 'MERLIN_OR_MORGANA' ? '?' : '',
     knowledgeClass:
       type === 'MERLIN_OR_MORGANA' ? 'knowledge-candidate' : 'knowledge-evil',
   };
 }
-function actionDone(game, playerId) {
+function actionDone(game, player) {
   if (!game) return false;
-  if (game.phase === 'TEAM_VOTING') return (game.votedPlayerIds || []).includes(playerId);
+  // Keep numeric callers compatible; private fallback is only available for an explicit me player.
+  const { playerId, me } = typeof player === 'object' && player ? player : { playerId: player };
+  if (game.phase === 'TEAM_VOTING')
+    return (game.votedPlayerIds || []).includes(playerId) || (me === true && game.hasVoted === true);
   if (game.phase === 'MISSION_EXECUTING')
-    return (game.selectedPlayerIds || []).includes(playerId) && (game.missionSubmittedPlayerIds || []).includes(playerId);
+    return (game.selectedPlayerIds || []).includes(playerId) &&
+      ((game.missionSubmittedPlayerIds || []).includes(playerId) || (me === true && game.hasSubmittedMission === true));
   return false;
 }
 function seats(players, selected = [], leaderId, maxPlayers = players.length, phase = 'TEAM_BUILDING') {
@@ -187,7 +191,38 @@ function finishedIdentities(identities = []) {
   return identities.slice().sort((a, b) => a.seatNo - b.seatNo).map(player => ({
     ...player,
     initial: player.isBot ? '机' : initial(player.nickname),
+    roleClass: player.roleCode === 'MERLIN' ? 'role-merlin' : player.roleCode === 'PERCIVAL' ? 'role-percival' : '',
   }));
+}
+function finishedGroups(identities = [], winner) {
+  const players = finishedIdentities(identities);
+  const order = winner === 'EVIL' ? ['EVIL', 'GOOD'] : ['GOOD', 'EVIL'];
+  return order.map(alignment => ({
+    alignment,
+    title: alignment === 'GOOD' ? '正义阵营' : '邪恶阵营',
+    tone: alignment === 'GOOD' ? 'settlement-good' : 'settlement-evil',
+    winner: winner === alignment,
+    players: players.filter(player => player.alignment === alignment),
+  }));
+}
+function missionDetail(timeline, players, missionNo) {
+  if (!timeline || !Number.isInteger(missionNo) || missionNo < 1 || missionNo > 5) return null;
+  const bundle = (timeline.missions || []).find(value => (value.mission || value).missionNo === missionNo);
+  const mission = bundle && (bundle.mission || bundle);
+  if (!mission || !['SUCCESS', 'FAILED'].includes(mission.status)) return null;
+  const proposal = (timeline.proposals || []).find(value => value.proposalId === mission.approvedProposalId &&
+    value.status === 'APPROVED' && value.missionNo === missionNo);
+  if (!proposal) return null;
+  const { resultCards } = require('./mission-result');
+  const { CARDS } = require('./cards');
+  const cards = resultCards(mission);
+  if (!cards.length) return null;
+  const view = logs({ proposals: [proposal], missions: [mission] }, players)[0];
+  // Explicit public display fields only: never pass participant actions or Lady results to the overlay.
+  return { missionNo, proposalId: proposal.proposalId, proposalNo: proposal.proposalNo,
+    leaderText: view.leaderText, teamSeatText: view.teamSeatText, approveText: view.approveText,
+    rejectText: view.rejectText, status: mission.status,
+    cards: cards.map(card => ({ index: card.index, src: CARDS.actions[card.type] })) };
 }
 function showRules() {
   wx.showModal({
@@ -220,6 +255,8 @@ module.exports = {
   logs,
   liveLogs,
   finishedIdentities,
+  finishedGroups,
+  missionDetail,
   showRules,
   showLegal,
 };

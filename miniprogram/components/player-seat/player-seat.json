@@ -1,1 +1,1 @@
-{ "component": true }
+{ "component": true, "usingComponents": { "knowledge-mark": "/components/knowledge-mark/knowledge-mark" } }

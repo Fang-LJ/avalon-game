@@ -1,6 +1,7 @@
 <view class="track">
   <text class="muted">任务</text>
-  <view wx:for="{{dots}}" wx:key="n" class="dot {{item.status}}">
+  <view wx:for="{{dots}}" wx:key="n" class="dot {{item.status}} {{item.completed ? 'completed' : ''}}"
+    data-mission-no="{{item.n}}" bindtap="missionTap" hover-class="{{item.completed ? 'dot-pressed' : 'none'}}">
     {{item.label}}
   </view>
 </view>

@@ -12,7 +12,7 @@
     <button class="host-end" disabled="{{busy}}" bindtap="endGame">{{game ? '结束本局' : '关闭房间'}}</button>
   </view>
   <view wx:if="{{game && game.phase !== 'FINISHED'}}" class="game-status-row">
-    <mission-track wx:if="{{board}}" missions="{{timeline.missions}}" current="{{game.missionNo}}" />
+    <mission-track wx:if="{{board}}" missions="{{timeline.missions}}" current="{{game.missionNo}}" bind:missiontap="openMissionDetail" />
     <text wx:else class="muted small">确认身份</text>
     <view class="room-quick-actions">
       <button wx:if="{{board}}" class="quick-action private-role-trigger" disabled="{{busy}}" bindtap="openRoleOverlay">我的身份</button>
@@ -101,17 +101,23 @@
         刺杀目标：{{finished.targetName}}
       </view>
     </game-card>
-    <view class="card identity-list">
-      <view wx:for="{{finishedIdentities}}" wx:key="playerId" class="identity-row">
-        <view class="identity-avatar">
-          <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" />
-          <text wx:else>{{item.initial}}</text>
+    <view class="settlement-groups">
+      <view wx:for="{{finishedGroups}}" wx:for-item="group" wx:key="alignment" class="card identity-list {{group.tone}}">
+        <view class="identity-group-heading">
+          <text>{{group.title}}{{group.winner ? ' · 胜利' : ''}}</text>
+          <text class="identity-group-count">{{group.players.length}}人</text>
         </view>
-        <view class="identity-player-info">
-          <text class="identity-seat">{{item.seatNo}}号位 · </text>
-          <text class="identity-nickname">{{item.nickname}}</text>
+        <view wx:for="{{group.players}}" wx:key="playerId" class="identity-row">
+          <view class="identity-avatar">
+            <image wx:if="{{item.avatarUrl}}" src="{{item.avatarUrl}}" mode="aspectFill" />
+            <text wx:else>{{item.initial}}</text>
+          </view>
+          <view class="identity-player-info">
+            <text class="identity-seat">{{item.seatNo}}号位 · </text>
+            <text class="identity-nickname">{{item.nickname}}</text>
+          </view>
+          <text class="identity-role {{item.roleClass}}">{{item.roleName}}</text>
         </view>
-        <text class="identity-role {{item.alignment === 'GOOD' ? 'good' : 'evil'}}">{{item.roleName}}</text>
       </view>
     </view>
     <view class="finish-actions actions">
@@ -281,6 +287,7 @@
       </view>
     </view>
   </block>
+  <mission-detail-overlay wx:if="{{missionDetail && !missionResultOpen}}" detail="{{missionDetail}}" bind:close="closeMissionDetail" />
   <mission-card-overlay
     wx:if="{{missionOverlayOpen && game.phase === 'MISSION_EXECUTING' && game.onMission && !game.hasSubmittedMission}}"
     evil="{{game.evil}}" teamSize="{{game.requiredTeamSize}}" choice="{{missionChoice}}" busy="{{busy}}"
@@ -308,7 +315,7 @@
         <view class="muted small">{{role.visiblePlayers[0].hint}}</view>
         <view wx:for="{{role.visiblePlayers}}" wx:key="playerId" class="role-overlay-player">
           <text>{{item.seatNo}}号 {{item.nickname}}</text>
-          <text class="knowledge-inline {{item.knowledgeClass}}">{{item.knowledgeSymbol}}</text>
+          <view class="knowledge-inline {{item.knowledgeClass}}"><knowledge-mark type="{{item.knowledgeType}}" /></view>
         </view>
       </view>
       <view wx:else class="muted small">你没有额外角色视野</view>

@@ -1,0 +1,4 @@
+<view wx:if="{{type === 'EVIL' || type === 'EVIL_ALLY'}}" class="knowledge-mark evil-mark">
+  <view class="evil-crescent"><view class="crescent-cutout"></view></view>
+</view>
+<view wx:elif="{{type === 'MERLIN_OR_MORGANA'}}" class="knowledge-mark candidate-mark">?</view>

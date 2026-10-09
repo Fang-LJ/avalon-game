@@ -107,8 +107,9 @@ test('private knowledge maps to safe identical symbols', () => {
   const ally = ui.privateKnowledge({ knowledgeType: 'EVIL_ALLY' });
   const merlin = ui.privateKnowledge({ knowledgeType: 'MERLIN_OR_MORGANA' });
   const morgana = ui.privateKnowledge({ knowledgeType: 'MERLIN_OR_MORGANA' });
-  assert.equal(evil.knowledgeSymbol, '●');
-  assert.equal(ally.knowledgeSymbol, '●');
+  assert.equal(evil.knowledgeSymbol, '');
+  assert.equal(ally.knowledgeSymbol, '');
+  assert.equal(evil.knowledgeClass, ally.knowledgeClass);
   assert.deepEqual(
     [merlin.knowledgeSymbol, merlin.knowledgeClass],
     [morgana.knowledgeSymbol, morgana.knowledgeClass],
@@ -135,7 +136,8 @@ test('role knowledge merges only into local display players and preserves exclus
     selectedIds: [2],
   });
   page.decoratePlayers();
-  assert.equal(page.data.displayPlayers.find((p) => p.playerId === 2).knowledgeSymbol, '●');
+  assert.equal(page.data.displayPlayers.find((p) => p.playerId === 2).knowledgeSymbol, '');
+  assert.equal(page.data.displayPlayers.find((p) => p.playerId === 2).knowledgeClass, 'knowledge-evil');
   assert.equal(page.data.displayPlayers.find((p) => p.playerId === 3).knowledgeType, undefined);
   assert.equal(page.data.displayPlayers.find((p) => p.playerId === 2).selected, true);
   assert.equal(page.data.displayPlayers.find((p) => p.playerId === 1).leader, true);

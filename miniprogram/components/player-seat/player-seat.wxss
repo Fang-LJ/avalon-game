@@ -86,6 +86,8 @@
 .knowledge-icon {
   right: -5rpx;
   bottom: -5rpx;
+  width: 30rpx;
+  padding: 0;
 }
 .action-done-icon {
   top: -5rpx;
@@ -96,8 +98,7 @@
   background: var(--good);
 }
 .knowledge-evil {
-  color: var(--text);
-  background: var(--evil);
+  background: transparent;
 }
 .knowledge-candidate {
   color: var(--bg);

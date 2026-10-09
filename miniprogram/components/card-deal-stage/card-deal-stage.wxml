@@ -27,7 +27,7 @@
       <view class="vision-chips">
         <view wx:for="{{role.visiblePlayers}}" wx:key="playerId" class="vision-chip">
           <text>{{item.seatNo}}号</text>
-          <text class="knowledge {{item.knowledgeClass}}">{{item.knowledgeSymbol}}</text>
+          <view class="knowledge {{item.knowledgeClass}}"><knowledge-mark type="{{item.knowledgeType}}" /></view>
         </view>
       </view>
     </view>

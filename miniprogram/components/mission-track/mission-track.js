@@ -11,6 +11,7 @@ Component({
           return {
             n,
             status,
+            completed: status === 'SUCCESS' || status === 'FAILED',
             label:
               status === 'SUCCESS'
                 ? '✓'
@@ -22,6 +23,13 @@ Component({
           };
         }),
       });
+    },
+  },
+  methods: {
+    missionTap(event) {
+      const dot = this.data.dots.find(value => value.n === Number(event.currentTarget.dataset.missionNo));
+      if (dot && dot.completed)
+        this.triggerEvent('missiontap', { missionNo: dot.n, status: dot.status });
     },
   },
 });

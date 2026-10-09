@@ -1,0 +1,27 @@
+<view class="mission-detail-mask" catchtap="close" catchtouchmove="ignoreTap">
+  <view class="card mission-detail-card" catchtap="ignoreTap">
+    <view class="detail-heading">
+      <view>
+        <view class="detail-title">第 {{detail.missionNo}} 个任务</view>
+        <view class="detail-result {{detail.status === 'SUCCESS' ? 'good' : 'evil'}}">任务{{detail.status === 'SUCCESS' ? '成功' : '失败'}}</view>
+      </view>
+      <button class="detail-close" aria-label="关闭任务详情" bindtap="close">×</button>
+    </view>
+    <scroll-view class="detail-scroll" scroll-y="{{true}}">
+      <view class="detail-scroll-content">
+        <view class="detail-proposal-title">第 {{detail.missionNo}} 轮 · 第 {{detail.proposalNo}} 次提案</view>
+        <view class="muted small">通过提案</view>
+        <view class="detail-fields">
+          <text class="muted">队长</text><text class="detail-value">{{detail.leaderText}}</text>
+          <text class="muted">队伍</text><text class="detail-value">{{detail.teamSeatText}}</text>
+          <text class="muted">同意</text><text class="detail-value good">{{detail.approveText || '无'}}</text>
+          <text class="muted">反对</text><text class="detail-value evil">{{detail.rejectText || '无'}}</text>
+        </view>
+        <view class="detail-cards-title muted small">任务结果</view>
+        <view class="detail-cards">
+          <image wx:for="{{detail.cards}}" wx:key="index" src="{{item.src}}" mode="aspectFit" class="detail-card-image" />
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</view>

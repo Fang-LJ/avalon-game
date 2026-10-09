@@ -81,7 +81,8 @@ for (const [phase, className, color] of [
     assert.equal(player.selectionClass, className);
     assert.equal(player.selected, true);
     assert.equal(player.leader, true);
-    assert.equal(player.knowledgeSymbol, '●');
+    assert.equal(player.knowledgeSymbol, '');
+    assert.equal(player.knowledgeClass, 'knowledge-evil');
     assert.equal(player.me, true);
     assert.match(read('components/player-seat/player-seat.wxss'),
       new RegExp(`\\.${className} \\{ box-shadow:[^}]*var\\(--${color}\\)`));

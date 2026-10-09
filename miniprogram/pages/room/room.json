@@ -2,6 +2,8 @@
   "navigationBarTitleText": "阿瓦隆房间",
   "enablePullDownRefresh": true,
   "usingComponents": {
+    "knowledge-mark": "/components/knowledge-mark/knowledge-mark",
+    "mission-detail-overlay": "/components/mission-detail-overlay/mission-detail-overlay",
     "mission-result-overlay": "/components/mission-result-overlay/mission-result-overlay",
     "mission-card-overlay": "/components/mission-card-overlay/mission-card-overlay",
     "play-card": "/components/play-card/play-card",

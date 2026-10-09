@@ -31,18 +31,28 @@ class FinishedIdentityTest {
         assertEquals(List.of(1,2), state.identities().stream().map(GameService.PublicIdentity::seatNo).toList());
         assertEquals("https://images.example/avatar.png", state.identities().getFirst().avatarUrl());
         assertEquals("昵称快照", state.identities().getFirst().nickname());
+        assertEquals("MERLIN", state.identities().getFirst().roleCode());
+        assertEquals("梅林", state.identities().getFirst().roleName());
+        assertEquals("GOOD", state.identities().getFirst().alignment());
+        assertEquals("ASSASSIN", state.identities().getLast().roleCode());
         assertTrue(state.identities().getLast().isBot());
         assertNull(state.identities().getLast().avatarUrl());
         assertTrue(new ObjectMapper().writeValueAsString(state).contains("\"avatarUrl\":\"https://images.example/avatar.png\""));
+        assertTrue(new ObjectMapper().writeValueAsString(state).contains("\"roleCode\":\"MERLIN\""));
         verify(repository, times(1)).gamePlayerIdentities(1);
         verify(repository, never()).gamePlayers(anyLong());
         verify(repository, never()).user(anyLong());
     }
 
     @ParameterizedTest @EnumSource(value = Phase.class, names = "FINISHED", mode = EnumSource.Mode.EXCLUDE)
-    void playingPhasesNeverReadOrPublishPublicIdentities(Phase phase) {
+    void playingPhasesNeverReadOrPublishPublicIdentities(Phase phase) throws Exception {
         AvalonRepository repository = mock(AvalonRepository.class);
-        assertTrue(service(repository, phase).state(101,1).identities().isEmpty());
+        var state = service(repository, phase).state(101,1);
+        assertTrue(state.identities().isEmpty());
+        String json = new ObjectMapper().writeValueAsString(state);
+        assertFalse(json.contains("roleCode"));
+        assertFalse(json.contains("roleName"));
+        assertFalse(json.contains("\"alignment\""));
         verify(repository, never()).gamePlayerIdentities(anyLong());
         verify(repository, never()).user(anyLong());
     }
