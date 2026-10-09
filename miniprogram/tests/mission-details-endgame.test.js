@@ -147,7 +147,8 @@ test('settlement has restrained separate cyan/red camps, gold Merlin/lavender Pe
   const css=read('pages/room/room.wxss'),w=read('pages/room/room.wxml');
   assert.match(w,/wx:for="\{\{finishedGroups\}\}"/);assert.match(w,/group.winner \? ' · 胜利' : ''/);
   assert.match(css,/\.settlement-good \{ color: #65c7df/);assert.match(css,/\.settlement-evil \{ color: var\(--evil\)/);
-  assert.match(css,/\.identity-role.role-merlin \{ color: #f0d58c; text-shadow/);
-  assert.match(css,/\.identity-role.role-percival \{ color: #afc7ff; text-shadow/);
+  assert.match(css,/\.identity-role.role-merlin \{ color: #f0d58c;[^}]+text-shadow/);
+  assert.match(css,/\.identity-role.role-percival \{ color: #c3aeff;[^}]+text-shadow/);
+  assert.match(css,/\.identity-role.special-role-tag \{[^}]+border-radius: 999rpx/);
   assert.match(read('app.wxss'),/--good: #46c2a3/);
 });

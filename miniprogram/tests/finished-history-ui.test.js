@@ -191,7 +191,7 @@ test('settlement grid keeps avatar seat nickname and right-aligned role in one r
     assert.ok(identity.includes(text), text);
   assert.match(identity, /item.roleClass/);
   // Text nodes must not contain leading newlines that displace the visible role glyphs.
-  assert.match(identity, /class="identity-role[^>]*">\{\{item.roleName\}\}<\/text>/);
+  assert.match(identity, /class="identity-role[^>]*"><text wx:if="\{\{item.roleClass\}\}"[^>]*>[^<]+<\/text>\{\{item.roleName\}\}<\/text>/);
   const css = read('pages/room/room.wxss');
   assert.match(css, /grid-template-columns: 68rpx minmax\(0, 1fr\) max-content/);
   assert.match(css, /text-overflow: ellipsis/);

@@ -24,9 +24,8 @@
 .choice-muted { opacity: 0.6; transform: scale(0.97); }
 .mission-card-label { margin-top: 18rpx; font-size: 24rpx; }
 .mission-footer { flex-shrink: 0; padding-top: 16rpx; }
-.mission-votes, .mission-close { margin: 0; padding: 0 12rpx; background: transparent; font-size: 23rpx; line-height: 68rpx; }
 .mission-secondary-actions { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; }
+.mission-secondary-action { padding: 0 12rpx; font-size: 23rpx; line-height: 72rpx; white-space: nowrap; }
+.mission-secondary-action.disabled { opacity: 0.4; }
 .mission-votes { color: var(--gold); text-align: left; }
 .mission-close { min-width: 112rpx; color: var(--muted); text-align: right; }
-.mission-votes::after, .mission-close::after { border: 0; }
-.mission-close[disabled], .mission-votes[disabled] { opacity: 0.45; background: transparent; color: var(--muted); }

@@ -2,19 +2,20 @@
   padding-bottom: calc(28rpx + env(safe-area-inset-bottom));
 }
 .lobby-title {
-  font-size: 31rpx;
+  font-size: 29rpx;
   font-weight: bold;
 }
 .room-code {
-  font-size: 50rpx;
+  font-size: 48rpx;
   font-weight: bold;
+  line-height: 1.2;
 }
 .lobby-label {
-  margin-top: 24rpx;
+  margin-top: 30rpx;
 }
 .lobby-board {
   height: 820rpx;
-  margin-top: 32rpx;
+  margin-top: 24rpx;
   position: relative;
 }
 .lobby-board.large-table {
@@ -28,7 +29,7 @@
   padding: 22rpx 12rpx;
   text-align: center;
 }
-.room-code-small {
+.lobby-seat-number {
   font-size: 34rpx;
   font-weight: 700;
 }
@@ -93,8 +94,10 @@
 .identity-group-heading { display: flex; justify-content: space-between; align-items: center; padding: 18rpx 0 12rpx; font-size: 26rpx; font-weight: 700; }
 .identity-group-count { font-size: 21rpx; font-weight: 400; opacity: .8; }
 .identity-player-info { color: var(--text); }
-.identity-role.role-merlin { color: #f0d58c; text-shadow: 0 0 10rpx rgba(240,213,140,.25); }
-.identity-role.role-percival { color: #afc7ff; text-shadow: 0 0 10rpx rgba(175,199,255,.25); }
+.identity-role.special-role-tag { border: 1rpx solid; border-radius: 999rpx; padding: 4rpx 12rpx; white-space: nowrap; }
+.identity-role.role-merlin { color: #f0d58c; background: rgba(240,213,140,.10); border-color: rgba(240,213,140,.40); text-shadow: 0 0 10rpx rgba(240,213,140,.25); }
+.identity-role.role-percival { color: #c3aeff; background: rgba(182,156,255,.10); border-color: rgba(182,156,255,.42); text-shadow: 0 0 10rpx rgba(182,156,255,.20); }
+.special-role-symbol { font-size: 19rpx; line-height: 1; }
 .identity-row {
   display: grid;
   grid-template-columns: 68rpx minmax(0, 1fr) max-content;
@@ -197,9 +200,7 @@
   gap: 24rpx 10rpx;
   margin: 45rpx 0;
 }
-.host-controls { display: flex; justify-content: flex-end; margin-bottom: 16rpx; }
-.host-end { background: transparent; color: var(--muted); font-size: 24rpx; padding: 0 20rpx; margin: 0; line-height: 64rpx; }
-.host-end::after, .bot-add::after { border: none; }
+.bot-add::after { border: none; }
 .bot-tools { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-bottom: 20rpx; }
 .bot-add { flex-shrink: 0; background: var(--soft); color: var(--gold); font-size: 23rpx; border: 1px solid var(--border); border-radius: 999rpx; margin: 0; padding: 0 20rpx; line-height: 60rpx; }
 button.bot-add[disabled] { background: var(--soft) !important; color: var(--muted) !important; opacity: 0.45; }
@@ -210,7 +211,16 @@ button.bot-add[disabled] { background: var(--soft) !important; color: var(--mute
 .quick-action::after { border: 0; }
 button.quick-action.private-role-trigger { color: var(--gold); }
 button.quick-action[disabled] { background: transparent !important; color: var(--muted) !important; opacity: 0.45; }
-.lobby-invite-actions { display: flex; align-items: center; gap: 20rpx; margin-top: 16rpx; }
-.invite-button { margin: 0; padding: 0 28rpx; line-height: 64rpx; font-size: 24rpx; color: var(--bg); background: var(--gold); border-radius: 999rpx; }
-.copy-code-button { margin: 0; padding: 0 8rpx; line-height: 64rpx; font-size: 23rpx; color: var(--muted); background: transparent; }
+.lobby-card { padding: 24rpx; }
+.lobby-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
+.lobby-close-action { flex-shrink: 0; padding-left: 12rpx; line-height: 44rpx; font-size: 22rpx; color: var(--evil); white-space: nowrap; }
+.lobby-close-action.disabled { opacity: 0.4; }
+.lobby-card .lobby-player-count { margin-top: 6rpx; }
+.lobby-card .lobby-status { margin-top: 2rpx; }
+.lobby-card .lobby-room-code { margin-top: 12rpx; }
+.lobby-invite-actions { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16rpx; }
+.lobby-card .lobby-invite-actions { margin-top: 16rpx; }
+.invite-button, .copy-code-button { display: flex; align-items: center; justify-content: center; width: 100%; min-width: 0; height: 74rpx; margin: 0; padding: 0 12rpx; line-height: 1.3; font-size: 24rpx; border: 1px solid transparent; border-radius: 24rpx; white-space: nowrap; }
+.invite-button { color: var(--bg); background: var(--gold); }
+.copy-code-button { color: var(--gold); background: transparent; border-color: var(--border); font-size: 23rpx; }
 .invite-button::after, .copy-code-button::after { border: 0; }

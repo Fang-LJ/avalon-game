@@ -23,8 +23,8 @@
     <view class="mission-footer">
       <button class="btn" disabled="{{busy || !choice}}" loading="{{busy}}" bindtap="submit">确认提交</button>
       <view class="mission-secondary-actions">
-        <button class="mission-votes" disabled="{{busy}}" bindtap="votes">查看组队投票结果 ›</button>
-        <button class="mission-close" disabled="{{busy}}" bindtap="close">暂时收起</button>
+        <view class="mission-secondary-action mission-votes {{busy ? 'disabled' : ''}}" aria-role="button" aria-disabled="{{busy}}" bindtap="votes">查看投票结果 ›</view>
+        <view class="mission-secondary-action mission-close {{busy ? 'disabled' : ''}}" aria-role="button" aria-disabled="{{busy}}" bindtap="close">收起</view>
       </view>
     </view>
   </view>

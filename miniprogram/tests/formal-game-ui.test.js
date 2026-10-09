@@ -298,7 +298,8 @@ test('my identity and mission overlays are mutually exclusive', async () => {
 
 test('compact top row keeps task progress identity exit and host end together', () => {
   const markup = read('pages/room/room.wxml');
-  assert.match(markup, /room.host && !game[^>]*class="host-controls"/);
+  assert.doesNotMatch(markup, /host-controls/);
+  assert.match(markup, /room.host[^>]*class="lobby-close-action[^>]*bindtap="endGame"/);
   const row = markup.split('class="game-status-row">')[1].split('  <block wx:if=')[0];
   ['mission-track', 'openRoleOverlay', 'confirmLeaveRoom', 'endGame'].forEach(name => assert.match(row, new RegExp(name)));
   assert.match(row, /wx:if="\{\{room.host\}\}"/);
