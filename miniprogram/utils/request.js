@@ -1,5 +1,6 @@
 const { getConfig } = require('./config');
 const tokenStore = require('./token');
+const diagnostics = require('./diagnostics');
 
 function request({
   url,
@@ -11,13 +12,19 @@ function request({
   const header = { 'content-type': 'application/json' };
   if (requireAuth && tokenStore.getToken())
     header.Authorization = `Bearer ${tokenStore.getToken()}`;
+  const requestUrl = `${getConfig().apiBaseUrl}${url}`;
   return new Promise((resolve, reject) =>
     wx.request({
-      url: `${getConfig().apiBaseUrl}${url}`,
+      url: requestUrl,
       method,
       data,
       header,
       success(res) {
+        diagnostics.httpResponse({
+          url: requestUrl,
+          method,
+          statusCode: res.statusCode,
+        });
         const body = res.data || {};
         if (res.statusCode === 401 || body.code === 'UNAUTHORIZED') {
           tokenStore.clearToken();
@@ -44,6 +51,7 @@ function request({
         reject(error);
       },
       fail(error) {
+        diagnostics.httpFail({ url: requestUrl, method, error, data, header });
         if (showError) wx.showToast({ title: '网络连接失败', icon: 'none' });
         reject(error);
       },

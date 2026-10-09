@@ -1,6 +1,7 @@
 const { request } = require('../utils/request');
 const tokenStore = require('../utils/token');
 const { getConfig, getEnvironment } = require('../utils/config');
+const diagnostics = require('../utils/diagnostics');
 const MOCK_KEY = 'AVALON_MOCK_USER';
 const MOCK_USERS = Array.from({ length: 10 }, (_, i) => ({
   key: String(i + 1),
@@ -21,26 +22,36 @@ function currentMockUser() {
 function login() {
   if (loginPromise) return loginPromise;
   const attempt = ++generation;
+  if (!isMockLogin()) diagnostics.loginEvent('wx.login started');
   const credentials = isMockLogin()
     ? Promise.resolve(currentMockUser())
     : new Promise((resolve, reject) =>
         wx.login({
-          success: (result) =>
-            result.code
-              ? resolve({ code: result.code })
-              : reject(new Error('微信未返回登录凭证，请重试')),
-          fail: () => reject(new Error('微信登录失败，请重试')),
+          success: (result) => {
+            diagnostics.loginEvent(
+              result.code
+                ? 'wx.login success: code received'
+                : 'wx.login success: code missing',
+            );
+            if (result.code) resolve({ code: result.code });
+            else reject(new Error('微信未返回登录凭证，请重试'));
+          },
+          fail: (error) => {
+            diagnostics.loginEvent('wx.login failed', error);
+            reject(new Error('微信登录失败，请重试'));
+          },
         }),
       );
   loginPromise = credentials
-    .then((data) =>
-      request({
+    .then((data) => {
+      if (!isMockLogin()) diagnostics.loginEvent('auth wx-login request started');
+      return request({
         url: '/api/auth/wx-login',
         method: 'POST',
         requireAuth: false,
         data,
-      }),
-    )
+      });
+    })
     .then((result) => {
       if (attempt !== generation) throw new Error('登录已取消');
       tokenStore.setToken(result.token);
