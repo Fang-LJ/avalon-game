@@ -5,9 +5,9 @@
   font-size: 29rpx;
   font-weight: bold;
 }
-.room-code {
-  font-size: 48rpx;
-  font-weight: bold;
+.lobby-room-code {
+  font-size: 38rpx;
+  font-weight: 700;
   line-height: 1.2;
 }
 .lobby-label {
@@ -226,8 +226,6 @@ button.quick-action[disabled] { background: transparent !important; color: var(-
 .lobby-close-action { flex-shrink: 0; padding-left: 12rpx; line-height: 44rpx; font-size: 22rpx; color: var(--evil); white-space: nowrap; }
 .lobby-close-action.disabled { opacity: 0.4; }
 .lobby-card .lobby-player-count { margin-top: 6rpx; }
-.lobby-card .lobby-status { margin-top: 2rpx; }
-.lobby-card .lobby-room-code { margin-top: 12rpx; }
 .lobby-invite-actions { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16rpx; }
 .lobby-card .lobby-invite-actions { margin-top: 16rpx; }
 .invite-button, .copy-code-button { display: flex; align-items: center; justify-content: center; width: 100%; min-width: 0; height: 74rpx; margin: 0; padding: 0 12rpx; line-height: 1.3; font-size: 24rpx; border: 1px solid transparent; border-radius: 24rpx; white-space: nowrap; }

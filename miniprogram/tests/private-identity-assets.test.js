@@ -92,12 +92,12 @@ test('local and prod cards use one HTTPS versioned base without changing login m
     assert.equal(module.exports.getConfig().cardBaseUrl,CARD_BASE);
     assert.equal(module.exports.getConfig().mockLogin,env==='local');
   }
-  assert.equal(CARD_BASE,'https://api.playmatespace.cloud/avalon-assets/cards/v1');
+  assert.equal(CARD_BASE,'https://api.playmatespace.cloud/avalon-assets/cards/v2');
   assert.ok(Object.values(CARDS).flatMap(Object.values).every(url=>url.startsWith(CARD_BASE+'/')&&!url.includes('?')));
 });
 test('anonymous policy permits only GetObject for versioned cards, no listing/write permissions', () => {
   const policy=JSON.parse(fs.readFileSync(path.join(root,'../static-assets/avalon/public-policy.json'),'utf8'));
   assert.equal(policy.Statement.length,1);
   assert.deepEqual(policy.Statement[0].Action,['s3:GetObject']);
-  assert.deepEqual(policy.Statement[0].Resource,['arn:aws:s3:::avalon-assets/cards/v1/*']);
+  assert.deepEqual(policy.Statement[0].Resource,['arn:aws:s3:::avalon-assets/cards/v1/*','arn:aws:s3:::avalon-assets/cards/v2/*']);
 });

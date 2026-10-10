@@ -2,18 +2,21 @@
 
 ## 当前资源
 
-统一 HTTPS base：`https://api.playmatespace.cloud/avalon-assets/cards/v1`。
+统一 HTTPS base：`https://api.playmatespace.cloud/avalon-assets/cards/v2`。
 local/prod 均使用此 base；不改变 API、WebSocket 和 mock 登录配置。
 
 19 个对象位于现有 `playmate-minio` 的独立 bucket `avalon-assets`，key 为
-`cards/v1/{roles,actions,back,special}/*.jpg`。
-Git 原件位于 `static-assets/avalon/cards/v1/`，主包 `miniprogram/assets/cards/` 已移除，旧图可由 Git 历史恢复。
-匿名策略只允许这个前缀的 `s3:GetObject`，不开放列表或写入。
+`cards/v2/{roles,actions,back,special}/*.png`。
+Git 原件位于 `static-assets/avalon/cards/v2/`，v1 JPG 在 Git 与服务器上均完整保留。
+主包 `miniprogram/assets/cards/` 保持不存在。
+经用户批准，匿名策略只增加 v2 前缀的 `s3:GetObject`；v1 继续可读，不开放列表或写入。
 
 导出：`python3 scripts/export-cards.py`，需要 Pillow 以及本地保留的三张原 PNG。
-保持原裁切坐标/像素，宽 272–388px、高 501–526px，JPEG quality=92、RGB、optimize、progressive；
-无放大、无 200KB 限制、无降质 fallback。本批 19 张共 1,464,662 字节。
-较前次 quality=85 减少有损压缩，但原拼版的文字细节上限不会因重导出提高。
+直接读取 1448×1086 RGB PNG 母版，保持原裁切坐标与比例；原生宽 272–388px、高 501–526px。
+v2 使用 2× LANCZOS、RGB PNG、optimize 与 compress_level=9；无锐化、无有损压缩、无调色板降级。
+19 张共 18,148,413 字节，尺寸/来源/像素与哈希报告位于 `static-assets/avalon/card-export-v2.json`。
+2× 插值不增加真实细节，只预先完成高 DPI 放大；PNG 编码无损保存插值后像素。
+本地原生 PNG / 2× PNG A/B 及总览在忽略的 `design-source/cards/` 中。
 
 | 类别 | 原生裁切尺寸（px） |
 | --- | --- |
@@ -36,15 +39,16 @@ cd miniprogram
 npm run check:assets
 ```
 
-发布脚本使用容器现有环境中的凭据，只增加专用 bucket、19 个对象及只读策略，
-不输出凭据、不改其他桶、不安装或重启 MinIO。已有相同对象跳过；v1 对象字节不同则中止，
-以后更新图像应发布 v2 并修改 base，不能覆盖 immutable v1。
+发布脚本使用容器现有环境中的凭据，只复用既有 bucket、增加 19 个 v2 对象及批准的 v2 只读前缀。
+不输出凭据、不改其他桶、不安装或重启 MinIO。已有相同对象跳过；v2 对象字节不同则中止，
+对 v1 的 19 张对象进行发布前后哈希比对；原策略与哈希留在服务器静态资源备份目录。
+以后更新图像应发布 v3 并修改 base，不能覆盖 immutable v1 / v2。
 `check:assets` 单独运行公网 HEAD/GET、Content-Type、缓存及 SHA-256 验证，并验证匿名列表 403。
 普通 `npm test` 离线运行，不依赖生产网络。
 
 真实 Nginx 文件：`/opt/playmate-space/deploy/nginx/default.conf`。
-此次修改前备份：`default.conf.before-avalon-assets-20261010`。
-仅新增 `deploy/nginx-assets.conf.fragment` 中的 location，复用 `playmate_minio_backend`，
+此前 v1 接入时备份：`default.conf.before-avalon-assets-20261010`；本轮 v2 没有修改 Nginx。
+已有 `deploy/nginx-assets.conf.fragment` 中的 location 复用 `playmate_minio_backend`，
 代理 `/avalon-assets/` 到桶同名路径并传递 `Host: playmate-minio:9000`，缓存 365 天/immutable。
 不得用仓库模板覆盖真实配置；修改后 `docker exec playmate-nginx nginx -t` 通过才 reload。
 原 `/avalon/` Web、`/avalon/socket.io/`、`/avalon/ws/`、`/avalon/api/`、`/api/`、`/minio/` 和健康路由不变。

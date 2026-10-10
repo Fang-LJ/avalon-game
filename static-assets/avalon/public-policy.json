@@ -4,6 +4,9 @@
     "Effect": "Allow",
     "Principal": { "AWS": ["*"] },
     "Action": ["s3:GetObject"],
-    "Resource": ["arn:aws:s3:::avalon-assets/cards/v1/*"]
+    "Resource": [
+      "arn:aws:s3:::avalon-assets/cards/v1/*",
+      "arn:aws:s3:::avalon-assets/cards/v2/*"
+    ]
   }]
 }

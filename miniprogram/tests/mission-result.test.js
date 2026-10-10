@@ -265,7 +265,7 @@ test('fourth mission with one FAIL and server SUCCESS still displays success', a
 test('resources are reused and result overlay is above every existing overlay', () => {
   for (const file of [CARDS.actions.SUCCESS,CARDS.actions.FAIL,CARDS.back.ACTION]) {
     assert.ok(file.startsWith(CARD_BASE + '/'));
-    assert.ok(fs.existsSync(path.join(root,'../static-assets/avalon/cards/v1',file.slice(CARD_BASE.length + 1))));
+    assert.ok(fs.existsSync(path.join(root,'../static-assets/avalon/cards/v2',file.slice(CARD_BASE.length + 1))));
   }
   const markup=read('pages/room/room.wxml');
   const resultMarkup=markup.split('<mission-result-overlay')[1].split('/>')[0];

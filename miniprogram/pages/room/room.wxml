@@ -5,7 +5,7 @@
   <page-head
     compact="{{board}}"
     title="{{game && (game.phase === 'TEAM_BUILDING' || game.phase === 'TEAM_VOTING' || game.phase === 'MISSION_EXECUTING') ? '第 ' + game.missionNo + ' 轮 · ' + phaseTitle : phaseTitle}}"
-    subtitle="{{game && game.phase === 'ROLE_CONFIRM' ? '仅你自己可见 · 请注意遮挡屏幕' : '房间 ' + room.roomCode + ' · ' + room.maxPlayers + ' 人局'}}"
+    subtitle="{{!game ? room.maxPlayers + ' 人局' : game.phase === 'ROLE_CONFIRM' ? '仅你自己可见 · 请注意遮挡屏幕' : '房间 ' + room.roomCode + ' · ' + room.maxPlayers + ' 人局'}}"
   />
   <view wx:if="{{error}}" class="error" bindtap="refresh">{{error}}</view>
   <view wx:if="{{game && game.phase !== 'FINISHED'}}" class="game-status-row">
@@ -21,18 +21,10 @@
   <block wx:if="{{!game}}">
     <view class="card lobby-card">
       <view class="lobby-card-heading">
-        <view class="lobby-title">邀请好友加入</view>
+        <view class="lobby-title">房间 <text class="lobby-room-code gold">{{room.roomCode}}</text></view>
         <view wx:if="{{room.host}}" class="lobby-close-action {{busy ? 'disabled' : ''}}" aria-role="button" aria-disabled="{{busy}}" bindtap="endGame">关闭房间</view>
       </view>
-      <view class="muted small lobby-player-count">
-        {{room.currentPlayers}} / {{room.maxPlayers}} 人 · 已入座
-        {{room.seatedPlayers}} / {{room.maxPlayers}}
-      </view>
-      <view class="muted small lobby-status">{{room.canStart ? '可以开始游戏' : '等待全员入座'}}</view>
-      <view class="lobby-room-code">
-        <view class="muted small">房间号</view>
-        <view class="room-code gold">{{room.roomCode}}</view>
-      </view>
+      <view class="muted small lobby-player-count">{{lobbyStatus}}</view>
       <view class="lobby-invite-actions">
         <button wx:if="{{room.status === 'WAITING'}}" class="invite-button" open-type="share">邀请好友</button>
         <button class="copy-code-button" bindtap="copyCode">复制房号</button>
@@ -55,7 +47,7 @@
       </view>
       <view class="card lobby-center">
         <view class="gold lobby-seat-number">{{room.mySeatNo ? room.mySeatNo + '号位' : '当前站立'}}</view>
-        <view class="muted small">{{room.mySeatNo ? '我的座位 · 等待好友加入' : '请选择空位坐下'}}</view>
+        <view class="muted small">{{room.mySeatNo ? '我的座位' : '请选择座位'}}</view>
       </view>
     </view>
     <view wx:if="{{standingPlayers.length}}" class="card standing-list">

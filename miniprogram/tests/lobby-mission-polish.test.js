@@ -68,7 +68,9 @@ test('lobby close action is inside the single room card, only for host and busy-
   const card = roomMarkup.split('<view class="card lobby-card">')[1].split('<view class="section-title lobby-label">')[0];
   assert.match(card, /lobby-card-heading/);
   assert.match(card, /wx:if="\{\{room.host\}\}" class="lobby-close-action \{\{busy \? 'disabled' : ''\}\}"[^>]*bindtap="endGame">关闭房间/);
-  for (const field of ['room.currentPlayers', 'room.seatedPlayers', 'room.maxPlayers', 'room.canStart', 'room.roomCode']) assert.ok(card.includes(field));
+  for (const field of ['lobbyStatus', 'room.roomCode']) assert.ok(card.includes(field));
+  assert.match(read('pages/room/room.js'), /lobbyStatus: ui.lobbyStatus\(room\)/);
+  assert.match(roomMarkup, /disabled="\{\{!room.canStart \|\| busy\}\}"/);
   assert.match(roomCss, /\.lobby-close-action \{[^}]*font-size: 22rpx; color: var\(--evil\)/);
   const js = read('pages/room/room.js').split('  endGame() {')[1].split('  identityRevealed')[0];
   assert.match(js, /!room.host \|\| busy/); assert.match(js, /wx.showModal/); assert.match(js, /if \(!result.confirm\) return/);
@@ -87,7 +89,8 @@ test('lobby share and copy remain in one 2:1 row of equal-height rounded buttons
 test('lobby centre displays seated/standing instructions, never a duplicate room code', () => {
   const center = roomMarkup.split('<view class="card lobby-center">')[1].split('    </view>\n    <view wx:if="{{standingPlayers.length}}"')[0];
   assert.doesNotMatch(center, /roomCode|房间号/);
-  for (const phrase of ['room.mySeatNo', '号位', '当前站立', '等待好友加入', '请选择空位坐下']) assert.ok(center.includes(phrase));
+  for (const phrase of ['room.mySeatNo', '号位', '当前站立', '我的座位', '请选择座位']) assert.ok(center.includes(phrase));
+  assert.doesNotMatch(center, /等待好友加入/);
   assert.match(roomCss, /\.lobby-label \{\s*margin-top: 30rpx/);
   assert.match(roomCss, /\.lobby-board \{\s*height: 820rpx;\s*margin-top: 24rpx/);
 });

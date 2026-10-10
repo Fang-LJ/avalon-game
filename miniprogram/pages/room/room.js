@@ -46,6 +46,7 @@ Page({
     canEarlyAssassination: false,
     rejection: { dots: [], forced: false },
     phaseTitle: '',
+    lobbyStatus: '',
     busy: false,
     error: '',
     timeline: { missions: [], proposals: [] },
@@ -350,6 +351,7 @@ Page({
     if (!game) {
       this.setData({
         displayPlayers: ui.lobbySeats(room.players, room.maxPlayers),
+        lobbyStatus: ui.lobbyStatus(room),
         standingPlayers: room.players.filter((player) => !player.seated),
         botPlayers: room.players.filter((player) => player.isBot),
         board: false,

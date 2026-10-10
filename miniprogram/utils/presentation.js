@@ -50,6 +50,13 @@ function rules(n) {
 function initial(name) {
   return Array.from(name || '玩家')[0];
 }
+function lobbyStatus(room) {
+  const { currentPlayers = 0, maxPlayers = 0, seatedPlayers = 0 } = room || {};
+  const count = `${currentPlayers} / ${maxPlayers} 人`;
+  if (currentPlayers < maxPlayers) return `${count} · 等待 ${maxPlayers - currentPlayers} 人加入`;
+  if (seatedPlayers < maxPlayers) return `${count} · ${seatedPlayers} 人已就座`;
+  return `${count} · 全员已就座`;
+}
 function dateText(value) {
   return value ? value.replace('T', ' ').slice(0, 16) : '';
 }
@@ -311,6 +318,7 @@ function showLegal() {
   });
 }
 module.exports = {
+  lobbyStatus,
   ROLE_NAMES,
   FINISH,
   rules,

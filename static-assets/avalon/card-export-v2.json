@@ -1,0 +1,379 @@
+{
+  "version": "v2",
+  "scale": 2,
+  "resampling": "LANCZOS",
+  "sources": [
+    {
+      "source": "01-actions.png",
+      "width": 1448,
+      "height": 1086,
+      "mode": "RGB",
+      "format": "PNG",
+      "bytes": 2712484,
+      "sha256": "ef6d86df0cfa8701ff1b8bbe07f59c82f9b77c6474bd2113b2482b7a5822d61b"
+    },
+    {
+      "source": "02-special.png",
+      "width": 1448,
+      "height": 1086,
+      "mode": "RGB",
+      "format": "PNG",
+      "bytes": 2675739,
+      "sha256": "14504057b52ed3b7d478fbc2ab01d7132571db695d19c2f2ab073f30421cd4b4"
+    },
+    {
+      "source": "03-roles.png",
+      "width": 1448,
+      "height": 1086,
+      "mode": "RGB",
+      "format": "PNG",
+      "bytes": 2770026,
+      "sha256": "c10f64339e516fd17c32ec2a464efe102bb76de27468a6c98a4d478d9b213078"
+    }
+  ],
+  "assets": [
+    {
+      "asset": "roles/merlin.png",
+      "source": "03-roles.png",
+      "crop": [
+        62,
+        14,
+        414,
+        515
+      ],
+      "source_crop_width": 352,
+      "source_crop_height": 501,
+      "export_width": 704,
+      "export_height": 1002,
+      "bytes": 1007108,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "3099cf678517fa5bc213df65d329afa4e741b7c0ff320b4f5ff7f01bb69e3a92"
+    },
+    {
+      "asset": "roles/percival.png",
+      "source": "03-roles.png",
+      "crop": [
+        420,
+        14,
+        738,
+        515
+      ],
+      "source_crop_width": 318,
+      "source_crop_height": 501,
+      "export_width": 636,
+      "export_height": 1002,
+      "bytes": 911394,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "6304522bba0862fe79501c7c180a2b4a2ef21c037abf6d6ab91b3b99eb79c3f5"
+    },
+    {
+      "asset": "roles/loyal-servant.png",
+      "source": "03-roles.png",
+      "crop": [
+        743,
+        14,
+        1065,
+        515
+      ],
+      "source_crop_width": 322,
+      "source_crop_height": 501,
+      "export_width": 644,
+      "export_height": 1002,
+      "bytes": 887666,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "f6fe24f60a0afba494ee9afc5382adf2c3a8b26e7bce222130070c0b85c52d43"
+    },
+    {
+      "asset": "roles/assassin.png",
+      "source": "03-roles.png",
+      "crop": [
+        1070,
+        14,
+        1406,
+        515
+      ],
+      "source_crop_width": 336,
+      "source_crop_height": 501,
+      "export_width": 672,
+      "export_height": 1002,
+      "bytes": 812896,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "e9a580cf5e3beae8b0883ccbbd9c78efc8d8aef11b08e0bdafad1789074b672a"
+    },
+    {
+      "asset": "roles/morgana.png",
+      "source": "03-roles.png",
+      "crop": [
+        22,
+        519,
+        299,
+        1032
+      ],
+      "source_crop_width": 277,
+      "source_crop_height": 513,
+      "export_width": 554,
+      "export_height": 1026,
+      "bytes": 759395,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "df3defd276c0af6db1c8bd30baba725ddd3d1e2ce0a445a579e9fc8914a1deb0"
+    },
+    {
+      "asset": "roles/mordred.png",
+      "source": "03-roles.png",
+      "crop": [
+        302,
+        519,
+        581,
+        1032
+      ],
+      "source_crop_width": 279,
+      "source_crop_height": 513,
+      "export_width": 558,
+      "export_height": 1026,
+      "bytes": 698112,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "46b71ae9cd55653dc3e774063d0b731ba7071d71a3d67f7714d28256a38f924b"
+    },
+    {
+      "asset": "roles/oberon.png",
+      "source": "03-roles.png",
+      "crop": [
+        583,
+        519,
+        855,
+        1032
+      ],
+      "source_crop_width": 272,
+      "source_crop_height": 513,
+      "export_width": 544,
+      "export_height": 1026,
+      "bytes": 736224,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "5606528a8d33a69b6535cfff7e9dc74681c1c1a38175c610a4c087b623f03352"
+    },
+    {
+      "asset": "roles/minion.png",
+      "source": "03-roles.png",
+      "crop": [
+        856,
+        519,
+        1132,
+        1032
+      ],
+      "source_crop_width": 276,
+      "source_crop_height": 513,
+      "export_width": 552,
+      "export_height": 1026,
+      "bytes": 682594,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "de0e1b3105ae36a6c5689a3edf6496a457ae2c1bdbed90f57fe3f810a4be9b1b"
+    },
+    {
+      "asset": "back/role-back.png",
+      "source": "03-roles.png",
+      "crop": [
+        1136,
+        526,
+        1435,
+        1032
+      ],
+      "source_crop_width": 299,
+      "source_crop_height": 506,
+      "export_width": 598,
+      "export_height": 1012,
+      "bytes": 894344,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "105726ea35422e38c94b2c684dc76c631eb4edd3eefd2056c0049c2f93cc955f"
+    },
+    {
+      "asset": "actions/mission-success.png",
+      "source": "01-actions.png",
+      "crop": [
+        128,
+        7,
+        505,
+        531
+      ],
+      "source_crop_width": 377,
+      "source_crop_height": 524,
+      "export_width": 754,
+      "export_height": 1048,
+      "bytes": 1136967,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "360d680467d5f99d7f2f5250f66c829fb12eeb27dff2d3913086615943082aed"
+    },
+    {
+      "asset": "actions/mission-fail.png",
+      "source": "01-actions.png",
+      "crop": [
+        535,
+        7,
+        913,
+        531
+      ],
+      "source_crop_width": 378,
+      "source_crop_height": 524,
+      "export_width": 756,
+      "export_height": 1048,
+      "bytes": 1029147,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "6996250f8f42d62d81e360b65af8b5bac1068ca30e3de27bc81cdd206bd7c6fe"
+    },
+    {
+      "asset": "actions/approve.png",
+      "source": "01-actions.png",
+      "crop": [
+        943,
+        7,
+        1320,
+        531
+      ],
+      "source_crop_width": 377,
+      "source_crop_height": 524,
+      "export_width": 754,
+      "export_height": 1048,
+      "bytes": 1113450,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "fdcd3835ef2bfd4c89eae58ca56fe300e430f59643deb3538239c72a0a0083d4"
+    },
+    {
+      "asset": "actions/reject.png",
+      "source": "01-actions.png",
+      "crop": [
+        128,
+        528,
+        505,
+        1041
+      ],
+      "source_crop_width": 377,
+      "source_crop_height": 513,
+      "export_width": 754,
+      "export_height": 1026,
+      "bytes": 1011706,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "8c1f338c0603c180fa038a61dde9307d759ce35c8656a9dd2d17d4cf7b7f4d3d"
+    },
+    {
+      "asset": "back/action-back.png",
+      "source": "01-actions.png",
+      "crop": [
+        535,
+        533,
+        913,
+        1041
+      ],
+      "source_crop_width": 378,
+      "source_crop_height": 508,
+      "export_width": 756,
+      "export_height": 1016,
+      "bytes": 1101237,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "d6806c6f7f89b808c5a406349d64e9978b243586a60bd71d6a54a1f527e6c334"
+    },
+    {
+      "asset": "special/lady-of-the-lake.png",
+      "source": "02-special.png",
+      "crop": [
+        120,
+        6,
+        508,
+        532
+      ],
+      "source_crop_width": 388,
+      "source_crop_height": 526,
+      "export_width": 776,
+      "export_height": 1052,
+      "bytes": 1150385,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "4ac62fef911207bb692dfd2dde154c5e8d1b1385356d16e1865f09d195088d45"
+    },
+    {
+      "asset": "special/assassinate.png",
+      "source": "02-special.png",
+      "crop": [
+        531,
+        6,
+        915,
+        532
+      ],
+      "source_crop_width": 384,
+      "source_crop_height": 526,
+      "export_width": 768,
+      "export_height": 1052,
+      "bytes": 1018437,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "ef384b7983352e13b21dbfdbb28a19f8643c60a797519d6969995c90d4df8440"
+    },
+    {
+      "asset": "special/good-victory.png",
+      "source": "02-special.png",
+      "crop": [
+        939,
+        6,
+        1324,
+        532
+      ],
+      "source_crop_width": 385,
+      "source_crop_height": 526,
+      "export_width": 770,
+      "export_height": 1052,
+      "bytes": 1157554,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "161b43553772f0f37dfc6c7271947e8b29af7f12c41c858fb1fe6f2214d632ef"
+    },
+    {
+      "asset": "special/evil-victory.png",
+      "source": "02-special.png",
+      "crop": [
+        120,
+        528,
+        508,
+        1043
+      ],
+      "source_crop_width": 388,
+      "source_crop_height": 515,
+      "export_width": 776,
+      "export_height": 1030,
+      "bytes": 979644,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "72829ac002aabeb8ee9d9fe9b744b987d6a8a7b5047aadbe123b8518cc5ef952"
+    },
+    {
+      "asset": "special/generic-emblem.png",
+      "source": "02-special.png",
+      "crop": [
+        939,
+        528,
+        1324,
+        1043
+      ],
+      "source_crop_width": 385,
+      "source_crop_height": 515,
+      "export_width": 770,
+      "export_height": 1030,
+      "bytes": 1060153,
+      "format": "PNG",
+      "mode": "RGB",
+      "sha256": "5ab6b6c5d803d38a223959255e99f3fc224a06f844b42d742ddb7940eb6acef0"
+    }
+  ],
+  "total_bytes": 18148413
+}
