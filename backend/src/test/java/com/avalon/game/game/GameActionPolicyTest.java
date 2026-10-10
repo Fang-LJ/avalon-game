@@ -59,6 +59,14 @@ class GameActionPolicyTest {
         assertEquals(List.of("roomId", "type"), eventFields);
         var stateFields = Arrays.stream(GameService.GameState.class.getRecordComponents()).map(c -> c.getName()).toList();
         assertFalse(stateFields.contains("roleCode"));
+        assertFalse(stateFields.contains("roleName"));
+        assertFalse(stateFields.contains("knowledgeType"));
+        for (var contract : List.of(com.avalon.game.room.RoomService.PlayerView.class,
+                GameHistoryService.Timeline.class, GameHistoryService.PublicProposal.class, RoomEventPublisher.RoomEvent.class)) {
+            var fields = Arrays.stream(contract.getRecordComponents()).map(c -> c.getName()).toList();
+            for (var forbidden : List.of("roleCode", "roleName", "role", "alignment", "knowledgeType", "visiblePlayers"))
+                assertFalse(fields.contains(forbidden), contract.getSimpleName() + ": " + forbidden);
+        }
         assertFalse(stateFields.contains("missionActions"));
         assertFalse(stateFields.contains("ladyInspectionResult"));
     }

@@ -6,6 +6,8 @@ const vm = require('node:vm');
 const cards = require('../utils/cards');
 const ui = require('../utils/presentation');
 const root = path.join(__dirname, '..');
+const assetRoot = path.join(root, '../static-assets/avalon/cards/v1');
+const assetPath = url => path.join(assetRoot, url.slice(cards.CARD_BASE.length + 1));
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 
 function componentAt(file, data = {}, globals = {}) {
@@ -65,7 +67,7 @@ for (const [code, name] of Object.entries({
   MORDRED: 'mordred', OBERON: 'oberon',
 })) {
   test(`${code} maps to its supplied role artwork`, () => {
-    assert.equal(cards.roleCard(code), `/assets/cards/roles/${name}.jpg`);
+    assert.equal(cards.roleCard(code), `${cards.CARD_BASE}/roles/${name}.jpg`);
   });
 }
 
@@ -77,50 +79,52 @@ test('unknown card codes including inherited object keys use safe fallbacks', ()
   }
 });
 
-test('all 19 mapped images exist as nonempty JPEG files below 200KB', () => {
+test('all 19 remote mappings have nonempty versioned JPEG sources outside the main package', () => {
   const images = Object.values(cards.CARDS).flatMap(Object.values);
   assert.equal(images.length, 19);
   assert.equal(new Set(images).size, 19);
   for (const image of images) {
-    const bytes = fs.readFileSync(path.join(root, image));
+    assert.ok(image.startsWith(cards.CARD_BASE + '/'));
+    const bytes = fs.readFileSync(assetPath(image));
     assert.ok(image.endsWith('.jpg'), image);
     assert.equal(bytes.readUInt16BE(0), 0xffd8, image);
     assert.equal(bytes.readUInt16BE(bytes.length - 2), 0xffd9, image);
-    assert.ok(bytes.length > 1024 && bytes.length <= 200_000, image);
+    assert.ok(bytes.length > 1024, image);
   }
 });
 
 test('all action mappings select JPG; no unmapped or duplicate files remain in cards/', () => {
-  assert.equal(cards.actionCard('SUCCESS'), '/assets/cards/actions/mission-success.jpg');
-  assert.equal(cards.actionCard('FAIL'), '/assets/cards/actions/mission-fail.jpg');
-  assert.equal(cards.actionCard('APPROVE'), '/assets/cards/actions/approve.jpg');
-  assert.equal(cards.actionCard('REJECT'), '/assets/cards/actions/reject.jpg');
+  assert.equal(cards.actionCard('SUCCESS'), `${cards.CARD_BASE}/actions/mission-success.jpg`);
+  assert.equal(cards.actionCard('FAIL'), `${cards.CARD_BASE}/actions/mission-fail.jpg`);
+  assert.equal(cards.actionCard('APPROVE'), `${cards.CARD_BASE}/actions/approve.jpg`);
+  assert.equal(cards.actionCard('REJECT'), `${cards.CARD_BASE}/actions/reject.jpg`);
   const actual = [];
   function walk(dir) {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const file = path.join(dir, entry.name);
       if (entry.isDirectory()) walk(file);
-      else actual.push('/' + path.relative(root, file).split(path.sep).join('/'));
+      else actual.push(cards.CARD_BASE + '/' + path.relative(assetRoot, file).split(path.sep).join('/'));
     }
   }
-  walk(path.join(root, 'assets/cards'));
+  walk(assetRoot);
+  assert.equal(fs.existsSync(path.join(root, 'assets/cards')), false);
   assert.deepEqual(actual.sort(), Object.values(cards.CARDS).flatMap(Object.values).sort());
 });
 
-const CARD_HEIGHTS = {
-  'roles/merlin': 740, 'roles/percival': 819, 'roles/loyal-servant': 809,
-  'roles/assassin': 775, 'roles/morgana': 963, 'roles/mordred': 956,
-  'roles/oberon': 981, 'roles/minion': 967,
-  'back/role-back': 880, 'back/action-back': 699,
-  'actions/mission-success': 723, 'actions/mission-fail': 721,
-  'actions/approve': 723, 'actions/reject': 708,
-  'special/lady-of-the-lake': 705, 'special/assassinate': 712,
-  'special/good-victory': 710, 'special/evil-victory': 690,
-  'special/generic-emblem': 696,
+const CARD_DIMENSIONS = {
+  'roles/merlin': [352,501], 'roles/percival': [318,501], 'roles/loyal-servant': [322,501],
+  'roles/assassin': [336,501], 'roles/morgana': [277,513], 'roles/mordred': [279,513],
+  'roles/oberon': [272,513], 'roles/minion': [276,513],
+  'back/role-back': [299,506], 'back/action-back': [378,508],
+  'actions/mission-success': [377,524], 'actions/mission-fail': [378,524],
+  'actions/approve': [377,524], 'actions/reject': [377,513],
+  'special/lady-of-the-lake': [388,526], 'special/assassinate': [384,526],
+  'special/good-victory': [385,526], 'special/evil-victory': [388,515],
+  'special/generic-emblem': [385,515],
 };
-for (const [name, height] of Object.entries(CARD_HEIGHTS)) {
-  test(`${name} JPEG is progressive RGB with proportionate 520x${height} dimensions`, () => {
-    const bytes = fs.readFileSync(path.join(root, `assets/cards/${name}.jpg`));
+for (const [name, [width, height]] of Object.entries(CARD_DIMENSIONS)) {
+  test(`${name} JPEG preserves native ${width}x${height} crop pixels, progressive RGB`, () => {
+    const bytes = fs.readFileSync(path.join(assetRoot, `${name}.jpg`));
     let position = 2;
     let frame;
     // Parse JPEG segments before entropy data; SOF2 proves progressive encoding.
@@ -137,27 +141,26 @@ for (const [name, height] of Object.entries(CARD_HEIGHTS)) {
       };
       position += length + 2;
     }
-    assert.deepEqual(frame, { height, width: 520, channels: 3 });
+    assert.deepEqual(frame, { height, width, channels: 3 });
   });
 }
 
-test('export script outputs all 19 mapped JPGs with bounded JPEG settings', () => {
+test('export script outputs all 19 native crops with quality 92 and no size/quality fallback', () => {
   const script = fs.readFileSync(path.join(root, '../scripts/export-cards.py'), 'utf8');
   const exported = [...script.matchAll(/"((?:roles|actions|back|special)\/[^"\s]+\.jpg)"/g)]
-    .map(match => '/assets/cards/' + match[1]);
+    .map(match => cards.CARD_BASE + '/' + match[1]);
   assert.deepEqual(exported.sort(), Object.values(cards.CARDS).flatMap(Object.values).sort());
-  assert.match(script, /"JPEG", quality=quality, optimize=True, progressive=True/);
-  assert.match(script, /for quality in \(85, 82, 80\)/);
-  assert.match(script, /MAX_CARD_BYTES = 200_000/);
-  assert.match(script, /encoded\.tell\(\) <= MAX_CARD_BYTES/);
-  assert.match(script, /CARD_WIDTH = 520/);
+  assert.match(script, /"JPEG", quality=JPEG_QUALITY, optimize=True, progressive=True/);
+  assert.match(script, /JPEG_QUALITY = 92/);
+  assert.match(script, /static-assets\/avalon\/cards\/v1/);
+  assert.doesNotMatch(script, /MAX_CARD_BYTES|CARD_WIDTH|card\.resize|for quality in/);
   assert.doesNotMatch(script, /"WEBP"|\.webp/);
   assert.match(script, /save_card\(card, destination\)/);
 });
 
 test('identity dealing and generic play-card defaults both use the JPEG role back', () => {
-  assert.equal(cards.CARDS.back.ROLE, '/assets/cards/back/role-back.jpg');
-  assert.equal(cards.CARDS.back.ACTION, '/assets/cards/back/action-back.jpg');
+  assert.equal(cards.CARDS.back.ROLE, `${cards.CARD_BASE}/back/role-back.jpg`);
+  assert.equal(cards.CARDS.back.ACTION, `${cards.CARD_BASE}/back/action-back.jpg`);
   const generic = componentAt('components/play-card/play-card.js');
   assert.equal(generic.definition.properties.back.value, cards.CARDS.back.ROLE);
   const identity = deal();
@@ -567,7 +570,7 @@ test('Percival candidates retain identical knowledge class symbol and hint with 
   assert.equal(candidates.some((player) => 'roleCode' in player || 'alignment' in player), false);
 });
 
-test('conservative uncompressed production package remains below 2 MiB excluding configured tests', () => {
+test('conservative uncompressed production package remains below 1.5 MiB excluding configured tests', () => {
   const project = JSON.parse(read('project.config.json'));
   assert.ok(project.packOptions.ignore.some((entry) => entry.type === 'folder' && entry.value === 'tests'));
   let bytes = 0;
@@ -581,5 +584,5 @@ test('conservative uncompressed production package remains below 2 MiB excluding
     }
   }
   walk(root);
-  assert.ok(bytes < 2 * 1024 * 1024, `raw package: ${bytes} bytes`);
+  assert.ok(bytes < 1.5 * 1024 * 1024, `raw package: ${bytes} bytes`);
 });

@@ -211,7 +211,7 @@ Page({
         ...role,
         initial: role.roleCode.charAt(0),
         visiblePlayers: role.visiblePlayers.map((p) => ({
-          ...ui.privateKnowledge(p),
+          ...ui.privateVisiblePlayer(p, role.roleCode),
           initial: ui.initial(p.nickname),
         })),
       },
@@ -355,14 +355,16 @@ Page({
       ((role && role.visiblePlayers) || []).map((player) => [
         player.playerId,
         {
-          knowledgeType: player.knowledgeType,
-          knowledgeHint: player.hint,
+          knowledgeType: !role.roleCode || ui.identityMark(player, role.roleCode).markType ? player.knowledgeType : undefined,
+          knowledgeHint: !role.roleCode || ui.identityMark(player, role.roleCode).markType ? player.hint : undefined,
+          ...ui.identityMark(player, role.roleCode),
         },
       ]),
     );
     const privatePlayers = room.players.map((player) => ({
       ...player,
       ...(privateByPlayer[player.playerId] || {}),
+      ...(role && player.playerId === room.myPlayerId ? ui.identityMark({}, role.roleCode, true) : {}),
       actionDone: ui.actionDone(game, player),
     }));
     const players = ui

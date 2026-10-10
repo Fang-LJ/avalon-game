@@ -218,6 +218,7 @@ class RoomServiceTest {
         assertNull(result.players().get(1).avatarUrl());
         String json=new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(result);
         assertFalse(json.contains("role"));assertFalse(json.contains("alignment"));assertFalse(json.contains("knowledgeType"));
+        assertFalse(json.contains("roleCode"));assertFalse(json.contains("roleName"));assertFalse(json.contains("visiblePlayers"));
     }
 
     @Test void playerLeavingActiveGameIsOnlyMarkedOfflineSoHistoryRemains() {

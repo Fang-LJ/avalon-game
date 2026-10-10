@@ -6,7 +6,7 @@ function logCardImage(kind, event) {
     const envVersion = wx.getAccountInfoSync().miniProgram.envVersion;
     if (envVersion !== 'develop' && envVersion !== 'trial') return;
     const { side, src } = event.currentTarget.dataset;
-    // Only bundled artwork; never log arbitrary URLs, component data or user profiles.
+    // Only manifest artwork; never log arbitrary URLs, component data or user profiles.
     if (!['front', 'back'].includes(side) || !CARD_SOURCES.includes(src)) return;
     const fields = { type: side, src, envVersion };
     if (kind === 'ERROR') {

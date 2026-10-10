@@ -30,7 +30,7 @@ class GameHistoryServiceTest {
         assertNull(timeline.proposals().getFirst().approveCount());
         assertTrue(timeline.missions().isEmpty());
         String json = new ObjectMapper().writeValueAsString(timeline);
-        for (String secret : List.of("role", "alignment", "actions", "resultAlignment", "userId", "FAIL"))
+        for (String secret : List.of("role", "roleCode", "roleName", "knowledgeType", "visiblePlayers", "alignment", "actions", "resultAlignment", "userId", "FAIL"))
             assertFalse(json.contains(secret), json);
         verify(repository, never()).votes(anyLong());
         verify(repository, never()).missionActions(anyLong());

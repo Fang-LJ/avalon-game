@@ -1,17 +1,15 @@
-"""Export the supplied artwork as local JPEG cards; requires Pillow.
+"""Export supplied artwork as versioned static JPEG cards; requires Pillow.
 
 Run from the repository root: python3 scripts/export-cards.py
 The source sheets are local-only. A contact sheet is written there for review.
 """
-from io import BytesIO
 from pathlib import Path
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "design-source/cards"
-OUTPUT = ROOT / "miniprogram/assets/cards"
-CARD_WIDTH = 520  # Preserve proportions and quality while keeping the main package < 2 MiB.
-MAX_CARD_BYTES = 200_000
+OUTPUT = ROOT / "static-assets/avalon/cards/v1"
+JPEG_QUALITY = 92
 
 # Coordinates include the protruding faction emblem and bottom star ornament.
 CARDS = [
@@ -41,13 +39,8 @@ def save_card(card, destination):
     if destination.suffix.lower() not in (".jpg", ".jpeg"):
         raise ValueError(f"Card output must be JPEG: {destination}")
     rgb = card.convert("RGB")
-    for quality in (85, 82, 80):
-        encoded = BytesIO()
-        rgb.save(encoded, "JPEG", quality=quality, optimize=True, progressive=True)
-        if encoded.tell() <= MAX_CARD_BYTES:
-            destination.write_bytes(encoded.getvalue())
-            return quality
-    raise ValueError(f"Card exceeds {MAX_CARD_BYTES} bytes at quality 80: {destination}")
+    rgb.save(destination, "JPEG", quality=JPEG_QUALITY, optimize=True, progressive=True)
+    return JPEG_QUALITY
 
 
 def main():
@@ -59,7 +52,7 @@ def main():
                 raise ValueError(f"Unexpected source dimensions: {source} {original.size}")
             card = original.convert("RGB").crop(box)
         # Preserve each card's original aspect ratio; no letter or frame is trimmed.
-        card = card.resize((CARD_WIDTH, round(card.height * CARD_WIDTH / card.width)), Image.Resampling.LANCZOS)
+        # Keep native crop pixels: upscaling cannot restore detail from the source sheet.
         destination = OUTPUT / name
         destination.parent.mkdir(parents=True, exist_ok=True)
         quality = save_card(card, destination)

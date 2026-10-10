@@ -78,6 +78,40 @@ function privateKnowledge(player) {
       type === 'MERLIN_OR_MORGANA' ? 'knowledge-candidate' : 'knowledge-evil',
   };
 }
+const ROLE_MARKS = Object.freeze({
+  LOYAL_SERVANT: ['忠', 'loyal'], MERLIN: ['梅', 'merlin'], PERCIVAL: ['派', 'percival'],
+  MORGANA: ['娜', 'evil'], ASSASSIN: ['刺', 'evil'], MINION: ['爪', 'evil'],
+  MORDRED: ['莫', 'evil'], OBERON: ['奥', 'evil'],
+});
+const ORDINARY_EVIL = ['MORGANA', 'ASSASSIN', 'MINION', 'MORDRED'];
+// Only private /my-role data enters here. Never infer identity from public players.
+function identityMark(player, viewerRole, self = false) {
+  if (self && ROLE_MARKS[viewerRole]) {
+    const [markText, markClass] = ROLE_MARKS[viewerRole];
+    return { markType: 'ROLE', markText, markClass };
+  }
+  if (player.knowledgeType === 'EVIL_ALLY' && ORDINARY_EVIL.includes(viewerRole) &&
+      ORDINARY_EVIL.includes(player.roleCode)) {
+    return { markType: 'ROLE', markText: ROLE_MARKS[player.roleCode][0], markClass: 'evil' };
+  }
+  if (player.knowledgeType === 'MERLIN_OR_MORGANA' && (!viewerRole || viewerRole === 'PERCIVAL'))
+    return { markType: 'MERLIN_OR_MORGANA', markText: '?', markClass: 'candidate' };
+  if (player.knowledgeType === 'EVIL' && (!viewerRole || viewerRole === 'MERLIN'))
+    return { markType: 'EVIL', markText: '', markClass: 'evil' };
+  return { markType: '', markText: '', markClass: '' };
+}
+function privateVisiblePlayer(player, viewerRole) {
+  const mark = identityMark(player, viewerRole);
+  const exact = mark.markType === 'ROLE';
+  // Explicit projection prevents accidental role metadata from reaching candidate UI/DOM.
+  return {
+    playerId: player.playerId, seatNo: player.seatNo, nickname: player.nickname,
+    knowledgeType: player.knowledgeType,
+    hint: { EVIL: '邪恶阵营', MERLIN_OR_MORGANA: '梅林或莫甘娜', EVIL_ALLY: '邪恶同伴' }[player.knowledgeType] || '',
+    ...privateKnowledge({ knowledgeType: player.knowledgeType }), ...mark,
+    ...(exact ? { roleCode: player.roleCode, roleName: ROLE_NAMES[player.roleCode] } : {}),
+  };
+}
 function actionDone(game, player) {
   if (!game) return false;
   // Keep numeric callers compatible; private fallback is only available for an explicit me player.
@@ -249,6 +283,8 @@ module.exports = {
   historyItem,
   seatPosition,
   privateKnowledge,
+  identityMark,
+  privateVisiblePlayer,
   actionDone,
   seats,
   lobbySeats,

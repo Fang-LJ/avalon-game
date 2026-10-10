@@ -3,4 +3,9 @@
 .evil-mark { background: #26171c; border: 1rpx solid #9b4653; }
 .evil-crescent { position: relative; width: 68%; height: 68%; border-radius: 50%; overflow: hidden; background: #e47a86; }
 .crescent-cutout { position: absolute; width: 92%; height: 92%; border-radius: 50%; background: #26171c; top: -18%; right: -18%; }
-.candidate-mark { background: #b69cff; color: #ffffff; font-size: 20rpx; font-weight: 900; line-height: 1; box-shadow: 0 0 10rpx rgba(182,156,255,.35); }
+.candidate-mark { background: #b69cff; color: #ffffff; font-size: 24rpx; font-weight: 900; line-height: 1; box-shadow: 0 0 10rpx rgba(182,156,255,.35); }
+.role-mark { border: 1rpx solid; font-size: 22rpx; font-weight: 900; line-height: 1; }
+.role-evil { background: #6f2833; border-color: #c86472; color: #fff2f2; }
+.role-loyal { background: #255c62; border-color: #66c5c6; color: #dcffff; }
+.role-merlin { background: #594a22; border-color: #e2bf62; color: #f5dc91; }
+.role-percival { background: #493a69; border-color: #b69cff; color: #f1eaff; }

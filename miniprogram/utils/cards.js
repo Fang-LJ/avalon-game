@@ -1,31 +1,32 @@
 // Only /my-role chooses a role card during a live game.
+const CARD_BASE = require('./config').getConfig().cardBaseUrl;
 const CARDS = {
   roles: {
-    MERLIN: '/assets/cards/roles/merlin.jpg',
-    PERCIVAL: '/assets/cards/roles/percival.jpg',
-    LOYAL_SERVANT: '/assets/cards/roles/loyal-servant.jpg',
-    MORGANA: '/assets/cards/roles/morgana.jpg',
-    ASSASSIN: '/assets/cards/roles/assassin.jpg',
-    MINION: '/assets/cards/roles/minion.jpg',
-    MORDRED: '/assets/cards/roles/mordred.jpg',
-    OBERON: '/assets/cards/roles/oberon.jpg',
+    MERLIN: `${CARD_BASE}/roles/merlin.jpg`,
+    PERCIVAL: `${CARD_BASE}/roles/percival.jpg`,
+    LOYAL_SERVANT: `${CARD_BASE}/roles/loyal-servant.jpg`,
+    MORGANA: `${CARD_BASE}/roles/morgana.jpg`,
+    ASSASSIN: `${CARD_BASE}/roles/assassin.jpg`,
+    MINION: `${CARD_BASE}/roles/minion.jpg`,
+    MORDRED: `${CARD_BASE}/roles/mordred.jpg`,
+    OBERON: `${CARD_BASE}/roles/oberon.jpg`,
   },
   actions: {
-    SUCCESS: '/assets/cards/actions/mission-success.jpg',
-    FAIL: '/assets/cards/actions/mission-fail.jpg',
-    APPROVE: '/assets/cards/actions/approve.jpg',
-    REJECT: '/assets/cards/actions/reject.jpg',
+    SUCCESS: `${CARD_BASE}/actions/mission-success.jpg`,
+    FAIL: `${CARD_BASE}/actions/mission-fail.jpg`,
+    APPROVE: `${CARD_BASE}/actions/approve.jpg`,
+    REJECT: `${CARD_BASE}/actions/reject.jpg`,
   },
   special: {
-    LADY_OF_THE_LAKE: '/assets/cards/special/lady-of-the-lake.jpg',
-    ASSASSINATE: '/assets/cards/special/assassinate.jpg',
-    GOOD_VICTORY: '/assets/cards/special/good-victory.jpg',
-    EVIL_VICTORY: '/assets/cards/special/evil-victory.jpg',
-    GENERIC_EMBLEM: '/assets/cards/special/generic-emblem.jpg',
+    LADY_OF_THE_LAKE: `${CARD_BASE}/special/lady-of-the-lake.jpg`,
+    ASSASSINATE: `${CARD_BASE}/special/assassinate.jpg`,
+    GOOD_VICTORY: `${CARD_BASE}/special/good-victory.jpg`,
+    EVIL_VICTORY: `${CARD_BASE}/special/evil-victory.jpg`,
+    GENERIC_EMBLEM: `${CARD_BASE}/special/generic-emblem.jpg`,
   },
   back: {
-    ROLE: '/assets/cards/back/role-back.jpg',
-    ACTION: '/assets/cards/back/action-back.jpg',
+    ROLE: `${CARD_BASE}/back/role-back.jpg`,
+    ACTION: `${CARD_BASE}/back/action-back.jpg`,
   },
 };
 Object.values(CARDS).forEach(Object.freeze);
@@ -36,6 +37,7 @@ function lookup(group, type, fallback) {
 }
 
 module.exports = {
+  CARD_BASE,
   CARDS,
   roleCard: (code) => lookup(CARDS.roles, code, CARDS.back.ROLE),
   actionCard: (type) => lookup(CARDS.actions, type, CARDS.back.ACTION),

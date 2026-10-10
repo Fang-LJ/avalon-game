@@ -1,0 +1,10 @@
+# Add only this location inside the existing api.playmatespace.cloud TLS server.
+# Reuse the existing playmate_minio_backend. Never replace the production config.
+location /avalon-assets/ {
+    proxy_pass http://playmate_minio_backend/avalon-assets/;
+    proxy_http_version 1.1;
+    proxy_set_header Host playmate-minio:9000;
+    proxy_hide_header Cache-Control;
+    expires 365d;
+    add_header Cache-Control "public, max-age=31536000, immutable";
+}

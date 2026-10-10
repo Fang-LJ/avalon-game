@@ -3,6 +3,6 @@
   "version": "0.0.1",
   "private": true,
   "description": "阿瓦隆多人在线微信小程序",
-  "scripts": { "test": "node --test tests/*.test.js", "check": "find . -name '*.js' -not -path './node_modules/*' -exec node --check {} \\;" },
+  "scripts": { "test": "node --test tests/*.test.js", "check": "find . -name '*.js' -not -path './node_modules/*' -exec node --check {} \\;", "check:assets": "node ../scripts/check-card-assets.js" },
   "dependencies": {}
 }

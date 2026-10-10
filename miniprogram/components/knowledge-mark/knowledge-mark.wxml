@@ -1,4 +1,5 @@
-<view wx:if="{{type === 'EVIL' || type === 'EVIL_ALLY'}}" class="knowledge-mark evil-mark">
+<view wx:if="{{markType === 'ROLE'}}" class="knowledge-mark role-mark role-{{tone}}">{{text}}</view>
+<view wx:elif="{{markType === 'EVIL' || (!markType && (type === 'EVIL' || type === 'EVIL_ALLY'))}}" class="knowledge-mark evil-mark">
   <view class="evil-crescent"><view class="crescent-cutout"></view></view>
 </view>
-<view wx:elif="{{type === 'MERLIN_OR_MORGANA'}}" class="knowledge-mark candidate-mark">?</view>
+<view wx:elif="{{markType === 'MERLIN_OR_MORGANA' || (!markType && type === 'MERLIN_OR_MORGANA')}}" class="knowledge-mark candidate-mark">?</view>

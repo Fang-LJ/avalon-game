@@ -319,7 +319,8 @@
         <view class="muted small">{{role.visiblePlayers[0].hint}}</view>
         <view wx:for="{{role.visiblePlayers}}" wx:key="playerId" class="role-overlay-player">
           <text>{{item.seatNo}}号 {{item.nickname}}</text>
-          <view class="knowledge-inline {{item.knowledgeClass}}"><knowledge-mark type="{{item.knowledgeType}}" /></view>
+          <text wx:if="{{item.markType === 'ROLE'}}">{{item.roleName}}</text>
+          <view class="knowledge-inline {{item.knowledgeClass}}"><knowledge-mark type="{{item.knowledgeType}}" markType="{{item.markType}}" text="{{item.markText}}" tone="{{item.markClass}}" /></view>
         </view>
       </view>
       <view wx:else class="muted small">你没有额外角色视野</view>
