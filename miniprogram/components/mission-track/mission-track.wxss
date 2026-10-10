@@ -16,6 +16,10 @@
   font-weight: bold;
   flex-shrink: 0;
 }
+.CURRENT,
+.PENDING {
+  font-size: 24rpx;
+}
 .SUCCESS {
   background: var(--good);
   color: var(--bg);

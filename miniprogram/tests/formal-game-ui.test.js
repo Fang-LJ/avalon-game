@@ -66,13 +66,13 @@ test('mission track renders five status dots without duplicated GOOD/EVIL scores
   let definition;
   vm.runInNewContext(read('components/mission-track/mission-track.js'), { Component: value => { definition = value; } });
   let data;
-  definition.observers['missions,current'].call({ setData: value => { data = value; } },
-    [{ missionNo: 1, status: 'SUCCESS' }, { missionNo: 2, status: 'FAILED' }], 3);
-  assert.equal(JSON.stringify(data.dots.map(dot => dot.label)), JSON.stringify(['✓', '×', 3, '•', '•']));
+  definition.observers['missions,current,teamSizes'].call({ setData: value => { data = value; } },
+    [{ missionNo: 1, status: 'SUCCESS' }, { missionNo: 2, status: 'FAILED' }], 3, ui.rules(6).teamSizes);
+  assert.equal(JSON.stringify(data.dots.map(dot => dot.label)), JSON.stringify(['✓', '×', 4, 3, 4]));
 });
 
 for (const [phase, className, color] of [
-  ['TEAM_BUILDING', 'selected-team', 'selection'], ['ASSASSINATION', 'selected-danger', 'evil'],
+  ['TEAM_BUILDING', 'selected-team', 'selection'], ['ASSASSINATION', 'selected-assassination', 'amber'],
   ['LADY_OF_LAKE', 'selected-lady', 'gold'],
 ]) {
   test(`${phase} selects an avatar ring using ${color} without a tick badge`, () => {
@@ -85,7 +85,7 @@ for (const [phase, className, color] of [
     assert.equal(player.knowledgeClass, 'knowledge-evil');
     assert.equal(player.me, true);
     assert.match(read('components/player-seat/player-seat.wxss'),
-      new RegExp(`\\.${className} \\{ box-shadow:[^}]*var\\(--${color}\\)`));
+      new RegExp(`\\.${className} \\{ box-shadow:[^}]*${color === 'amber' ? '#FFD166' : `var\\(--${color}\\)`}`));
     const markup = read('components/player-seat/player-seat.wxml');
     assert.match(markup, /player\.selected \? player\.selectionClass/);
     assert.doesNotMatch(markup, /selected-icon/);
@@ -100,7 +100,7 @@ test('selection phase is merged only into local display players, never public ro
   page.setData({ room: { players: [player], maxPlayers: 6 },
     game: { phase: 'ASSASSINATION', leaderPlayerId: 2 }, selectedIds: [2] });
   page.decoratePlayers();
-  assert.equal(page.data.displayPlayers[0].selectionClass, 'selected-danger');
+  assert.equal(page.data.displayPlayers[0].selectionClass, 'selected-assassination');
   assert.equal(player.selectionClass, undefined);
   assert.equal(player.knowledgeType, undefined);
 });

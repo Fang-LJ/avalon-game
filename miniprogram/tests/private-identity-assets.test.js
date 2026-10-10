@@ -77,10 +77,10 @@ test('identity overlay and dealt identity share authorized character marks and r
 test('crown and identity grow independently, action tick stays 30rpx, compact badges fit 9/10 seats', () => {
   const css=read('components/player-seat/player-seat.wxss');
   const rule=name=>css.match(new RegExp(`\\.${name} \\{([^}]+)\\}`))[1];
-  assert.match(rule('leader-icon'),/width: 36rpx/);assert.match(rule('leader-icon'),/height: 36rpx/);
+  assert.match(rule('leader-icon'),/width: 42rpx/);assert.match(rule('leader-icon'),/height: 42rpx/);
   assert.match(rule('knowledge-icon'),/width: 38rpx/);assert.match(rule('knowledge-icon'),/height: 38rpx/);
   assert.match(rule('action-done-icon'),/width: 30rpx/);assert.doesNotMatch(rule('action-done-icon'),/height:/);
-  assert.match(css,/\.formal.compact .leader-icon \{ width: 32rpx; height: 32rpx;/);
+  assert.match(css,/\.formal.compact .leader-icon \{ width: 36rpx; height: 36rpx;/);
   assert.match(css,/\.formal.compact .knowledge-icon \{ width: 34rpx; height: 34rpx;/);
   const mark=read('components/knowledge-mark/knowledge-mark.wxss');assert.match(mark,/font-size: 24rpx/);assert.match(mark,/font-size: 22rpx/);
   for (const color of ['#6f2833','#c86472','#fff2f2','#255c62','#66c5c6','#dcffff','#594a22','#e2bf62','#f5dc91','#493a69','#b69cff','#f1eaff'])assert.ok(mark.includes(color));

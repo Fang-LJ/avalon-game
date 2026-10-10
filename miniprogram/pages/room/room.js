@@ -44,6 +44,7 @@ Page({
     missionCardBack: CARDS.back.ACTION,
     isLeader: false,
     canEarlyAssassination: false,
+    rejection: { dots: [], forced: false },
     phaseTitle: '',
     busy: false,
     error: '',
@@ -353,6 +354,7 @@ Page({
         botPlayers: room.players.filter((player) => player.isBot),
         board: false,
         canEarlyAssassination: false,
+        rejection: ui.rejectionState(null),
       });
       return;
     }
@@ -374,6 +376,7 @@ Page({
       ...(privateByPlayer[player.playerId] || {}),
       ...(role && player.playerId === room.myPlayerId ? ui.identityMark({}, role.roleCode, true) : {}),
       ...(revealedByPlayer[player.playerId] || {}),
+      ...ui.assassinationPlayerState(game, player, room.myPlayerId),
       actionDone: ui.actionDone(game, player),
     }));
     const players = ui
@@ -386,8 +389,7 @@ Page({
       )
       .map((p) => ({
         ...p,
-        disabled: game.phase === 'ASSASSINATION'
-          ? p.playerId === room.myPlayerId || ui.isRevealedEvil(game, p.playerId) : !!(
+        disabled: !!(
           game &&
           game.phase === 'LADY_OF_LAKE' &&
           game.ladyHolder &&
@@ -404,6 +406,7 @@ Page({
       targetName: selected.map((p) => p.nickname).join('、'),
       board,
       canEarlyAssassination: ui.canStartEarlyAssassination(game, role),
+      rejection: ui.rejectionState(game),
       voteResult: vote
         ? {
             ...vote,

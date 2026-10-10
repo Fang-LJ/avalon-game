@@ -3,7 +3,7 @@
   bindtap="choose"
 >
   <view
-    class="seat-avatar {{player.empty ? 'empty-avatar' : ''}} {{player.selected ? player.selectionClass : ''}}"
+    class="seat-avatar {{player.empty ? 'empty-avatar' : ''}} {{player.revealedEvil ? 'revealed-evil-ring' : ''}} {{player.selected ? player.selectionClass : ''}}"
   >
     <image
       wx:if="{{player.avatarUrl}}"

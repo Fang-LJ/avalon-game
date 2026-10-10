@@ -105,7 +105,7 @@ for(const viewer of roles) {
       assert.equal(good.knowledgeType,undefined); assert.equal(good.roleCode,undefined); assert.equal(good.roleName,undefined);
     }
     assert.equal(players.find(p=>p.playerId===8).markText,'奥','Oberon public even to ordinary evil');
-    assert.ok(players.filter(p=>p.playerId>=4).every(p=>p.disabled));
+    assert.ok(players.filter(p=>p.playerId>=4).every(p=>p.unselectable && p.revealedEvil && !p.disabled && !p.dimmed));
     assert.ok(f.room.players.every(p=>!p.roleCode&&!p.alignment&&!p.knowledgeType&&!p.markText));
   });
 }
@@ -126,7 +126,7 @@ test('only another non-revealed player can be selected as assassination target',
   f.page.togglePlayer({detail:{playerId:1}}); assert.equal(f.page.data.assassinationTarget,1);
   f.page.togglePlayer({detail:{playerId:2}}); assert.equal(f.page.data.assassinationTarget,2);
   assert.deepEqual(plain(f.page.data.selectedIds),[2]);
-  assert.equal(f.page.data.displayPlayers.find(p=>p.playerId===2).selectionClass,'selected-danger');
+  assert.equal(f.page.data.displayPlayers.find(p=>p.playerId===2).selectionClass,'selected-assassination');
   const nonAssassin=fixture('MERLIN','ASSASSINATION'); nonAssassin.page.togglePlayer({detail:{playerId:2}});
   assert.equal(nonAssassin.page.data.assassinationTarget,null);
 });
@@ -162,10 +162,10 @@ test('final assassination blocks evil target even if caller bypasses seat handle
   const f=fixture('ASSASSIN','ASSASSINATION');
   f.page.setData({assassinationTarget:8}); f.page.assassinate(); assert.equal(f.modal(),undefined);
 });
-test('UI exposes only small role-gated trigger and distinguishes early from normal assassination',()=>{
+test('UI keeps the role-gated early trigger but unifies the final assassination page copy',()=>{
   const wxml=read('pages/room/room.wxml');
   assert.match(wxml,/wx:if="\{\{canEarlyAssassination\}\}"[^>]*bindtap="requestEarlyAssassination"/);
-  assert.match(wxml,/game.assassinationEarly/); assert.match(wxml,/邪恶身份已公开/); assert.match(wxml,/请选择你认为是梅林的玩家/);
+  assert.match(wxml,/最终刺杀/); assert.match(wxml,/刺中梅林，邪恶获胜；刺错则正义获胜/); assert.match(wxml,/请选择刺杀梅林/);
   assert.match(read('pages/room/room.wxss'),/early-assassination-trigger[^}]+var\(--evil\)/);
   assert.match(ui.FINISH.EARLY_MERLIN_ASSASSINATED,/邪恶获胜/); assert.match(ui.FINISH.EARLY_ASSASSINATION_MISSED,/正义获胜/);
 });

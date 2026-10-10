@@ -34,7 +34,7 @@ const timeline={proposals:[proposal(1,1),proposal(2,2,'REJECTED'),proposal(3,2,'
 test('mission-track emits only SUCCESS/FAILED with current trusted dot status, never queries APIs',()=>{
   const d=definition('components/mission-track/mission-track.js');
   const c={data:{},setData:v=>Object.assign(c.data,v),events:[],triggerEvent:(...args)=>c.events.push(args),...d.methods};
-  d.observers['missions,current'].call(c,timeline.missions,3);
+  d.observers['missions,current,teamSizes'].call(c,timeline.missions,3,ui.rules(7).teamSizes);
   for(const n of [1,2,3,4,5,99])c.missionTap({currentTarget:{dataset:{missionNo:n}}});
   assert.deepEqual(plain(c.events),[['missiontap',{missionNo:1,status:'SUCCESS'}],['missiontap',{missionNo:2,status:'FAILED'}]]);
   assert.doesNotMatch(read('components/mission-track/mission-track.js'),/request|services|proposal|showModal/);

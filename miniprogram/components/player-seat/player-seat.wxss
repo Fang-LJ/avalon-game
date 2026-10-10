@@ -72,18 +72,19 @@
   box-sizing: border-box;
 }
 .leader-icon {
-  top: -11rpx;
+  top: -16rpx;
   left: 50%;
   transform: translateX(-50%);
   color: var(--bg);
   background: var(--gold);
-  width: 36rpx;
-  height: 36rpx;
-  font-size: 22rpx;
+  width: 42rpx;
+  height: 42rpx;
+  font-size: 26rpx;
   padding: 0;
 }
 .selected-team { box-shadow: 0 0 0 4rpx var(--bg), 0 0 0 8rpx var(--selection); }
-.selected-danger { box-shadow: 0 0 0 4rpx var(--bg), 0 0 0 8rpx var(--evil); }
+.selected-assassination { box-shadow: 0 0 0 4rpx var(--bg), 0 0 0 9rpx #FFD166, 0 0 18rpx rgba(255, 209, 102, .30); }
+.revealed-evil-ring { box-shadow: 0 0 0 4rpx var(--bg), 0 0 0 8rpx #C85C68, 0 0 14rpx rgba(200, 92, 104, .22); }
 .selected-lady { box-shadow: 0 0 0 4rpx var(--bg), 0 0 0 8rpx var(--gold); }
 .knowledge-icon {
   right: -5rpx;
@@ -155,6 +156,6 @@
 .formal.compact { width: 112rpx; }
 .formal.compact .seat-avatar { width: 84rpx; height: 84rpx; }
 .formal.compact .action-done-icon { right: -9rpx; }
-.formal.compact .leader-icon { width: 32rpx; height: 32rpx; }
+.formal.compact .leader-icon { width: 36rpx; height: 36rpx; font-size: 23rpx; }
 .formal.compact .knowledge-icon { width: 34rpx; height: 34rpx; }
 .formal.compact .seat-number { font-size: 24rpx; line-height: 32rpx; }

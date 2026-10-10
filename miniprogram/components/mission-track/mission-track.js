@@ -1,13 +1,14 @@
 Component({
   options: { styleIsolation: 'apply-shared' },
-  properties: { missions: Array, current: Number },
+  properties: { missions: Array, current: Number, teamSizes: Array },
   data: { dots: [] },
   observers: {
-    'missions,current': function (missions, current) {
+    'missions,current,teamSizes': function (missions, current, teamSizes) {
       this.setData({
         dots: [1, 2, 3, 4, 5].map((n) => {
-          const m = (missions || []).find((m) => m.missionNo === n);
+          const m = (missions || []).find((m) => m.missionNo === n && ['SUCCESS', 'FAILED'].includes(m.status));
           const status = m ? m.status : n === current ? 'CURRENT' : 'PENDING';
+          const required = (teamSizes || [])[n - 1];
           return {
             n,
             status,
@@ -17,9 +18,7 @@ Component({
                 ? '✓'
                 : status === 'FAILED'
                   ? '×'
-                  : status === 'CURRENT'
-                    ? n
-                    : '•',
+                  : Number.isInteger(required) && required >= 2 && required <= 5 ? required : '–',
           };
         }),
       });

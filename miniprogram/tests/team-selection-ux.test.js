@@ -102,7 +102,7 @@ test('ASSASSINATION remains single-target replacement and forbids targeting self
   click(3); assert.deepEqual(plain(page.data.selectedIds), [3]);
   click(1); assert.deepEqual(plain(page.data.selectedIds), [3]);
   assert.equal(page.data.assassinationTarget, 3);
-  assert.equal(page.data.displayPlayers.find(player => player.playerId === 3).selectionClass, 'selected-danger');
+  assert.equal(page.data.displayPlayers.find(player => player.playerId === 3).selectionClass, 'selected-assassination');
 });
 
 test('LADY_OF_LAKE remains eligible single-target replacement, not team selection', () => {
@@ -151,14 +151,14 @@ for (const size of [2,3,4,5]) {
   });
 }
 
-test('selection is one shared bright blue token while done assassination and Lady colors stay unchanged', () => {
+test('team selection stays blue, assassination is amber, while done and Lady colors stay unchanged', () => {
   const css = read('components/player-seat/player-seat.wxss');
   const rule = name => css.match(new RegExp(`\\.${name} \\{([^}]+)\\}`))[1];
   assert.match(read('app.wxss'), /--selection: #55c8ff;/);
   assert.match(rule('selected-team'), /var\(--selection\)/);
   assert.doesNotMatch(rule('selected-team'), /var\(--good\)/);
   assert.match(rule('action-done-icon'), /background: var\(--good\)/);
-  assert.match(rule('selected-danger'), /var\(--evil\)/);
+  assert.match(rule('selected-assassination'), /#FFD166/);
   assert.match(rule('selected-lady'), /var\(--gold\)/);
   assert.match(rule('leader-icon'), /var\(--gold\)/);
 });

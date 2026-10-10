@@ -41,6 +41,7 @@ function rules(n) {
     goodRoles: '梅林 · 派西维尔 · 忠臣 × ' + (good - 2),
     evilRoles: ['莫甘娜', '刺客'].concat(extra).join(' · '),
     teamText: TEAMS[n].join(' / '),
+    teamSizes: TEAMS[n].slice(),
     maxMissionSlots: Math.max(...TEAMS[n]),
     fourth: n >= 7 ? 2 : 1,
     lady: n === 10,
@@ -103,6 +104,22 @@ function revealedEvilMark(player) {
     ? { markType: 'ROLE', markText: ROLE_MARKS[player.roleCode][0], markClass: 'evil' }
     : { markType: '', markText: '', markClass: '' };
 }
+function assassinationPlayerState(game, player, myPlayerId) {
+  const assassination = !!game && game.phase === 'ASSASSINATION';
+  const revealedEvil = isRevealedEvil(game, player.playerId);
+  return {
+    revealedEvil,
+    unselectable: assassination && (revealedEvil || player.playerId === myPlayerId || game.assassin !== true),
+    dimmed: false,
+  };
+}
+function rejectionState(game) {
+  const max = game && Number.isInteger(game.maxRejections) && game.maxRejections > 0 && game.maxRejections <= 10
+    ? game.maxRejections : 0;
+  const count = game && Number.isInteger(game.consecutiveRejections)
+    ? Math.max(0, Math.min(max, game.consecutiveRejections)) : 0;
+  return { dots: Array.from({ length: max }, (_, i) => i < count), forced: max > 0 && count === max - 1 };
+}
 // Only private /my-role data enters here. Never infer identity from public players.
 function identityMark(player, viewerRole, self = false) {
   if (self && ROLE_MARKS[viewerRole]) {
@@ -143,14 +160,14 @@ function actionDone(game, player) {
   return false;
 }
 function seats(players, selected = [], leaderId, maxPlayers = players.length, phase = 'TEAM_BUILDING') {
-  const selectionClass = phase === 'ASSASSINATION' ? 'selected-danger'
+  const selectionClass = phase === 'ASSASSINATION' ? 'selected-assassination'
     : phase === 'LADY_OF_LAKE' ? 'selected-lady' : 'selected-team';
   return players.filter((p) => p.seatNo != null).map((p) => {
     return {
       ...privateKnowledge(p),
       initial: initial(p.nickname),
-      selected: selected.includes(p.playerId),
-      selectionClass: selected.includes(p.playerId) ? selectionClass : '',
+      selected: selected.includes(p.playerId) && !(phase === 'ASSASSINATION' && p.revealedEvil),
+      selectionClass: selected.includes(p.playerId) && !(phase === 'ASSASSINATION' && p.revealedEvil) ? selectionClass : '',
       leader: p.playerId === leaderId,
       position: seatPosition(p.seatNo, maxPlayers, true),
     };
@@ -306,6 +323,8 @@ module.exports = {
   canStartEarlyAssassination,
   revealedEvilIdentities,
   revealedEvilMark,
+  assassinationPlayerState,
+  rejectionState,
   isRevealedEvil,
   privateVisiblePlayer,
   actionDone,

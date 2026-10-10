@@ -9,7 +9,7 @@
   />
   <view wx:if="{{error}}" class="error" bindtap="refresh">{{error}}</view>
   <view wx:if="{{game && game.phase !== 'FINISHED'}}" class="game-status-row">
-    <mission-track wx:if="{{board}}" missions="{{timeline.missions}}" current="{{game.missionNo}}" bind:missiontap="openMissionDetail" />
+    <mission-track wx:if="{{board}}" missions="{{timeline.missions}}" current="{{game.missionNo}}" teamSizes="{{rule.teamSizes}}" bind:missiontap="openMissionDetail" />
     <text wx:else class="muted small">确认身份</text>
     <view class="room-quick-actions">
       <button wx:if="{{canEarlyAssassination}}" class="quick-action early-assassination-trigger" disabled="{{busy}}" bindtap="requestEarlyAssassination">提前刺杀</button>
@@ -148,10 +148,8 @@
   </block>
   <block wx:else>
     <view wx:if="{{game.phase === 'ASSASSINATION'}}" class="card">
-      <view class="evil">
-        {{game.assassin ? '轮到你选择刺杀目标' : '等待刺客选择目标'}}
-      </view>
-      <view class="muted small">{{game.assassinationEarly ? '提前刺杀 · 不可返回任务阶段' : '正义已完成 3 个任务 · 邪恶最后机会'}} · 邪恶身份已公开</view>
+      <view class="evil">最终刺杀</view>
+      <view class="muted small">刺中梅林，邪恶获胜；刺错则正义获胜</view>
     </view>
     <view
       wx:if="{{board}}"
@@ -171,7 +169,7 @@
           bind:select="togglePlayer"
         />
       </view>
-      <view class="card board-center">
+      <view class="card board-center {{rejection.forced && (game.phase === 'TEAM_BUILDING' || game.phase === 'TEAM_VOTING') ? 'forced-turn' : ''}}">
         <block wx:if="{{game.phase === 'TEAM_BUILDING'}}">
           <view class="gold">
             {{isLeader ? '请选择任务成员' : '队长正在选择任务成员'}}
@@ -182,7 +180,7 @@
         <block wx:elif="{{game.phase === 'TEAM_VOTING'}}">
           <view class="gold">是否同意这支队伍？</view>
           <view class="muted small">队伍：{{selectedText}}</view>
-          <view class="muted small">
+          <view wx:if="{{!rejection.forced}}" class="muted small">
             {{game.hasVoted ? '已投票，等待其他玩家' : '请投票'}}
           </view>
         </block>
@@ -192,11 +190,9 @@
         </block>
         <block wx:elif="{{game.phase === 'ASSASSINATION'}}">
           <view class="gold">
-            {{game.assassin ? '刺杀梅林' : '刺客正在寻找梅林'}}
+            {{game.assassin ? '请选择刺杀梅林' : '等待刺客选择梅林'}}
           </view>
-          <view wx:if="{{game.assassin}}" class="muted small">请选择你认为是梅林的玩家</view>
-          <view wx:if="{{game.assassin && targetName}}" class="evil small">已选择：{{selectedText}}号 {{targetName}}</view>
-          <view class="muted small">确认后不可更改</view>
+          <view wx:if="{{game.assassin && targetName}}" class="assassination-selection small">已选择：{{selectedText}}号 {{targetName}}</view>
         </block>
         <block wx:elif="{{game.phase === 'LADY_OF_LAKE'}}">
           <view class="gold">湖中仙女</view>
@@ -205,6 +201,15 @@
         <block wx:else>
           <view class="gold">第 {{game.missionNo}} 轮</view>
           <view class="muted small">保持交流，等待当前操作完成</view>
+        </block>
+        <block wx:if="{{game.phase === 'TEAM_BUILDING' || game.phase === 'TEAM_VOTING'}}">
+          <view wx:if="{{rejection.forced}}" class="forced-heading">⚠ 强制轮</view>
+          <view wx:if="{{rejection.forced}}" class="forced-description">本轮若再次否决，邪恶阵营直接获胜</view>
+          <view class="rejection-status" aria-label="连续否决 {{game.consecutiveRejections}} / {{game.maxRejections}}">
+            <text class="rejection-label">否决</text>
+            <view wx:for="{{rejection.dots}}" wx:for-item="rejected" wx:for-index="dotIndex" wx:key="dotIndex" class="rejection-dot {{rejected ? 'rejected' : ''}}" />
+          </view>
+          <view wx:if="{{game.phase === 'TEAM_VOTING' && rejection.forced}}" class="muted small">{{game.hasVoted ? '已投票，等待其他玩家' : '请投票'}}</view>
         </block>
       </view>
     </view>
@@ -284,13 +289,6 @@
       >
         {{game.assassin ? '确认刺杀' + targetName : '等待刺客行动'}}
       </button>
-      <view
-        wx:if="{{game.phase === 'TEAM_BUILDING' || game.phase === 'TEAM_VOTING'}}"
-        class="footer-note"
-      >
-        连续否决 {{game.consecutiveRejections}} / {{game.maxRejections}} ·
-        {{game.leaderNickname}} 为当前队长
-      </view>
     </view>
   </block>
   <mission-detail-overlay wx:if="{{missionDetail && !missionResultOpen}}" detail="{{missionDetail}}" bind:close="closeMissionDetail" />

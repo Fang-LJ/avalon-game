@@ -9,7 +9,7 @@ Component({
   },
   methods: {
     choose() {
-      if (!this.data.player.disabled)
+      if (!this.data.player.disabled && !this.data.player.unselectable)
         this.triggerEvent('select', {
           playerId: this.data.player.playerId,
           seatNo: this.data.player.seatNo,

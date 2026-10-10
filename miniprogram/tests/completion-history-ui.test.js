@@ -10,7 +10,7 @@ const read = file => fs.readFileSync(path.join(root,file),'utf8');
 const plain = value => JSON.parse(JSON.stringify(value));
 const roomMarkup = read('pages/room/room.wxml');
 // Extract the center blocks, not the independent footer controls.
-const boardMarkup = roomMarkup.split('class="card board-center">')[1].split('</view>\n    </view>')[0];
+const boardMarkup = roomMarkup.split(/class="card board-center[^\n]*>/)[1].split('</view>\n    </view>')[0];
 const centerPhase = phase => boardMarkup.split(`game.phase === '${phase}'`)[1].split('</block>')[0];
 function logComponent() {
   let definition;

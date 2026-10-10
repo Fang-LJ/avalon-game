@@ -20,7 +20,7 @@
 
 在 app.wxss 增加唯一公共颜色变量 `--selection: #55c8ff`。
 selected-team 外圈使用该亮蓝色；action-done-icon 保持 var(--good)，
-刺杀外圈保持 var(--evil)，Lady 外圈和队长皇冠保持 var(--gold)。
+刺杀目标外圈为 #FFD166，已公开邪恶的固定外圈为 #C85C68；Lady 外圈和队长皇冠保持 var(--gold)。
 没有修改 ✓ 的判断、位置、私有身份标记或角色规则。
 
 ## 按点击顺序替换最后一个队员
