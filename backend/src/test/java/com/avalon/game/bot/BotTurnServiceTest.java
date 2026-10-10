@@ -73,6 +73,20 @@ class BotTurnServiceTest {
         phase(Phase.ASSASSINATION); when(strategy.target(List.of(1L,3L))).thenReturn(3L);
         service.act(50); verify(games).assassinate(102,50,3);
     }
+    @Test void botAssassinExcludesEveryRevealedEvilRoleButDoesNotPreferMerlin() {
+        phase(Phase.ASSASSINATION);
+        when(repository.players(50)).thenReturn(List.of(player(1,101,Role.MERLIN,true), player(2,102,Role.ASSASSIN,true),
+                player(3,103,Role.LOYAL_SERVANT,true), player(4,104,Role.MORGANA,true),
+                player(5,105,Role.MINION,true), player(6,106,Role.MORDRED,true), player(7,107,Role.OBERON,true)));
+        when(strategy.target(List.of(1L,3L))).thenReturn(3L);
+        service.act(50);
+        verify(strategy).target(List.of(1L,3L)); verify(games).assassinate(102,50,3);
+    }
+    @ParameterizedTest @ValueSource(strings={"TEAM_BUILDING","TEAM_VOTING","MISSION_EXECUTING","LADY_OF_LAKE"})
+    void botsNeverStartEarlyAssassination(String value) {
+        phase(Phase.valueOf(value)); service.act(50);
+        verify(games,never()).startAssassination(anyLong(),anyLong());
+    }
     @ParameterizedTest @ValueSource(strings={"WAITING","FINISHED","CLOSED"})
     void noAutomatedActionOutsidePlaying(String status) {
         when(repository.game(50,true)).thenReturn(Optional.of(new GameRow(50,"123456",101,5,"AVALON_V1",status,

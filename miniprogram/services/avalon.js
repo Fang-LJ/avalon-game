@@ -66,6 +66,8 @@ module.exports = {
       method: 'POST',
       data: { targetPlayerId },
     }),
+  startAssassination: (id) =>
+    request({ url: `/api/avalon/game/${id}/assassination/start`, method: 'POST' }),
   assassinate: (id, targetPlayerId) =>
     request({
       url: `/api/avalon/game/${id}/assassinate`,

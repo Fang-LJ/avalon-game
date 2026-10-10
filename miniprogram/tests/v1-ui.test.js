@@ -314,7 +314,7 @@ test('assassination requires explicit confirmation', async () => {
     },
   );
   page.setData({
-    game: { gameId: 1 },
+    game: { gameId: 1, phase: 'ASSASSINATION', assassin: true },
     assassinationTarget: 2,
     targetName: '玩家二',
   });

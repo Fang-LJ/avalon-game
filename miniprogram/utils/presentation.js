@@ -14,6 +14,8 @@ const FINISH = {
   THREE_FAILED_MISSIONS: '三个任务失败',
   MERLIN_ASSASSINATED: '刺客刺中梅林',
   ASSASSINATION_MISSED: '刺客刺杀失败 · 梅林存活',
+  EARLY_MERLIN_ASSASSINATED: '提前刺杀命中梅林 · 邪恶获胜',
+  EARLY_ASSASSINATION_MISSED: '提前刺杀失败 · 正义获胜',
 };
 const TEAMS = {
   5: [2, 3, 2, 3, 3],
@@ -84,6 +86,23 @@ const ROLE_MARKS = Object.freeze({
   MORDRED: ['莫', 'evil'], OBERON: ['奥', 'evil'],
 });
 const ORDINARY_EVIL = ['MORGANA', 'ASSASSIN', 'MINION', 'MORDRED'];
+const EARLY_ASSASSINATION_PHASES = ['TEAM_BUILDING', 'TEAM_VOTING', 'MISSION_EXECUTING', 'LADY_OF_LAKE'];
+function canStartEarlyAssassination(game, role) {
+  return !!(game && role && role.roleCode === 'ASSASSIN' && EARLY_ASSASSINATION_PHASES.includes(game.phase));
+}
+function revealedEvilIdentities(game) {
+  // Phase and role whitelist: never turn a GOOD identity into a public UI mark.
+  return game && game.phase === 'ASSASSINATION'
+    ? (game.revealedEvilIdentities || []).filter(p => [...ORDINARY_EVIL, 'OBERON'].includes(p.roleCode)) : [];
+}
+function isRevealedEvil(game, playerId) {
+  return revealedEvilIdentities(game).some(p => p.playerId === playerId);
+}
+function revealedEvilMark(player) {
+  return [...ORDINARY_EVIL, 'OBERON'].includes(player.roleCode)
+    ? { markType: 'ROLE', markText: ROLE_MARKS[player.roleCode][0], markClass: 'evil' }
+    : { markType: '', markText: '', markClass: '' };
+}
 // Only private /my-role data enters here. Never infer identity from public players.
 function identityMark(player, viewerRole, self = false) {
   if (self && ROLE_MARKS[viewerRole]) {
@@ -262,7 +281,7 @@ function showRules() {
   wx.showModal({
     title: '规则与角色说明',
     content:
-      '5–10 人 · 后端自动裁定。队长选人，全员严格过半通过后执行任务；正义只能出成功，邪恶可出成功或失败。三个失败或连续五次否决：邪恶获胜。三个成功后刺客刺杀梅林决定胜负。7 人以上第 4 任务需 2 张失败票。仅 10 人局在第 2/3/4 任务后使用湖中仙女。梅林看不到莫德雷德；派西维尔看到梅林/莫甘娜；奥伯伦与邪恶同伴互不可见。',
+      '5–10 人 · 后端自动裁定。队长选人，全员严格过半通过后执行任务；正义只能出成功，邪恶可出成功或失败。三个失败或连续五次否决：邪恶获胜。三个成功后刺杀梅林决定胜负；刺客也可提前发动刺杀。进入刺杀后所有邪恶身份公开，不能返回任务，刺中梅林邪恶胜，否则正义胜。7 人以上第 4 任务需 2 张失败票。仅 10 人局在第 2/3/4 任务后使用湖中仙女。梅林看不到莫德雷德；派西维尔看到梅林/莫甘娜；刺杀前奥伯伦与邪恶同伴互不可见。',
     showCancel: false,
   });
 }
@@ -270,7 +289,7 @@ function showLegal() {
   wx.showModal({
     title: '用户协议与隐私说明',
     content:
-      '本应用使用微信登录标识识别账号，保存昵称和对局记录。进行中的角色、任务出票及湖中仙女结果仅按游戏规则私密展示；对局结束后，本局参与者可查看包含个人出票的完整复盘。正式上线前请以运营方公布的用户协议及微信隐私保护指引为准。',
+      '本应用使用微信登录标识识别账号，保存昵称和对局记录。角色、任务出票及湖中仙女结果按游戏规则展示：进入刺杀时仅公开邪恶身份，正义身份仍保密；对局结束后，本局参与者可查看包含个人出票的完整复盘。正式上线前请以运营方公布的用户协议及微信隐私保护指引为准。',
     showCancel: false,
   });
 }
@@ -284,6 +303,10 @@ module.exports = {
   seatPosition,
   privateKnowledge,
   identityMark,
+  canStartEarlyAssassination,
+  revealedEvilIdentities,
+  revealedEvilMark,
+  isRevealedEvil,
   privateVisiblePlayer,
   actionDone,
   seats,

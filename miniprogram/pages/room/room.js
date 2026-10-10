@@ -43,6 +43,7 @@ Page({
     missionFailCard: CARDS.actions.FAIL,
     missionCardBack: CARDS.back.ACTION,
     isLeader: false,
+    canEarlyAssassination: false,
     phaseTitle: '',
     busy: false,
     error: '',
@@ -257,6 +258,8 @@ Page({
       finishedIdentities: game.phase === 'FINISHED' ? ui.finishedIdentities(game.identities) : [],
       finishedGroups: game.phase === 'FINISHED' ? ui.finishedGroups(game.identities, game.winner) : [],
       missionDetail: ['ROLE_CONFIRM', 'FINISHED'].includes(game.phase) ? null : this.data.missionDetail,
+      ...(newPhase && game.phase === 'ASSASSINATION'
+        ? { roleOverlay: false, ladyResult: null, ladyResultGameId: null, missionDetail: null } : {}),
       // Keep the existing result reveal authoritative and atomic with the advanced server phase.
       ...this.missionResultUpdate(game),
     };
@@ -269,6 +272,7 @@ Page({
     this.stateEpoch = (this.stateEpoch || 0) + 1;
     const phases = Object.keys(PHASES);
     const older = current.phase === 'FINISHED' && result.phase !== 'FINISHED' ||
+      current.phase === 'ASSASSINATION' && !['ASSASSINATION', 'FINISHED'].includes(result.phase) ||
       result.phase !== 'FINISHED' && (result.missionNo < current.missionNo ||
         result.missionNo === current.missionNo && (result.proposalNo < current.proposalNo ||
           result.proposalNo === current.proposalNo && phases.indexOf(result.phase) < phases.indexOf(current.phase)));
@@ -348,11 +352,12 @@ Page({
         standingPlayers: room.players.filter((player) => !player.seated),
         botPlayers: room.players.filter((player) => player.isBot),
         board: false,
+        canEarlyAssassination: false,
       });
       return;
     }
     const privateByPlayer = Object.fromEntries(
-      ((role && role.visiblePlayers) || []).map((player) => [
+      (game.phase === 'ASSASSINATION' ? [] : ((role && role.visiblePlayers) || [])).map((player) => [
         player.playerId,
         {
           knowledgeType: !role.roleCode || ui.identityMark(player, role.roleCode).markType ? player.knowledgeType : undefined,
@@ -361,10 +366,14 @@ Page({
         },
       ]),
     );
+    const revealedByPlayer = Object.fromEntries(ui.revealedEvilIdentities(game)
+      .map(player => [player.playerId, ui.revealedEvilMark(player)]));
     const privatePlayers = room.players.map((player) => ({
       ...player,
+      markType: '', markText: '', markClass: '',
       ...(privateByPlayer[player.playerId] || {}),
       ...(role && player.playerId === room.myPlayerId ? ui.identityMark({}, role.roleCode, true) : {}),
+      ...(revealedByPlayer[player.playerId] || {}),
       actionDone: ui.actionDone(game, player),
     }));
     const players = ui
@@ -377,7 +386,8 @@ Page({
       )
       .map((p) => ({
         ...p,
-        disabled: !!(
+        disabled: game.phase === 'ASSASSINATION'
+          ? p.playerId === room.myPlayerId || ui.isRevealedEvil(game, p.playerId) : !!(
           game &&
           game.phase === 'LADY_OF_LAKE' &&
           game.ladyHolder &&
@@ -393,6 +403,7 @@ Page({
       selectedText: selected.map((p) => p.seatNo).join(' · '),
       targetName: selected.map((p) => p.nickname).join('、'),
       board,
+      canEarlyAssassination: ui.canStartEarlyAssassination(game, role),
       voteResult: vote
         ? {
             ...vote,
@@ -452,7 +463,8 @@ Page({
     } else if (
       game.phase === 'ASSASSINATION' &&
       game.assassin &&
-      id !== this.data.room.myPlayerId
+      id !== this.data.room.myPlayerId &&
+      !ui.isRevealedEvil(game, id)
     )
       this.setData({ assassinationTarget: id, selectedIds: [id] });
     else if (
@@ -483,6 +495,30 @@ Page({
   },
   startGame() {
     return this.run(() => api.start(this.data.roomId));
+  },
+  requestEarlyAssassination() {
+    const { game, role, roomId, busy } = this.data;
+    if (busy || this.earlyAssassinationDialog || !ui.canStartEarlyAssassination(game, role)) return;
+    this.earlyAssassinationDialog = true;
+    let handled = false;
+    wx.showModal({
+      title: '发动提前刺杀？',
+      content: '所有邪恶玩家的具体身份将向全员公开。发动后不可撤销，不能回到任务阶段。刺中梅林：邪恶获胜；刺杀失败：正义获胜。',
+      confirmText: '发动刺杀', confirmColor: '#c95d68',
+      success: result => {
+        if (handled) return;
+        handled = true;
+        this.earlyAssassinationDialog = false;
+        if (!result.confirm || this.data.roomId !== roomId || !this.data.game ||
+            this.data.game.gameId !== game.gameId || !ui.canStartEarlyAssassination(this.data.game, this.data.role)) return;
+        this.runGameMutation(() => {
+          // Pending GET / socket updates can invalidate a confirmation before its POST.
+          if (this.data.roomId === roomId && this.data.game && this.data.game.gameId === game.gameId &&
+              ui.canStartEarlyAssassination(this.data.game, this.data.role)) return api.startAssassination(game.gameId);
+        }, { waitForCurrent: true });
+      },
+      fail: () => { this.earlyAssassinationDialog = false; },
+    });
   },
   addBot() {
     const { room, game, busy } = this.data;
@@ -659,7 +695,10 @@ Page({
   },
   ignoreTap() {},
   assassinate() {
-    if (!this.data.assassinationTarget || this.data.busy) return;
+    const game = this.data.game;
+    if (!game || game.phase !== 'ASSASSINATION' || !game.assassin ||
+        !this.data.assassinationTarget || this.data.busy ||
+        ui.isRevealedEvil(game, this.data.assassinationTarget)) return;
     const id = this.data.assassinationTarget,
       gameId = this.data.game.gameId;
     wx.showModal({
@@ -667,7 +706,11 @@ Page({
       content: `确定刺杀「${this.data.targetName}」？提交后不可更改。`,
       confirmText: '确认刺杀',
       success: (r) => {
-        if (r.confirm) this.run(() => api.assassinate(gameId, id));
+        if (r.confirm) this.run(() => {
+          const current = this.data.game;
+          if (current && current.gameId === gameId && current.phase === 'ASSASSINATION' &&
+              current.assassin && !ui.isRevealedEvil(current, id)) return api.assassinate(gameId, id);
+        });
       },
     });
   },

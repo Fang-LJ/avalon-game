@@ -67,7 +67,7 @@ public class GameService {
             case PERCIVAL -> "你看到的是梅林与莫甘娜，但无法分辨他们。";
             case LOYAL_SERVANT -> "找出邪恶阵营，并让三个任务成功。";
             case MORGANA -> "伪装成梅林，误导派西维尔。";
-            case ASSASSIN -> "阻止任务；若正义完成三个任务，找出并刺杀梅林。";
+            case ASSASSIN -> "找出并刺杀梅林；可提前发动刺杀，但所有邪恶身份将公开，且无法回到任务阶段。";
             case MINION -> "与邪恶同伴合作，让三个任务失败。";
             case MORDRED -> "梅林看不到你；与邪恶同伴合作让三个任务失败。";
             case OBERON -> "你属于邪恶阵营，但你与其他邪恶玩家互不可见。";
@@ -207,6 +207,20 @@ public class GameService {
     }
 
     @Transactional
+    public GameState startAssassination(long userId, long gameId) {
+        // Same game-row lock as votes, missions and Lady: revalidate after acquiring it.
+        Context c = context(userId, gameId, true);
+        if (!"PLAYING".equals(c.game.status())) throw new BusinessException("INVALID_PHASE", "当前对局不能发动提前刺杀");
+        if (c.player.role() != Role.ASSASSIN) throw new BusinessException("FORBIDDEN", "只有刺客可以发动提前刺杀");
+        if (!EnumSet.of(Phase.TEAM_BUILDING, Phase.TEAM_VOTING, Phase.MISSION_EXECUTING, Phase.LADY_OF_LAKE).contains(c.game.phase()))
+            throw new BusinessException("INVALID_PHASE", "当前阶段不能发动提前刺杀");
+        // Do not resolve or discard an unfinished proposal, mission or private Lady result.
+        repository.setPhase(gameId, Phase.ASSASSINATION);
+        events.publish(gameId, "ASSASSINATION_STARTED");
+        return state(userId, gameId);
+    }
+
+    @Transactional
     public GameState assassinate(long userId, long gameId, long targetPlayerId) {
         Context c = context(userId, gameId, true);
         GameActionPolicy.requirePhase(c.game.phase(), Phase.ASSASSINATION);
@@ -214,8 +228,13 @@ public class GameService {
         if (targetPlayerId == c.player.id()) throw new BusinessException("PARAM_ERROR", "不能刺杀自己");
         GamePlayerRow target = repository.gamePlayer(gameId, targetPlayerId)
                 .orElseThrow(() -> new BusinessException("PARAM_ERROR", "目标玩家不在当前房间"));
+        if (target.alignment() != Alignment.GOOD) throw new BusinessException("PARAM_ERROR", "只能选择正义阵营玩家作为刺杀目标");
         Winner winner = GameRulesEngine.assassinationWinner(target.role());
-        repository.finish(gameId, winner, target.role() == Role.MERLIN ? "MERLIN_ASSASSINATED" : "ASSASSINATION_MISSED", target.id());
+        boolean early = c.game.goodScore() < 3;
+        String reason = target.role() == Role.MERLIN
+                ? (early ? "EARLY_MERLIN_ASSASSINATED" : "MERLIN_ASSASSINATED")
+                : (early ? "EARLY_ASSASSINATION_MISSED" : "ASSASSINATION_MISSED");
+        repository.finish(gameId, winner, reason, target.id());
         events.publish(gameId, "GAME_FINISHED");
         return state(userId, gameId);
     }
@@ -284,6 +303,10 @@ public class GameService {
                 .map(gp -> new PublicIdentity(gp.id(), Objects.requireNonNull(gp.seatNo()), gp.nickname(), gp.avatarUrl(),
                         gp.role().name(), gp.role().label(), gp.alignment().name(), gp.isBot()))
                 .sorted(Comparator.comparingInt(PublicIdentity::seatNo)).toList() : List.of();
+        List<RevealedIdentity> revealedEvilIdentities = c.game.phase() == Phase.ASSASSINATION ? players.stream()
+                .filter(p -> p.alignment() == Alignment.EVIL && p.role() != null && p.role().alignment() == Alignment.EVIL)
+                .map(p -> new RevealedIdentity(p.id(), requireSeat(p), p.nickname(), p.role().name(), p.role().label()))
+                .sorted(Comparator.comparingInt(RevealedIdentity::seatNo)).toList() : List.of();
         MissionResult result = latestMission == null ? null : new MissionResult(latestMission.missionNo(),
                 latestMission.successCount(), latestMission.failCount(), latestMission.status());
         GamePlayerRow ladyHolder = c.game.ladyHolderGamePlayerId() == null ? null
@@ -305,7 +328,8 @@ public class GameService {
                 c.player.role() == Role.ASSASSIN, result, config.ladyOfLake(), c.game.ladyHolderGamePlayerId(),
                 ladyHolder == null ? null : requireSeat(ladyHolder), ladyHolder == null ? null : ladyHolder.nickname(),
                 isLadyHolder, ladyUsedCount, ladyEligibleTargetIds,
-                c.game.winner() == null ? null : c.game.winner().name(), identities, c.game.finishReason());
+                c.game.winner() == null ? null : c.game.winner().name(), identities, c.game.finishReason(),
+                revealedEvilIdentities, c.game.phase() == Phase.ASSASSINATION && c.game.goodScore() < 3);
     }
 
     private Context context(long userId, long gameId, boolean lock) {
@@ -347,6 +371,7 @@ public class GameService {
     public record TeamVoteResult(int missionNo, int proposalNo, boolean approved, List<VoteView> votes) {}
     public record PublicIdentity(long playerId, int seatNo, String nickname, String avatarUrl,
                                  String roleCode, String roleName, String alignment, boolean isBot) {}
+    public record RevealedIdentity(long playerId, int seatNo, String nickname, String roleCode, String roleName) {}
     public record LadyInspectionResult(long targetPlayerId, int targetSeatNo, String targetNickname, String alignment) {}
     public record GameState(long gameId, long roomId, String phase, int missionNo, int proposalNo,
                             int consecutiveRejections, int goodScore, int evilScore, long leaderPlayerId,
@@ -358,7 +383,7 @@ public class GameService {
                             MissionResult latestMissionResult, boolean ladyEnabled, Long ladyHolderPlayerId,
                             Integer ladyHolderSeatNo, String ladyHolderNickname, boolean ladyHolder,
                             int ladyUsedCount, List<Long> ladyEligibleTargetIds, String winner, List<PublicIdentity> identities,
-                            String finishReason) {}
+                            String finishReason, List<RevealedIdentity> revealedEvilIdentities, boolean assassinationEarly) {}
     public record TeamRequest(List<Long> playerIds) {}
     public record VoteRequest(VoteChoice choice) {}
     public record MissionRequest(MissionChoice choice) {}

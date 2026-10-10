@@ -4,6 +4,7 @@ import com.avalon.game.game.AvalonRepository;
 import com.avalon.game.game.AvalonRepository.*;
 import com.avalon.game.game.GameRuleConfig;
 import com.avalon.game.game.GameService;
+import com.avalon.game.game.GameTypes.Alignment;
 import com.avalon.game.game.GameTypes.Role;
 import com.avalon.game.realtime.RoomEventPublisher;
 import org.springframework.stereotype.Service;
@@ -55,7 +56,8 @@ public class BotTurnService {
                     });
             case ASSASSINATION -> bots.stream().filter(p -> p.role() == Role.ASSASSIN).findFirst()
                     .ifPresent(bot -> games.assassinate(bot.userId(), gameId,
-                            strategy.target(players.stream().filter(p -> p.id() != bot.id()).map(GamePlayerRow::id).toList())));
+                            strategy.target(players.stream().filter(p -> p.alignment() == Alignment.GOOD)
+                                    .map(GamePlayerRow::id).toList())));
             default -> { /* FINISHED and legacy phases have no automated action. */ }
         }
     }

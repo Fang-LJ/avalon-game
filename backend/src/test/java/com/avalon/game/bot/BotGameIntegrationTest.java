@@ -150,7 +150,7 @@ class BotGameIntegrationTest {
                             .filter(p -> p.id()!=me.id() && !repository.ladyHolderHistory(id).contains(p.id())).findFirst().orElseThrow().id());
                 }
                 case ASSASSINATION -> {
-                    if (me.role()==Role.ASSASSIN) games.assassinate(host,id,players.stream().filter(p -> p.id()!=me.id()).findFirst().orElseThrow().id());
+                    if (me.role()==Role.ASSASSIN) games.assassinate(host,id,players.stream().filter(p -> p.alignment()==Alignment.GOOD).findFirst().orElseThrow().id());
                 }
                 default -> fail("Unexpected phase " + game.phase());
             }
@@ -318,6 +318,138 @@ class BotGameIntegrationTest {
         assertEquals(Phase.TEAM_VOTING,repository.game(real,false).orElseThrow().phase());
         assertEquals(1,repository.voteCount(proposal)); assertEquals(5,repository.players(real).size());
         assertTrue(repository.user(host).isPresent()); assertTrue(repository.user(outsider).isPresent());
+    }
+    long humanGameWithKnownRoles() {
+        long id = rooms.create(host,10,null).roomId();
+        for (int i=0;i<9;i++) rooms.join(repository.insertUser("WECHAT","early-friend"+i,"朋友"+i),rooms.get(host,id).roomCode(),null);
+        games.start(host,id);
+        var players = repository.players(id);
+        var roles = GameRuleConfig.forPlayers(10).roles();
+        for (int i=0;i<10;i++) repository.assignRole(id,players.get(i).id(),roles.get(i));
+        for (var player:players) games.confirmRole(player.userId(),id);
+        return id;
+    }
+    @ParameterizedTest @ValueSource(strings={"TEAM_VOTING","MISSION_EXECUTING","LADY_OF_LAKE"})
+    void queuedVoteMissionOrLadyCannotWriteAfterEarlyAssassinationCommits(String value) throws Exception {
+        long id = humanGameWithKnownRoles();
+        var players = repository.players(id);
+        var assassin = players.stream().filter(p -> p.role()==Role.ASSASSIN).findFirst().orElseThrow();
+        var leader = repository.gamePlayerById(repository.game(id,false).orElseThrow().leaderGamePlayerId()).orElseThrow();
+        games.submitTeam(leader.userId(),id,players.stream().limit(3).map(GamePlayerRow::id).toList());
+        if (!value.equals("TEAM_VOTING")) for (var p:players) games.vote(p.userId(),id,VoteChoice.APPROVE);
+        if (value.equals("LADY_OF_LAKE")) repository.applyMissionScore(id,2,0,Phase.LADY_OF_LAKE);
+        var before = repository.game(id,false).orElseThrow();
+        var proposals = repository.proposals(id);
+        var missions = repository.missions(id);
+        int votes = jdbc.queryForObject("select count(*) from t_avalon_vote",Integer.class);
+        var events = new java.util.concurrent.CopyOnWriteArrayList<RoomEventPublisher.RoomEvent>();
+        context.addApplicationListener(event -> {
+            if (event instanceof org.springframework.context.PayloadApplicationEvent<?> payload &&
+                    payload.getPayload() instanceof RoomEventPublisher.RoomEvent roomEvent) events.add(roomEvent);
+        });
+        var executor = java.util.concurrent.Executors.newSingleThreadExecutor();
+        var started = new java.util.concurrent.CountDownLatch(1);
+        var pending = new java.util.concurrent.atomic.AtomicReference<java.util.concurrent.Future<String>>();
+        var transaction = new org.springframework.transaction.support.TransactionTemplate(context.getBean(DataSourceTransactionManager.class));
+        try {
+            transaction.executeWithoutResult(status -> {
+                repository.game(id,true).orElseThrow();
+                pending.set(executor.submit(() -> {
+                    started.countDown();
+                    try {
+                        switch (value) {
+                            case "TEAM_VOTING" -> games.vote(host,id,VoteChoice.REJECT);
+                            case "MISSION_EXECUTING" -> games.mission(players.getFirst().userId(),id,MissionChoice.SUCCESS);
+                            default -> games.inspectWithLady(repository.gamePlayerById(before.ladyHolderGamePlayerId()).orElseThrow().userId(),id,players.getFirst().id());
+                        }
+                        return "unexpected-success";
+                    } catch (BusinessException expected) { return expected.getCode(); }
+                }));
+                try {
+                    assertTrue(started.await(5,java.util.concurrent.TimeUnit.SECONDS));
+                    assertThrows(java.util.concurrent.TimeoutException.class,() -> pending.get().get(100,java.util.concurrent.TimeUnit.MILLISECONDS));
+                } catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new RuntimeException(e); }
+                var state = games.startAssassination(assassin.userId(),id);
+                assertEquals("ASSASSINATION",state.phase()); assertTrue(state.assassinationEarly());
+                assertEquals(4,state.revealedEvilIdentities().size()); // Includes Mordred and Oberon in 10 players.
+                assertTrue(events.isEmpty(),"WebSocket invalidation must wait for commit");
+            });
+            assertEquals("INVALID_PHASE",pending.get().get(5,java.util.concurrent.TimeUnit.SECONDS));
+            assertEquals(List.of("ASSASSINATION_STARTED"),events.stream().map(RoomEventPublisher.RoomEvent::type).toList());
+            var after = repository.game(id,false).orElseThrow();
+            assertEquals(Phase.ASSASSINATION,after.phase());
+            assertEquals(before.goodScore(),after.goodScore()); assertEquals(before.evilScore(),after.evilScore());
+            assertEquals(before.missionNo(),after.missionNo()); assertEquals(before.proposalNo(),after.proposalNo());
+            assertEquals(proposals,repository.proposals(id)); assertEquals(missions,repository.missions(id));
+            assertEquals(votes,jdbc.queryForObject("select count(*) from t_avalon_vote",Integer.class));
+            assertEquals(0,jdbc.queryForObject("select count(*) from t_avalon_mission_action",Integer.class));
+            assertEquals(0,repository.ladyActionCount(id));
+        } finally { executor.shutdownNow(); }
+    }
+    @Test void thirdSuccessWinningLockMakesQueuedEarlyStartFailWithoutChangingNormalFinishReason() throws Exception {
+        long id = humanGameWithKnownRoles();
+        var players = repository.players(id);
+        var assassin = players.stream().filter(p -> p.role()==Role.ASSASSIN).findFirst().orElseThrow();
+        var good = players.stream().filter(p -> p.alignment()==Alignment.GOOD).limit(3).toList();
+        var leader = repository.gamePlayerById(repository.game(id,false).orElseThrow().leaderGamePlayerId()).orElseThrow();
+        games.submitTeam(leader.userId(),id,good.stream().map(GamePlayerRow::id).toList());
+        for(var p:players) games.vote(p.userId(),id,VoteChoice.APPROVE);
+        repository.applyMissionScore(id,2,0,Phase.MISSION_EXECUTING); // Task 1: no Lady before normal assassination.
+        games.mission(good.get(0).userId(),id,MissionChoice.SUCCESS);
+        games.mission(good.get(1).userId(),id,MissionChoice.SUCCESS);
+        var executor = java.util.concurrent.Executors.newSingleThreadExecutor();
+        var started = new java.util.concurrent.CountDownLatch(1);
+        var pending = new java.util.concurrent.atomic.AtomicReference<java.util.concurrent.Future<String>>();
+        var transaction = new org.springframework.transaction.support.TransactionTemplate(context.getBean(DataSourceTransactionManager.class));
+        try {
+            transaction.executeWithoutResult(status -> {
+                repository.game(id,true).orElseThrow();
+                pending.set(executor.submit(() -> {
+                    started.countDown();
+                    try { games.startAssassination(assassin.userId(),id); return "unexpected-success"; }
+                    catch(BusinessException expected) { return expected.getCode(); }
+                }));
+                try { assertTrue(started.await(5,java.util.concurrent.TimeUnit.SECONDS)); }
+                catch(InterruptedException e) { Thread.currentThread().interrupt(); throw new RuntimeException(e); }
+                games.mission(good.get(2).userId(),id,MissionChoice.SUCCESS);
+            });
+            assertEquals("INVALID_PHASE",pending.get().get(5,java.util.concurrent.TimeUnit.SECONDS));
+            var state = games.state(assassin.userId(),id);
+            assertEquals("ASSASSINATION",state.phase()); assertFalse(state.assassinationEarly());
+            assertEquals(3,state.goodScore()); assertEquals(4,state.revealedEvilIdentities().size());
+            games.assassinate(assassin.userId(),id,good.stream().filter(p -> p.role()==Role.MERLIN).findFirst().orElseThrow().id());
+            assertEquals("MERLIN_ASSASSINATED",repository.game(id,false).orElseThrow().finishReason());
+        } finally { executor.shutdownNow(); }
+    }
+    @ParameterizedTest @ValueSource(strings={"MERLIN","PERCIVAL","LOYAL_SERVANT"})
+    void earlyAssassinationFinishesActualGameAndKeepsInterruptedVotingUnresolved(String targetRole) {
+        long id=humanGameWithKnownRoles();
+        var players=repository.players(id);
+        var assassin=players.stream().filter(p->p.role()==Role.ASSASSIN).findFirst().orElseThrow();
+        var target=players.stream().filter(p->p.role()==Role.valueOf(targetRole)).findFirst().orElseThrow();
+        var leader=repository.gamePlayerById(repository.game(id,false).orElseThrow().leaderGamePlayerId()).orElseThrow();
+        games.submitTeam(leader.userId(),id,players.stream().limit(3).map(GamePlayerRow::id).toList());
+        games.vote(host,id,VoteChoice.APPROVE);
+        repository.applyMissionScore(id,1,0,Phase.TEAM_VOTING);
+        var proposal=repository.proposals(id).getFirst();
+        games.startAssassination(assassin.userId(),id);
+        assertEquals("PARAM_ERROR",assertThrows(BusinessException.class,
+                ()->games.assassinate(assassin.userId(),id,players.stream().filter(p->p.role()==Role.OBERON).findFirst().orElseThrow().id())).getCode());
+        games.assassinate(assassin.userId(),id,target.id());
+        var finished=repository.game(id,false).orElseThrow();
+        assertEquals(Phase.FINISHED,finished.phase());
+        assertEquals(target.role()==Role.MERLIN?Winner.EVIL:Winner.GOOD,finished.winner());
+        assertEquals(target.role()==Role.MERLIN?"EARLY_MERLIN_ASSASSINATED":"EARLY_ASSASSINATION_MISSED",finished.finishReason());
+        assertEquals(target.id(),finished.assassinationTargetGamePlayerId());
+        assertEquals(1,finished.goodScore()); assertEquals(0,finished.evilScore());
+        assertEquals(proposal,repository.proposals(id).getFirst()); assertEquals(1,repository.voteCount(proposal.id()));
+        assertEquals(0,repository.missions(id).size()); // No invented result for interrupted vote.
+        var state=games.state(host,id);
+        assertEquals(10,state.identities().size()); assertTrue(state.revealedEvilIdentities().isEmpty());
+        var replay=context.getBean(GameHistoryService.class).replay(host,id);
+        assertEquals(finished.finishReason(),replay.finishReason()); assertEquals("VOTING",replay.proposals().getFirst().status());
+        assertThrows(BusinessException.class,()->games.startAssassination(assassin.userId(),id));
+        assertThrows(BusinessException.class,()->games.assassinate(assassin.userId(),id,target.id()));
     }
     @Configuration @EnableTransactionManagement
     static class Config {
