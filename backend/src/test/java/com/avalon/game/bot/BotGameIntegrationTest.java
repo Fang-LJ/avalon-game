@@ -69,6 +69,97 @@ class BotGameIntegrationTest {
         for (int n = 1; n < count; n++) rooms.addBot(host, id);
         return id;
     }
+    @ParameterizedTest @ValueSource(ints = {7,10})
+    void actualBotGameRevealsOberonToEveryViewerThroughAuthenticatedApi(int count) throws Exception {
+        // Real shuffled dealing, JDBC and transactions: do not manufacture an ASSASSINATION state.
+        long id = lobby(count);
+        var properties = new com.avalon.game.auth.JwtProperties();
+        properties.setSecret("isolated-integration-test-signing-key-not-a-production-secret");
+        var jwt = new com.avalon.game.auth.JwtService(properties);
+        var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(
+                new GameController(games), new com.avalon.game.room.RoomController(rooms),
+                new GameHistoryController(context.getBean(GameHistoryService.class)))
+                .setControllerAdvice(new com.avalon.game.common.GlobalExceptionHandler())
+                .addInterceptors(new com.avalon.game.auth.AuthInterceptor(jwt)).build();
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/avalon/game/start")
+                .param("roomId", Long.toString(id)).header("Authorization", "Bearer " + jwt.create(host)))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
+        var players = repository.players(id);
+        assertEquals(GameRuleConfig.forPlayers(count).roles().stream().sorted().toList(),
+                players.stream().map(GamePlayerRow::role).sorted().toList());
+        var assassin = players.stream().filter(p -> p.role() == Role.ASSASSIN).findFirst().orElseThrow();
+        var oberon = players.stream().filter(p -> p.role() == Role.OBERON).findFirst().orElseThrow();
+        var morgana = players.stream().filter(p -> p.role() == Role.MORGANA).findFirst().orElseThrow();
+        games.confirmRole(host, id);
+        for (int tick = 1; tick < count; tick++) bots.act(id);
+        assertEquals(Phase.TEAM_BUILDING, repository.game(id, false).orElseThrow().phase());
+        assertEquals(List.of(), games.myRole(oberon.userId(), id).visiblePlayers());
+        assertFalse(games.myRole(assassin.userId(), id).visiblePlayers().stream().anyMatch(p -> p.playerId() == oberon.id()));
+        assertTrue(games.myRole(assassin.userId(), id).visiblePlayers().stream().anyMatch(p -> p.playerId() == morgana.id()));
+        assertTrue(games.state(host, id).revealedEvilIdentities().isEmpty());
+        var json = new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules();
+        var diagnostics = new LinkedHashMap<String,Object>();
+        diagnostics.put("playerCount", count);
+        diagnostics.put("players", players.stream().map(p -> Map.of("seatNo",p.seatNo(),"playerId",p.id(),
+                "nickname",p.nickname(),"roleCode",p.role().name(),"alignment",p.alignment().name())).toList());
+        diagnostics.put("normal", players.stream().map(p -> Map.of("room",rooms.get(p.userId(),id),
+                "game",games.state(p.userId(),id),"role",games.myRole(p.userId(),id),
+                "timeline",context.getBean(GameHistoryService.class).timeline(p.userId(),id))).toList());
+        // Complete a real task before the early strike, so live history/cards are also exercised.
+        var leader = repository.gamePlayerById(repository.game(id,false).orElseThrow().leaderGamePlayerId()).orElseThrow();
+        var team = players.stream().limit(GameRuleConfig.forPlayers(count).teamSize(1)).toList();
+        games.submitTeam(leader.userId(),id,team.stream().map(GamePlayerRow::id).toList());
+        for (var p : players) games.vote(p.userId(),id,VoteChoice.REJECT);
+        leader = repository.gamePlayerById(repository.game(id,false).orElseThrow().leaderGamePlayerId()).orElseThrow();
+        games.submitTeam(leader.userId(),id,team.stream().map(GamePlayerRow::id).toList());
+        for (var p : players) games.vote(p.userId(),id,VoteChoice.APPROVE);
+        for (var p : team) games.mission(p.userId(),id,MissionChoice.SUCCESS);
+        var start = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post(
+                "/api/avalon/game/"+id+"/assassination/start").header("Authorization","Bearer "+jwt.create(assassin.userId())))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        var expected = count == 7 ? Set.of("MORGANA","ASSASSIN","OBERON") : Set.of("MORGANA","ASSASSIN","MORDRED","OBERON");
+        var publicList = json.readTree(start).path("data").path("revealedEvilIdentities");
+        var codes = new HashSet<String>(); publicList.forEach(p -> codes.add(p.path("roleCode").asText()));
+        assertEquals(expected,codes); assertEquals(expected.size(),publicList.size());
+        var target = players.stream().filter(p -> p.alignment() == Alignment.GOOD).findFirst().orElseThrow();
+        for (boolean selected : List.of(false,true)) {
+            if (selected) mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post(
+                    "/api/avalon/game/"+id+"/assassination/target").header("Authorization","Bearer "+jwt.create(assassin.userId()))
+                    .contentType("application/json").content("{\"targetPlayerId\":"+target.id()+"}"))
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk());
+            var snapshots = new ArrayList<Map<String,Object>>();
+            for (var viewer : players) {
+                var stateJson = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/avalon/game/"+id)
+                        .header("Authorization","Bearer "+jwt.create(viewer.userId())))
+                        .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+                        .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+                var state = json.readTree(stateJson).path("data");
+                assertEquals(publicList,state.path("revealedEvilIdentities"));
+                assertTrue(state.path("identities").isEmpty(),"GOOD identities remain secret");
+                assertEquals(games.state(viewer.userId(),id).revealedEvilIdentities(),games.state(host,id).revealedEvilIdentities());
+                var room = rooms.get(viewer.userId(),id);
+                for (var reveal : publicList) assertTrue(room.players().stream().anyMatch(p -> p.playerId() == reveal.path("playerId").asLong()));
+                var roomJson = json.valueToTree(room).path("players");
+                for (var p : roomJson) for (String secret : List.of("roleCode","alignment","knowledgeType")) assertFalse(p.has(secret));
+                if (selected) assertEquals(Set.of("playerId","seatNo","nickname"),
+                        json.convertValue(state.path("assassinationTarget"),Map.class).keySet());
+                snapshots.add(Map.of("room",room,"game",state,"role",games.myRole(viewer.userId(),id),
+                        "timeline",context.getBean(GameHistoryService.class).timeline(viewer.userId(),id)));
+            }
+            diagnostics.put(selected ? "selected" : "waiting",snapshots);
+        }
+        // Local diagnostic artifact used by native WeChat QA; never committed, no real accounts or JWTs.
+        Path output = Path.of("target/assassination-"+count+"-diagnostic.json");
+        Files.createDirectories(output.getParent());
+        Files.writeString(output,json.writerWithDefaultPrettyPrinter().writeValueAsString(diagnostics));
+        System.out.println("ASSASSINATION_DIAGNOSTIC "+count+" players="+json.writeValueAsString(diagnostics.get("players"))
+                +" public="+publicList+" assassinPrivate="+json.writeValueAsString(games.myRole(assassin.userId(),id).visiblePlayers())
+                +" oberonPrivate=[] artifact="+output);
+        games.end(host,id);
+        assertTrue(repository.game(id,false).isEmpty());
+        assertEquals(0,jdbc.queryForObject("select count(*) from t_avalon_user where provider='BOT'",Integer.class));
+    }
     @Test void hostCanAddAndRemoveBotsAndSeatsFillTheSmallestGap() throws Exception {
         long id = rooms.create(host, 5, null).roomId();
         var first = rooms.addBot(host, id).players().stream().filter(RoomService.PlayerView::isBot).findFirst().orElseThrow();

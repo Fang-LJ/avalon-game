@@ -145,7 +145,8 @@ test('public evil red ring and selected target amber ring stay static, private i
 test('final assassination copy is identical for early and normal and for all viewers',()=>{
   const markup=read('pages/room/room.wxml');
   assert.doesNotMatch(markup,/最终刺杀|刺中梅林，邪恶获胜；刺错则正义获胜|请选择刺杀梅林|等待刺客选择梅林/);
-  assert.match(markup,/<view class="gold">刺杀梅林阶段<\/view>/);
+  assert.match(markup,/<view class="assassination-title">刺杀梅林阶段<\/view>/);
+  assert.match(markup,/<view class="assassination-rule">刺中梅林，邪恶阵营获胜；刺错则正义阵营获胜<\/view>/);
   assert.match(markup,/\{\{assassinationText\}\}/);
   assert.doesNotMatch(markup,/game.assassinationEarly|正义已完成 3 个任务|邪恶最后机会|确认后不可更改/);
 });

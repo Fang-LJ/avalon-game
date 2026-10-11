@@ -157,7 +157,7 @@
           bind:select="togglePlayer"
         />
       </view>
-      <view class="card board-center {{rejection.forced && (game.phase === 'TEAM_BUILDING' || game.phase === 'TEAM_VOTING') ? 'forced-turn' : ''}}">
+      <view class="card board-center {{game.phase === 'ASSASSINATION' ? 'assassination-center' : ''}} {{rejection.forced && (game.phase === 'TEAM_BUILDING' || game.phase === 'TEAM_VOTING') ? 'forced-turn' : ''}}">
         <block wx:if="{{game.phase === 'TEAM_BUILDING'}}">
           <view class="gold">
             {{isLeader ? '请选择任务成员' : '队长正在选择任务成员'}}
@@ -177,8 +177,9 @@
           <view class="muted small">{{!game.onMission ? '等待任务成员完成' : game.hasSubmittedMission ? '已完成任务，等待其他任务成员' : '请做任务'}}</view>
         </block>
         <block wx:elif="{{game.phase === 'ASSASSINATION'}}">
-          <view class="gold">刺杀梅林阶段</view>
-          <view class="assassination-selection small">{{assassinationText}}</view>
+          <view class="assassination-title">刺杀梅林阶段</view>
+          <view class="assassination-rule">刺中梅林，邪恶阵营获胜；刺错则正义阵营获胜</view>
+          <view class="assassination-selection">{{assassinationText}}</view>
         </block>
         <block wx:elif="{{game.phase === 'LADY_OF_LAKE'}}">
           <view class="gold">湖中仙女</view>
