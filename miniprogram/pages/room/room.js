@@ -521,9 +521,6 @@ Page({
       return;
     }
     this.setData({ roleGuessSheet: sheet });
-    if (typeof wx.vibrateShort === 'function') {
-      try { wx.vibrateShort({ type: 'light', fail() {} }); } catch (_) { /* Optional device feedback. */ }
-    }
   },
   editRoleGuess(e, clear = false) {
     const { game, room, busy, roleGuessSheet: sheet } = this.data, detail = e && e.detail;

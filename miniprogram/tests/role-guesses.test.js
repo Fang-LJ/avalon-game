@@ -131,9 +131,10 @@ test('corrupted saved facts cannot override Merlin exclusions or newer exact evi
   assert.deepEqual(d.sanitizeGuesses(context(7,'ASSASSIN',[ally(2,'MORGANA')]),notes),{3:'OBERON'});
   assert.deepEqual(notes,{2:'MERLIN',3:'OBERON'});
 });
-for (const role of roles) test(`${role} personal mark has question suffix and never replaces exact/system public identity`, () => {
+for (const role of roles) test(`${role} personal mark supplies only the role letter and never replaces exact/system public identity`, () => {
   const mark = d.displayIdentityMark({}, role, 'TEAM_BUILDING');
-  assert.equal(mark.markType,'GUESS'); assert.equal(mark.markText, ui.ROLE_MARKS[role][0]+'?');
+  assert.equal(mark.markType,'GUESS'); assert.equal(mark.markText, ui.ROLE_MARKS[role][0]);
+  assert.equal(mark.markClass,ui.ROLE_MARKS[role][1]);
   for (const p of [{me:true},{markType:'ROLE'},{revealedEvil:true}]) assert.deepEqual(d.displayIdentityMark(p,role,'TEAM_BUILDING'),{});
 });
 for (const phase of ['WAITING','ROLE_CONFIRM','ASSASSINATION','FINISHED','UNKNOWN']) test(`${phase} renderer independently rejects guesses even without deletion`, () => {

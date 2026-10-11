@@ -18,7 +18,8 @@ function fixture(role='MERLIN', n=7, visible=[{playerId:2,knowledgeType:'EVIL'}]
     get(target,key) { if (key in target) return target[key]; return async (...args)=>{calls.push([key,...args]);}; }
   });
   const wx = {getStorageSync:k=>storage.get(k),setStorageSync:(k,v)=>{writes.push([k,plain(v)]);storage.set(k,plain(v));},
-    removeStorageSync:k=>{writes.push([k,null]);storage.delete(k);},showToast:o=>toast.push(o.title),vibrateShort:o=>vibration.push(o)};
+    removeStorageSync:k=>{writes.push([k,null]);storage.delete(k);},showToast:o=>toast.push(o.title),
+    vibrateShort:o=>vibration.push(o),vibrateLong:o=>vibration.push(o)};
   vm.runInNewContext(read('pages/room/room.js'),{Page:v=>{page=v;},wx,clearInterval(){},
     require:name=>name==='../../services/avalon'?api:/services\/auth|utils\/socket/.test(name)?{}:require(path.resolve(root,'pages/room',name))});
   page.data=structuredClone(page.data); page.setData=v=>Object.assign(page.data,v); page.active=true;
@@ -33,11 +34,11 @@ const display = (f,id) => f.page.data.displayPlayers.find(p=>p.playerId===id);
 test('private guess replaces moon in existing badge, clearing restores moon and never mutates public DTOs',()=>{
   const f=fixture();const before=plain({room:f.room,game:f.game,timeline:f.timeline,role:f.privateRole});
   assert.equal(display(f,2).markType,'EVIL');
-  choose(f,'OBERON');assert.equal(display(f,2).markType,'GUESS');assert.equal(display(f,2).markText,'奥?');
+  choose(f,'OBERON');assert.equal(display(f,2).markType,'GUESS');assert.equal(display(f,2).markText,'奥');
   assert.equal(f.page.data.roleGuessSheet,null);
   assert.deepEqual(f.storage.get(d.storageKey(42,1)),{guesses:{2:'OBERON'}});
   assert.deepEqual(plain({room:f.room,game:f.game,timeline:f.timeline,role:f.privateRole}),before);
-  assert.deepEqual(f.calls,[]);assert.equal(f.vibration.length,1);
+  assert.deepEqual(f.calls,[]);assert.equal(f.vibration.length,0);
   clear(f);assert.equal(display(f,2).markType,'EVIL');assert.equal(f.storage.has(d.storageKey(42,1)),false);
 });
 test('candidate groups contain only available roles and reediting releases current capacity',()=>{
@@ -54,8 +55,8 @@ test('Percival atomic pair storage, swapping and clearing restore both identical
   const f=fixture('PERCIVAL',7,[2,3].map(playerId=>({playerId,knowledgeType:'MERLIN_OR_MORGANA'})));
   assert.deepEqual([display(f,2).markType,display(f,3).markType],['MERLIN_OR_MORGANA','MERLIN_OR_MORGANA']);
   choose(f,'MERLIN',2);assert.deepEqual(f.storage.get(d.storageKey(42,1)),{guesses:{2:'MERLIN',3:'MORGANA'}});
-  assert.equal(f.writes.length,1);assert.equal(display(f,2).markText,'梅?');assert.equal(display(f,3).markText,'娜?');
-  choose(f,'MERLIN',3);assert.equal(display(f,2).markText,'娜?');assert.equal(display(f,3).markText,'梅?');
+  assert.equal(f.writes.length,1);assert.equal(display(f,2).markText,'梅');assert.equal(display(f,3).markText,'娜');
+  choose(f,'MERLIN',3);assert.equal(display(f,2).markText,'娜');assert.equal(display(f,3).markText,'梅');
   clear(f,3);assert.equal(display(f,2).markType,'MERLIN_OR_MORGANA');assert.equal(display(f,3).markType,'MERLIN_OR_MORGANA');
   assert.deepEqual(f.calls,[]);
 });
@@ -69,13 +70,13 @@ test('close sheet is a no-op on stored notes and canceled sheet cannot apply sta
   f.page.closeRoleGuess({detail:{scope:first.scope}});const second=open(f);
   f.page.chooseRoleGuess({detail:{scope:first.scope,playerId:2,roleCode:'ASSASSIN'}});
   f.page.closeRoleGuess({detail:{scope:first.scope}});
-  assert.equal(f.page.data.roleGuessSheet.scope,second.scope);assert.equal(display(f,2).markText,'奥?');
+  assert.equal(f.page.data.roleGuessSheet.scope,second.scope);assert.equal(display(f,2).markText,'奥');
   assert.equal(f.writes.length,1);
 });
 for(const phase of ['TEAM_BUILDING','TEAM_VOTING','MISSION_EXECUTING','LADY_OF_LAKE']) test(`${phase}: sheet saves while existing selection and state stay intact`,()=>{
   const f=fixture();f.game.phase=phase;f.page.data.selectedIds=[2];
   f.page.decoratePlayers();const before=JSON.stringify(f.game);
-  choose(f,'MORGANA');assert.equal(display(f,2).markText,'娜?');assert.equal(display(f,2).selected,true);
+  choose(f,'MORGANA');assert.equal(display(f,2).markText,'娜');assert.equal(display(f,2).selected,true);
   assert.deepEqual(f.page.data.selectedIds,[2]);assert.equal(JSON.stringify(f.game),before);assert.deepEqual(f.calls,[]);
 });
 for(const phase of ['WAITING','ROLE_CONFIRM','ASSASSINATION','FINISHED']) test(`${phase}: no sheet and no guess display`,()=>{
@@ -116,9 +117,9 @@ test('assassination keeps exact evil red rings and selected amber target without
 });
 test('normal websocket refresh retains guesses; reopening same game loads storage',async()=>{
   const f=fixture();choose(f,'OBERON');f.page.handleRoomEvent({roomId:91,type:'TEAM_VOTE_SUBMITTED'});await f.page.refreshing;
-  assert.equal(display(f,2).markText,'奥?');assert.equal(f.page.data.personalGuesses[2],'OBERON');
+  assert.equal(display(f,2).markText,'奥');assert.equal(f.page.data.personalGuesses[2],'OBERON');
   const again=fixture('MERLIN',7,[{playerId:2,knowledgeType:'EVIL'}],f.storage);
-  assert.equal(display(again,2).markText,'奥?');assert.deepEqual(f.calls,[]);
+  assert.equal(display(again,2).markText,'奥');assert.deepEqual(f.calls,[]);
 });
 test('another game or current gamePlayerId never inherits previous notes',()=>{
   const f=fixture();choose(f,'OBERON');open(f);f.game.gameId=43;f.page.decoratePlayers();
@@ -142,7 +143,7 @@ for(const change of ['phase','gameId','myPlayerId','busy','inactive']) test(`lat
 });
 test('storage write failure keeps previous badge, pair stays atomic and reports failure',()=>{
   const f=fixture();choose(f,'OBERON');f.wx.setStorageSync=()=>{throw new Error('full');};choose(f,'ASSASSIN');
-  assert.equal(display(f,2).markText,'奥?');assert.equal(f.storage.get(d.storageKey(42,1)).guesses[2],'OBERON');
+  assert.equal(display(f,2).markText,'奥');assert.equal(f.storage.get(d.storageKey(42,1)).guesses[2],'OBERON');
   assert.equal(f.toast.at(-1),'个人推测无法保存，请重试');assert.ok(f.page.data.roleGuessSheet);
 });
 
@@ -177,7 +178,7 @@ test('custom deduction sheet emits only available role choice, scoped clear and 
   assert.deepEqual(cmp.events,[{type:'choose',detail:{scope:sheet.scope,playerId:2,roleCode:'MERLIN'}},
     {type:'clear',detail:{scope:sheet.scope,playerId:2}},{type:'close',detail:{scope:sheet.scope}}]);
 });
-test('one existing identity badge, custom private sheet, lighter dashed guess style and no network dependency',()=>{
+test('one existing identity badge, custom private sheet, shared role style and no network dependency',()=>{
   const player=read('components/player-seat/player-seat.wxml');
   assert.equal((player.match(/class="seat-badge knowledge-icon /g)||[]).length,1);
   assert.match(player,/bindlongpress="longPress"/);assert.match(player,/bindtouchstart="beginTouch"/);
@@ -185,7 +186,56 @@ test('one existing identity badge, custom private sheet, lighter dashed guess st
   assert.match(sheet,/仅自己可见/);assert.match(sheet,/不是系统身份/);assert.match(sheet,/currentRole/);
   assert.doesNotMatch(read('components/role-guess-sheet/role-guess-sheet.js'),/showActionSheet|request|socket/);
   assert.doesNotMatch(read('utils/role-guesses.js'),/require\([^)]*(services|request|socket)/);
-  assert.match(read('components/knowledge-mark/knowledge-mark.wxss'),/\.guess-mark[^}]*dashed/);
+  assert.match(read('components/knowledge-mark/knowledge-mark.wxml'),/class="knowledge-mark role-mark role-\{\{tone\}\} guess-role-mark"/);
   const room=read('pages/room/room.wxml');assert.match(room,/roleGuessSheet && canGuessRoles/);
   assert.ok(!fs.readFileSync(path.join(root,'services/avalon.js'),'utf8').includes('personalGuesses'));
+});
+
+test('GUESS role body and independent question belong only to the GUESS branch',()=>{
+  const markup=read('components/knowledge-mark/knowledge-mark.wxml');
+  const guess=markup.match(/^<view wx:if="\{\{markType === 'GUESS'\}\}"[^>]*>([\s\S]*?)<\/view>/);
+  assert.ok(guess);
+  assert.match(guess[1],/<text class="guess-role-text">\{\{text\}\}<\/text>/);
+  assert.match(guess[1],/<text class="guess-question">\?<\/text>/);
+  assert.equal((markup.match(/class="guess-question"/g)||[]).length,1);
+  // Exact identities and the full-size purple ambiguity badge are unchanged.
+  assert.match(markup,/<view wx:elif="\{\{markType === 'ROLE'\}\}" class="knowledge-mark role-mark role-\{\{tone\}\}">\{\{text\}\}<\/view>/);
+  assert.match(markup,/class="knowledge-mark candidate-mark">\?<\/view>/);
+  assert.doesNotMatch(markup,/guess-\{\{tone\}\}|replace\(/);
+});
+test('system role sizes typography colors and candidate badge remain unchanged',()=>{
+  const css=read('components/knowledge-mark/knowledge-mark.wxss');
+  const original={
+    'role-mark':'border: 1rpx solid; font-size: 22rpx; font-weight: 900; line-height: 1;',
+    'role-evil':'background: #6f2833; border-color: #c86472; color: #fff2f2;',
+    'role-loyal':'background: #255c62; border-color: #66c5c6; color: #dcffff;',
+    'role-merlin':'background: #594a22; border-color: #e2bf62; color: #f5dc91;',
+    'role-percival':'background: #493a69; border-color: #b69cff; color: #f1eaff;',
+    'candidate-mark':'background: #b69cff; color: #ffffff; font-size: 24rpx; font-weight: 900; line-height: 1; box-shadow: 0 0 10rpx rgba(182,156,255,.35);',
+  };
+  for(const [name,body] of Object.entries(original)) {
+    assert.equal(css.match(new RegExp(`\\.${name} \\{([^}]+)\\}`))[1].trim(),body);
+  }
+  assert.doesNotMatch(css,/\.guess-(?:mark|evil|loyal|percival)\s*\{/);
+  assert.doesNotMatch(css,/\.guess-role-text\s*\{/); // Inherit exact role typography, no smaller overrides.
+});
+test('external question is 16rpx at upper right without its own circle or background',()=>{
+  const css=read('components/knowledge-mark/knowledge-mark.wxss');
+  assert.equal(css.match(/\.guess-role-mark \{([^}]+)\}/)[1].trim(),'position: relative; overflow: visible;');
+  const question=css.match(/\.guess-question \{([^}]+)\}/)[1];
+  for(const declaration of ['position: absolute','right: -7rpx','top: -8rpx','font-size: 16rpx','font-weight: 900','color: #f1ddb2'])
+    assert.ok(question.includes(declaration));
+  assert.doesNotMatch(question,/(?:^|;)\s*(?:background(?:-[\w-]+)?|border(?:-[\w-]+)?|width|height)\s*:/);
+});
+test('opening updating swapping clearing and closing a deduction sheet never trigger vibration',()=>{
+  const f=fixture('PERCIVAL',7,[2,3].map(playerId=>({playerId,knowledgeType:'MERLIN_OR_MORGANA'})));
+  choose(f,'MERLIN',2);choose(f,'MERLIN',3);clear(f,2);
+  const sheet=open(f,2);f.page.closeRoleGuess({detail:{scope:sheet.scope}});
+  assert.equal(f.vibration.length,0);
+  assert.doesNotMatch(read('pages/room/room.js'),/vibrateShort|vibrateLong/);
+});
+test('longpress sheet works without any vibration API in the environment',()=>{
+  const f=fixture();delete f.wx.vibrateShort;delete f.wx.vibrateLong;
+  assert.ok(open(f));assert.equal(f.page.data.roleGuessSheet.playerId,2);
+  assert.equal(f.vibration.length,0);
 });

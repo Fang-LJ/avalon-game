@@ -98,7 +98,7 @@ function clearGuess(c, guesses, targetId) {
 function displayIdentityMark(systemPlayer, role, phase) {
   if (!allowedPhase(phase) || systemPlayer.me || systemPlayer.revealedEvil || systemPlayer.markType === 'ROLE' || !ROLE_MARKS[role])
     return {};
-  return { markType: 'GUESS', markText: ROLE_MARKS[role][0] + '?', markClass: ROLE_MARKS[role][1] };
+  return { markType: 'GUESS', markText: ROLE_MARKS[role][0], markClass: ROLE_MARKS[role][1] };
 }
 function candidateOptions(roles) {
   return roles.map(roleCode => ({ roleCode, name: ROLE_NAMES[roleCode], evil: EVIL.includes(roleCode) }));
