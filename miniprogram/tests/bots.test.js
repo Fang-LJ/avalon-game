@@ -13,6 +13,7 @@ function pageAt(api = {}, wx = {}) {
       '../../services/auth': {},
       '../../utils/socket': {},
       '../../utils/presentation': ui,
+      '../../utils/role-guesses': require('../utils/role-guesses'),
       '../../utils/cards': require('../utils/cards'),
       '../../utils/mission-result': require('../utils/mission-result'),
     })[name],

@@ -1,9 +1,11 @@
 <view
   class="seat {{compact ? 'compact' : ''}} {{formal ? 'formal' : ''}} {{player.empty ? 'empty-seat' : ''}} {{player.disabled ? 'disabled' : ''}}"
   bindtap="choose"
+  bindtouchstart="beginTouch"
 >
   <view
     class="seat-avatar {{player.empty ? 'empty-avatar' : ''}} {{player.revealedEvil ? 'revealed-evil-ring' : ''}} {{player.selected ? player.selectionClass : ''}}"
+    bindlongpress="longPress"
   >
     <image
       wx:if="{{player.avatarUrl}}"

@@ -3,6 +3,7 @@ const auth = require('../../services/auth');
 const socket = require('../../utils/socket');
 const invite = require('../../utils/invite');
 const ui = require('../../utils/presentation');
+const deduction = require('../../utils/role-guesses');
 const { roleCard, CARDS } = require('../../utils/cards');
 const { normalizeResult, storageKey } = require('../../utils/mission-result');
 const PHASES = {
@@ -62,6 +63,9 @@ Page({
     identityRevealedGameId: null,
     roleCardFront: '',
     roleCardBack: CARDS.back.ROLE,
+    personalGuesses: {},
+    roleGuessSheet: null,
+    canGuessRoles: false,
   },
   onLoad(options) {
     this.setData({ roomId: Number(options.roomId) });
@@ -90,6 +94,7 @@ Page({
   },
   stop() {
     this.active = false;
+    this.setData({ roleGuessSheet: null });
     if (this.stopSocket) this.stopSocket();
     clearInterval(this.poller);
   },
@@ -184,6 +189,9 @@ Page({
         roleOverlay: false,
         identityRevealedGameId: null,
         roleCardFront: '',
+        personalGuesses: {},
+        roleGuessSheet: null,
+        canGuessRoles: false,
       });
     this.setData({
       room,
@@ -198,7 +206,14 @@ Page({
     }
     const gameId = room.currentGameId;
     const snapshot = await Promise.all([
-      api.game(gameId),
+      api.game(gameId).then(game => {
+        // Observe the public phase immediately, without waiting for timeline/my-role.
+        if (currentRead() && ['ASSASSINATION', 'FINISHED'].includes(game.phase)) {
+          this.clearPrivateGuesses(game.gameId, room.myPlayerId);
+          this.decoratePlayers();
+        }
+        return game;
+      }),
       api.timeline(gameId),
       api.myRole(gameId),
     ]).catch(error => {
@@ -244,6 +259,8 @@ Page({
     }
   },
   gameStateUpdate(game) {
+    if (['ASSASSINATION', 'FINISHED'].includes(game.phase))
+      this.clearPrivateGuesses(game.gameId, this.data.room && this.data.room.myPlayerId);
     const current = this.data.game;
     if (current && current.gameId === game.gameId && current.phase === 'ASSASSINATION' &&
         game.phase === 'ASSASSINATION' && current.assassinationTarget && game.assassinationTarget &&
@@ -274,6 +291,8 @@ Page({
         ? { roleOverlay: false, ladyResult: null, ladyResultGameId: null, missionDetail: null } : {}),
       // Keep the existing result reveal authoritative and atomic with the advanced server phase.
       ...this.missionResultUpdate(game),
+      ...(['ASSASSINATION', 'FINISHED', 'ROLE_CONFIRM'].includes(game.phase)
+        ? { personalGuesses: {}, roleGuessSheet: null, canGuessRoles: false } : {}),
     };
   },
   applyGameMutationResult(result, context) {
@@ -356,6 +375,7 @@ Page({
     this.syncMissionOverlay();
   },
   decoratePlayers() {
+    this.syncRoleGuesses();
     const { room, game, role, selectedIds } = this.data;
     if (!room) return;
     if (!game) {
@@ -390,6 +410,8 @@ Page({
       ...(revealedByPlayer[player.playerId] || {}),
       ...ui.assassinationPlayerState(game, player, room.myPlayerId),
       actionDone: ui.actionDone(game, player),
+    })).map(player => ({ ...player,
+      ...deduction.displayIdentityMark(player, this.data.personalGuesses[player.playerId], game.phase),
     }));
     const players = ui
       .seats(
@@ -433,6 +455,98 @@ Page({
           }
         : null,
     });
+  },
+  roleGuessContext() {
+    const { room, role } = this.data;
+    return { playerCount: room && room.maxPlayers, viewerPlayerId: room && room.myPlayerId,
+      viewerRole: role && role.roleCode, players: (room && room.players) || [],
+      visiblePlayers: (role && role.visiblePlayers) || [] };
+  },
+  clearPrivateGuesses(gameId, myPlayerId) {
+    const key = deduction.storageKey(gameId, myPlayerId);
+    if (key) {
+      this.clearedGuessScopes = this.clearedGuessScopes || new Set();
+      this.clearedGuessScopes.add(key);
+      deduction.removeGuesses(key, wx);
+    }
+    this.setData({ personalGuesses: {}, roleGuessSheet: null, canGuessRoles: false });
+  },
+  syncRoleGuesses() {
+    const { game, room, role } = this.data;
+    const key = game && room && deduction.storageKey(game.gameId, room.myPlayerId);
+    if (game && ['ASSASSINATION', 'FINISHED'].includes(game.phase)) {
+      this.clearPrivateGuesses(game.gameId, room && room.myPlayerId);
+      return;
+    }
+    if (!key || !role || !deduction.allowedPhase(game.phase) || this.clearedGuessScopes && this.clearedGuessScopes.has(key)) {
+      this.roleGuessScope = '';
+      this.setData({ personalGuesses: {}, roleGuessSheet: null, canGuessRoles: false });
+      return;
+    }
+    const c = this.roleGuessContext();
+    let guesses = this.data.personalGuesses;
+    if (key !== this.roleGuessScope) {
+      guesses = deduction.loadGuesses(key, c, wx);
+      this.roleGuessScope = key;
+      this.setData({ roleGuessSheet: null });
+    }
+    const clean = deduction.sanitizeGuesses(c, guesses);
+    this.setData({ personalGuesses: clean, canGuessRoles: true });
+    const sheet = this.data.roleGuessSheet;
+    if (sheet) this.setData({ roleGuessSheet: this.buildRoleGuessSheet(sheet.playerId, sheet.scope) });
+  },
+  buildRoleGuessSheet(playerId, scope) {
+    if (!this.data.canGuessRoles) return null;
+    const c = this.roleGuessContext(), options = deduction.candidateOptions(
+      deduction.guessCandidates(c, playerId, this.data.personalGuesses));
+    const player = c.players.find(p => p.playerId === playerId);
+    if (!player || !options.length) return null;
+    const currentRole = this.data.personalGuesses[playerId] || '';
+    return { scope, playerId, seatNo: player.seatNo, nickname: player.nickname, currentRole,
+      currentName: ui.ROLE_NAMES[currentRole] || '',
+      goodOptions: options.filter(option => !option.evil), evilOptions: options.filter(option => option.evil) };
+  },
+  openRoleGuess(e) {
+    const { game, busy, missionResultOpen, missionOverlayOpen, roleOverlay, missionDetail, ladyResult } = this.data;
+    if (this.active === false || !game || !deduction.allowedPhase(game.phase) || busy ||
+        missionResultOpen || missionOverlayOpen || roleOverlay || missionDetail || ladyResult) return;
+    this.syncRoleGuesses();
+    const playerId = Number(e && e.detail && e.detail.playerId);
+    const c = this.roleGuessContext();
+    if (!this.data.canGuessRoles || deduction.knowledge(c, playerId).exactRole) return;
+    this.roleGuessSequence = (this.roleGuessSequence || 0) + 1;
+    const sheet = this.buildRoleGuessSheet(playerId, `${this.roleGuessScope}:${this.roleGuessSequence}`);
+    if (!sheet) {
+      if (typeof wx.showToast === 'function') wx.showToast({ title: '当前没有可用身份判断', icon: 'none' });
+      return;
+    }
+    this.setData({ roleGuessSheet: sheet });
+    if (typeof wx.vibrateShort === 'function') {
+      try { wx.vibrateShort({ type: 'light', fail() {} }); } catch (_) { /* Optional device feedback. */ }
+    }
+  },
+  editRoleGuess(e, clear = false) {
+    const { game, room, busy, roleGuessSheet: sheet } = this.data, detail = e && e.detail;
+    if (this.active === false || !game || !room || busy || !deduction.allowedPhase(game.phase) ||
+        !this.data.canGuessRoles || !sheet || !detail || detail.scope !== sheet.scope || detail.playerId !== sheet.playerId ||
+        deduction.storageKey(game.gameId, room.myPlayerId) !== this.roleGuessScope) return;
+    const c = this.roleGuessContext();
+    if (deduction.knowledge(c, sheet.playerId).exactRole ||
+        !clear && !deduction.guessCandidates(c, sheet.playerId, this.data.personalGuesses).includes(detail.roleCode)) return;
+    const next = clear ? deduction.clearGuess(c, this.data.personalGuesses, sheet.playerId)
+      : deduction.applyGuess(c, this.data.personalGuesses, sheet.playerId, detail.roleCode);
+    if (!deduction.saveGuesses(this.roleGuessScope, next, wx)) {
+      if (typeof wx.showToast === 'function') wx.showToast({ title: '个人推测无法保存，请重试', icon: 'none' });
+      return;
+    }
+    this.setData({ personalGuesses: next, roleGuessSheet: null });
+    this.decoratePlayers();
+  },
+  chooseRoleGuess(e) { this.editRoleGuess(e); },
+  clearRoleGuess(e) { this.editRoleGuess(e, true); },
+  closeRoleGuess(e) {
+    const sheet = this.data.roleGuessSheet;
+    if (!e || sheet && e.detail && e.detail.scope === sheet.scope) this.setData({ roleGuessSheet: null });
   },
   handleLobbySeat(e) {
     if (this.data.game || this.data.busy) return;

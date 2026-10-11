@@ -25,16 +25,18 @@ const TEAMS = {
   9: [3, 4, 4, 5, 5],
   10: [3, 4, 4, 5, 5],
 };
+// Public composition only; kept in parity with GameRuleConfig by a regression test.
+const ROLE_CONFIGS = Object.freeze(Object.fromEntries([
+  [5, 1, {}], [6, 2, {}], [7, 2, { OBERON: 1 }], [8, 3, { MINION: 1 }],
+  [9, 4, { MORDRED: 1 }], [10, 4, { MORDRED: 1, OBERON: 1 }],
+].map(([n, loyal, extra]) => [n, Object.freeze({
+  MERLIN: 1, PERCIVAL: 1, LOYAL_SERVANT: loyal, MORGANA: 1, ASSASSIN: 1, ...extra,
+})])));
+function roleConfig(n) { return { ...(ROLE_CONFIGS[n] || {}) }; }
 function rules(n) {
-  const good = { 5: 3, 6: 4, 7: 4, 8: 5, 9: 6, 10: 6 }[n];
-  const extra = {
-    5: [],
-    6: [],
-    7: ['奥伯伦'],
-    8: ['爪牙'],
-    9: ['莫德雷德'],
-    10: ['莫德雷德', '奥伯伦'],
-  }[n];
+  const config = roleConfig(n);
+  const good = config.MERLIN + config.PERCIVAL + config.LOYAL_SERVANT;
+  const extra = Object.keys(config).filter(role => ['MINION', 'MORDRED', 'OBERON'].includes(role)).map(role => ROLE_NAMES[role]);
   return {
     good,
     evil: n - good,
@@ -330,6 +332,9 @@ function showLegal() {
   });
 }
 module.exports = {
+  ROLE_CONFIGS,
+  ROLE_MARKS,
+  roleConfig,
   lobbyStatus,
   ROLE_NAMES,
   FINISH,

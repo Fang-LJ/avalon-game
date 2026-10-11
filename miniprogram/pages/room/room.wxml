@@ -155,6 +155,8 @@
           hideNickname="{{room.maxPlayers >= 8}}"
           player="{{item}}"
           bind:select="togglePlayer"
+          guessEnabled="{{canGuessRoles && !busy}}"
+          bind:guess="openRoleGuess"
         />
       </view>
       <view class="card board-center {{game.phase === 'ASSASSINATION' ? 'assassination-center' : ''}} {{rejection.forced && (game.phase === 'TEAM_BUILDING' || game.phase === 'TEAM_VOTING') ? 'forced-turn' : ''}}">
@@ -278,6 +280,7 @@
       </button>
     </view>
   </block>
+  <role-guess-sheet wx:if="{{roleGuessSheet && canGuessRoles}}" sheet="{{roleGuessSheet}}" bind:choose="chooseRoleGuess" bind:clear="clearRoleGuess" bind:close="closeRoleGuess" />
   <mission-detail-overlay wx:if="{{missionDetail && !missionResultOpen}}" detail="{{missionDetail}}" bind:close="closeMissionDetail" />
   <mission-card-overlay
     wx:if="{{missionOverlayOpen && game.phase === 'MISSION_EXECUTING' && game.onMission && !game.hasSubmittedMission}}"

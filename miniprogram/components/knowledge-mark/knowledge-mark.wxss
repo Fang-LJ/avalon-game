@@ -9,3 +9,7 @@
 .role-loyal { background: #255c62; border-color: #66c5c6; color: #dcffff; }
 .role-merlin { background: #594a22; border-color: #e2bf62; color: #f5dc91; }
 .role-percival { background: #493a69; border-color: #b69cff; color: #f1eaff; }
+.guess-mark { background: #18231f; border: 1rpx dashed rgba(216,178,92,.75); color: #f1ddb2; font-size: 19rpx; font-weight: 600; line-height: 1; }
+.guess-evil { background: rgba(111,40,51,.30); border-color: rgba(228,122,134,.75); color: #efadb5; }
+.guess-loyal { color: #a2ddd7; border-color: rgba(102,197,198,.70); }
+.guess-percival { color: #d3c2ff; border-color: rgba(182,156,255,.70); }

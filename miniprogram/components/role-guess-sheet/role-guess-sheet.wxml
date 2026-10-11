@@ -1,0 +1,26 @@
+<view wx:if="{{sheet}}" class="guess-mask" catchtap="close" catchtouchmove="ignoreTap">
+  <view class="guess-sheet" catchtap="ignoreTap">
+    <view class="guess-heading">
+      <view class="guess-title">推测 {{sheet.seatNo}}号 · {{sheet.nickname}}</view>
+      <button class="guess-close" aria-label="关闭个人推测" bindtap="close">×</button>
+    </view>
+    <view class="guess-subtitle">仅自己可见 · 不是系统身份</view>
+    <view wx:if="{{sheet.currentRole}}" class="guess-current">当前判断：{{sheet.currentName}}?</view>
+    <scroll-view class="guess-scroll" scroll-y="{{true}}">
+      <view wx:if="{{sheet.goodOptions.length}}" class="guess-group">
+        <view class="guess-group-title good">正义阵营</view>
+        <view class="guess-options">
+          <button wx:for="{{sheet.goodOptions}}" wx:key="roleCode" class="guess-option {{sheet.currentRole === item.roleCode ? 'chosen' : ''}}" data-role-code="{{item.roleCode}}" bindtap="choose">{{item.name}}</button>
+        </view>
+      </view>
+      <view wx:if="{{sheet.evilOptions.length}}" class="guess-group">
+        <view class="guess-group-title evil">邪恶阵营</view>
+        <view class="guess-options">
+          <button wx:for="{{sheet.evilOptions}}" wx:key="roleCode" class="guess-option {{sheet.currentRole === item.roleCode ? 'chosen' : ''}}" data-role-code="{{item.roleCode}}" bindtap="choose">{{item.name}}</button>
+        </view>
+      </view>
+    </scroll-view>
+    <button wx:if="{{sheet.currentRole}}" class="guess-clear" bindtap="clear">清除推测</button>
+    <view class="guess-note">长按头像编辑 · 个人判断不会同步给其他玩家</view>
+  </view>
+</view>
