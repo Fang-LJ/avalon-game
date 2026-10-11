@@ -12,7 +12,7 @@
     <mission-track wx:if="{{board}}" missions="{{timeline.missions}}" current="{{game.missionNo}}" teamSizes="{{rule.teamSizes}}" bind:missiontap="openMissionDetail" />
     <text wx:else class="muted small">确认身份</text>
     <view class="room-quick-actions">
-      <button wx:if="{{canEarlyAssassination}}" class="quick-action early-assassination-trigger" disabled="{{busy}}" bindtap="requestEarlyAssassination">提前刺杀</button>
+      <button wx:if="{{canEarlyAssassination}}" class="quick-action early-assassination-trigger" disabled="{{busy}}" bindtap="requestEarlyAssassination">刺杀</button>
       <button wx:if="{{board}}" class="quick-action private-role-trigger" disabled="{{busy}}" bindtap="openRoleOverlay">我的身份</button>
       <button class="quick-action" disabled="{{busy}}" bindtap="confirmLeaveRoom">退出</button>
       <button wx:if="{{room.host}}" class="quick-action" disabled="{{busy}}" bindtap="endGame">结束</button>
@@ -139,10 +139,6 @@
     </view>
   </block>
   <block wx:else>
-    <view wx:if="{{game.phase === 'ASSASSINATION'}}" class="card">
-      <view class="evil">最终刺杀</view>
-      <view class="muted small">刺中梅林，邪恶获胜；刺错则正义获胜</view>
-    </view>
     <view
       wx:if="{{board}}"
       class="board {{room.maxPlayers >= 9 ? 'large-table' : ''}}"
@@ -181,10 +177,8 @@
           <view class="muted small">{{!game.onMission ? '等待任务成员完成' : game.hasSubmittedMission ? '已完成任务，等待其他任务成员' : '请做任务'}}</view>
         </block>
         <block wx:elif="{{game.phase === 'ASSASSINATION'}}">
-          <view class="gold">
-            {{game.assassin ? '请选择刺杀梅林' : '等待刺客选择梅林'}}
-          </view>
-          <view wx:if="{{game.assassin && targetName}}" class="assassination-selection small">已选择：{{selectedText}}号 {{targetName}}</view>
+          <view class="gold">刺杀梅林阶段</view>
+          <view class="assassination-selection small">{{assassinationText}}</view>
         </block>
         <block wx:elif="{{game.phase === 'LADY_OF_LAKE'}}">
           <view class="gold">湖中仙女</view>
@@ -224,7 +218,7 @@
       </view>
     </block>
     <game-log
-      wx:if="{{board && game.phase !== 'ASSASSINATION' && entries.length}}"
+      wx:if="{{board && entries.length}}"
       compact="{{true}}"
       gameId="{{game.gameId}}"
       maxMissionSlots="{{rule.maxMissionSlots}}"

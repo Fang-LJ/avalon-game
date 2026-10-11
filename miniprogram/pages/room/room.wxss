@@ -77,7 +77,7 @@
 .rejection-dot.rejected { background: var(--evil); border-color: var(--evil); }
 .board-center .forced-heading { color: #F0C96A; font-size: 22rpx; font-weight: 700; line-height: 28rpx; }
 .board-center .forced-description { color: #d5b7ae; font-size: 18rpx; line-height: 24rpx; }
-.assassination-selection { color: #FFD166; }
+.assassination-selection { color: #FFD166; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .phase-actions {
   margin-top: 25rpx;
 }
@@ -213,10 +213,10 @@
 .bot-tools { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-bottom: 20rpx; }
 .bot-add { flex-shrink: 0; background: var(--soft); color: var(--gold); font-size: 23rpx; border: 1px solid var(--border); border-radius: 999rpx; margin: 0; padding: 0 20rpx; line-height: 60rpx; }
 button.bot-add[disabled] { background: var(--soft) !important; color: var(--muted) !important; opacity: 0.45; }
-.game-status-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12rpx; }
+.game-status-row { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 8rpx; }
 .game-status-row mission-track { flex-shrink: 0; }
 .room-quick-actions { display: flex; align-items: center; gap: 4rpx; margin-left: auto; }
-.quick-action { min-width: 72rpx; min-height: 88rpx; padding: 0 8rpx; margin: 0; line-height: 88rpx; font-size: 21rpx; color: var(--muted); background: transparent; }
+.quick-action { min-width: 60rpx; min-height: 88rpx; padding: 0 6rpx; margin: 0; line-height: 88rpx; font-size: 21rpx; color: var(--muted); background: transparent; white-space: nowrap; }
 .quick-action::after { border: 0; }
 button.quick-action.private-role-trigger { color: var(--gold); }
 button.quick-action.early-assassination-trigger { color: var(--evil); white-space: nowrap; }

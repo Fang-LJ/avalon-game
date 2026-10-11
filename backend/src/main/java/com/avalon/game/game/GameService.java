@@ -7,6 +7,7 @@ import com.avalon.game.realtime.RoomEventPublisher;
 import com.avalon.game.room.RoomService;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
@@ -20,6 +21,7 @@ public class GameService {
     private final RoleVisibilityService visibilityService;
     private final RoomEventPublisher events;
     private final SecureRandom random = new SecureRandom();
+    private final AssassinationDrafts assassinationDrafts = new AssassinationDrafts();
 
     public GameService(AvalonRepository repository, RoomService roomService,
                        RoleVisibilityService visibilityService, RoomEventPublisher events) {
@@ -221,20 +223,43 @@ public class GameService {
     }
 
     @Transactional
-    public GameState assassinate(long userId, long gameId, long targetPlayerId) {
+    public GameState selectAssassinationTarget(long userId, long gameId, long targetPlayerId) {
         Context c = context(userId, gameId, true);
+        GamePlayerRow target = requireAssassinationTarget(c, gameId, targetPlayerId);
+        AssassinationDrafts.Draft draft = assassinationDrafts.prepare(target.id());
+        GameState result = state(userId, gameId, draft);
+        // The game-row lock serializes selections. Publish the memory change before the WS invalidation,
+        // only after commit; a failed/rolled-back transaction must not expose an uncommitted target.
+        assassinationDrafts.commit(gameId, draft);
+        events.publish(gameId, "ASSASSINATION_TARGET_CHANGED");
+        return result;
+    }
+
+    private GamePlayerRow requireAssassinationTarget(Context c, long gameId, long targetPlayerId) {
         GameActionPolicy.requirePhase(c.game.phase(), Phase.ASSASSINATION);
+        if (!"PLAYING".equals(c.game.status())) throw new BusinessException("INVALID_PHASE", "当前对局不能选择刺杀目标");
         if (c.player.role() != Role.ASSASSIN) throw new BusinessException("FORBIDDEN", "只有刺客可以选择刺杀目标");
         if (targetPlayerId == c.player.id()) throw new BusinessException("PARAM_ERROR", "不能刺杀自己");
         GamePlayerRow target = repository.gamePlayer(gameId, targetPlayerId)
                 .orElseThrow(() -> new BusinessException("PARAM_ERROR", "目标玩家不在当前房间"));
         if (target.alignment() != Alignment.GOOD) throw new BusinessException("PARAM_ERROR", "只能选择正义阵营玩家作为刺杀目标");
+        return target;
+    }
+
+    @Scheduled(fixedDelay = 60000)
+    public void cleanupAssassinationDrafts() { assassinationDrafts.cleanup(); }
+
+    @Transactional
+    public GameState assassinate(long userId, long gameId, long targetPlayerId) {
+        Context c = context(userId, gameId, true);
+        GamePlayerRow target = requireAssassinationTarget(c, gameId, targetPlayerId);
         Winner winner = GameRulesEngine.assassinationWinner(target.role());
         boolean early = c.game.goodScore() < 3;
         String reason = target.role() == Role.MERLIN
                 ? (early ? "EARLY_MERLIN_ASSASSINATED" : "MERLIN_ASSASSINATED")
                 : (early ? "EARLY_ASSASSINATION_MISSED" : "ASSASSINATION_MISSED");
         repository.finish(gameId, winner, reason, target.id());
+        assassinationDrafts.clear(gameId);
         events.publish(gameId, "GAME_FINISHED");
         return state(userId, gameId);
     }
@@ -250,6 +275,7 @@ public class GameService {
         for (GamePlayerRow old : oldPlayers) repository.insertGamePlayer(newGameId, old.userId(), old.nickname(), old.seatNo());
         repository.archiveGamePlayers(gameId);
         repository.deleteBotTestGame(gameId);
+        assassinationDrafts.clear(gameId);
         events.publish(gameId, "REMATCH_CREATED");
         events.publish(newGameId, "REMATCH_CREATED");
         return roomService.get(userId, newGameId);
@@ -260,6 +286,7 @@ public class GameService {
         GameRow game = roomService.requireRoom(gameId, true);
         roomService.requireHost(userId, game);
         if ("FINISHED".equals(game.status()) || "CLOSED".equals(game.status())) return new EndResult("CLOSED".equals(game.status()));
+        assassinationDrafts.clear(gameId);
         if (repository.isBotGame(gameId)) {
             repository.closeGame(gameId);
             repository.deleteBotTestGame(gameId);
@@ -279,6 +306,10 @@ public class GameService {
 
     @Transactional(readOnly = true)
     public GameState state(long userId, long gameId) {
+        return state(userId, gameId, assassinationDrafts.get(gameId));
+    }
+
+    private GameState state(long userId, long gameId, AssassinationDrafts.Draft draft) {
         Context c = context(userId, gameId, false);
         List<GamePlayerRow> players = repository.players(gameId);
         GameRuleConfig config = GameRuleConfig.forPlayers(c.game.playerCount());
@@ -319,6 +350,10 @@ public class GameService {
             ladyEligibleTargetIds = repository.gamePlayers(gameId).stream().map(GamePlayerRow::id)
                     .filter(id -> id != c.player.id() && !previousHolders.contains(id)).toList();
         }
+        AssassinationTarget target = c.game.phase() == Phase.ASSASSINATION && draft.playerId() != null
+                ? players.stream().filter(p -> p.id() == draft.playerId() && p.alignment() == Alignment.GOOD)
+                    .map(p -> new AssassinationTarget(p.id(), requireSeat(p), p.nickname())).findFirst().orElse(null)
+                : null;
         return new GameState(gameId, gameId, c.game.phase().name(), c.game.missionNo(), c.game.proposalNo(), c.game.rejections(),
                 c.game.goodScore(), c.game.evilScore(), leader.id(), requireSeat(leader), leader.nickname(),
                 c.game.missionNo() <= 5 ? config.teamSize(c.game.missionNo()) : 0, config.rejectedTeamsToEvilWin(),
@@ -329,7 +364,8 @@ public class GameService {
                 ladyHolder == null ? null : requireSeat(ladyHolder), ladyHolder == null ? null : ladyHolder.nickname(),
                 isLadyHolder, ladyUsedCount, ladyEligibleTargetIds,
                 c.game.winner() == null ? null : c.game.winner().name(), identities, c.game.finishReason(),
-                revealedEvilIdentities, c.game.phase() == Phase.ASSASSINATION && c.game.goodScore() < 3);
+                revealedEvilIdentities, c.game.phase() == Phase.ASSASSINATION && c.game.goodScore() < 3,
+                target, draft.revision());
     }
 
     private Context context(long userId, long gameId, boolean lock) {
@@ -373,6 +409,7 @@ public class GameService {
                                  String roleCode, String roleName, String alignment, boolean isBot) {}
     public record RevealedIdentity(long playerId, int seatNo, String nickname, String roleCode, String roleName) {}
     public record LadyInspectionResult(long targetPlayerId, int targetSeatNo, String targetNickname, String alignment) {}
+    public record AssassinationTarget(long playerId, int seatNo, String nickname) {}
     public record GameState(long gameId, long roomId, String phase, int missionNo, int proposalNo,
                             int consecutiveRejections, int goodScore, int evilScore, long leaderPlayerId,
                             int leaderSeatNo, String leaderNickname, int requiredTeamSize, int maxRejections,
@@ -383,7 +420,8 @@ public class GameService {
                             MissionResult latestMissionResult, boolean ladyEnabled, Long ladyHolderPlayerId,
                             Integer ladyHolderSeatNo, String ladyHolderNickname, boolean ladyHolder,
                             int ladyUsedCount, List<Long> ladyEligibleTargetIds, String winner, List<PublicIdentity> identities,
-                            String finishReason, List<RevealedIdentity> revealedEvilIdentities, boolean assassinationEarly) {}
+                            String finishReason, List<RevealedIdentity> revealedEvilIdentities, boolean assassinationEarly,
+                            AssassinationTarget assassinationTarget, long assassinationTargetRevision) {}
     public record TeamRequest(List<Long> playerIds) {}
     public record VoteRequest(VoteChoice choice) {}
     public record MissionRequest(MissionChoice choice) {}

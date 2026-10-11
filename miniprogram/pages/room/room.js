@@ -29,6 +29,7 @@ Page({
     targetName: '',
     draftKey: '',
     assassinationTarget: null,
+    assassinationText: '等待刺客刺杀',
     ladyTarget: null,
     ladyResult: null,
     ladyResultGameId: null,
@@ -243,18 +244,27 @@ Page({
     }
   },
   gameStateUpdate(game) {
+    const current = this.data.game;
+    if (current && current.gameId === game.gameId && current.phase === 'ASSASSINATION' &&
+        game.phase === 'ASSASSINATION' && current.assassinationTarget && game.assassinationTarget &&
+        current.assassinationTargetRevision > game.assassinationTargetRevision)
+      game = { ...game, assassinationTarget: current.assassinationTarget,
+        assassinationTargetRevision: current.assassinationTargetRevision };
     const key = `${game.gameId}-${game.missionNo}-${game.proposalNo}-${game.phase}`;
     const newPhase = key !== this.data.draftKey;
     const selecting = ['TEAM_BUILDING', 'ASSASSINATION', 'LADY_OF_LAKE'].includes(game.phase);
+    const target = ui.assassinationTarget(game);
     return {
       game, draftKey: key,
-      selectedIds: selecting ? (newPhase ? [] : this.data.selectedIds) : game.selectedPlayerIds || [],
+      selectedIds: game.phase === 'ASSASSINATION' ? (target ? [target.playerId] : [])
+        : selecting ? (newPhase ? [] : this.data.selectedIds) : game.selectedPlayerIds || [],
       phaseTitle: PHASES[game.phase],
       isLeader: game.leaderPlayerId === this.data.room.myPlayerId,
       missionChoice: newPhase ? '' : this.data.missionChoice,
       missionOverlayOpen: newPhase ? false : this.data.missionOverlayOpen,
       missionOverlayKey: newPhase ? '' : this.data.missionOverlayKey,
-      assassinationTarget: newPhase ? null : this.data.assassinationTarget,
+      assassinationTarget: target ? target.playerId : null,
+      assassinationText: ui.assassinationText(game),
       ladyTarget: newPhase ? null : this.data.ladyTarget,
       viewVotes: newPhase ? false : this.data.viewVotes,
       finishedIdentities: game.phase === 'FINISHED' ? ui.finishedIdentities(game.identities) : [],
@@ -471,7 +481,7 @@ Page({
       id !== this.data.room.myPlayerId &&
       !ui.isRevealedEvil(game, id)
     )
-      this.setData({ assassinationTarget: id, selectedIds: [id] });
+      return this.runGameMutation(() => api.selectAssassinationTarget(game.gameId, id));
     else if (
       game.phase === 'LADY_OF_LAKE' &&
       game.ladyHolder &&
@@ -714,7 +724,7 @@ Page({
         if (r.confirm) this.run(() => {
           const current = this.data.game;
           if (current && current.gameId === gameId && current.phase === 'ASSASSINATION' &&
-              current.assassin && !ui.isRevealedEvil(current, id)) return api.assassinate(gameId, id);
+              current.assassin && this.data.assassinationTarget === id && !ui.isRevealedEvil(current, id)) return api.assassinate(gameId, id);
         });
       },
     });

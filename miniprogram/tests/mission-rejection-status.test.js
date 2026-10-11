@@ -102,8 +102,10 @@ test('rejection indicators stay inside board center and only team-building/votin
     page.data.game.consecutiveRejections=0;page.decoratePlayers();assert.equal(page.data.rejection.forced,false);
   }
 });
-test('assassination evil seats cannot be clicked but do not dim; GOOD target gets amber without mutating public players',()=>{
-  const page=pageAt(); page.setData({role:{roleCode:'ASSASSIN',visiblePlayers:[]},
+test('assassination evil seats cannot be clicked but do not dim; GOOD target gets amber without mutating public players',async()=>{
+  const page=pageAt({selectAssassinationTarget:async()=>({...page.data.game,
+    assassinationTarget:{playerId:2,seatNo:2,nickname:'玩家2'},assassinationTargetRevision:1})});
+  page.setData({role:{roleCode:'ASSASSIN',visiblePlayers:[]},
     game:{...page.data.game,phase:'ASSASSINATION',assassin:true,revealedEvilIdentities:[{playerId:1,roleCode:'ASSASSIN'},{playerId:4,roleCode:'OBERON'}]}});
   const before=JSON.stringify(page.data.room.players); page.decoratePlayers();
   for(const id of [1,4]) {
@@ -112,7 +114,8 @@ test('assassination evil seats cannot be clicked but do not dim; GOOD target get
     page.togglePlayer({detail:{playerId:id}}); assert.equal(page.data.assassinationTarget,null);
   }
   const good=page.data.displayPlayers.find(p=>p.playerId===2); assert.equal(good.unselectable,false); assert.equal(good.revealedEvil,false);
-  page.togglePlayer({detail:{playerId:2}});
+  page.refreshAfterMutation=async()=>{};
+  await page.togglePlayer({detail:{playerId:2}});
   assert.equal(page.data.displayPlayers.find(p=>p.playerId===2).selectionClass,'selected-assassination');
   assert.equal(JSON.stringify(page.data.room.players),before);
   page.setData({selectedIds:[4]});page.decoratePlayers();
@@ -139,11 +142,11 @@ test('public evil red ring and selected target amber ring stay static, private i
   for(const phase of ['TEAM_BUILDING','TEAM_VOTING','MISSION_EXECUTING','LADY_OF_LAKE','FINISHED'])
     assert.deepEqual(ui.assassinationPlayerState({phase,revealedEvilIdentities:[{playerId:4,roleCode:'OBERON'}]}, {playerId:4},1),{revealedEvil:false,unselectable:false,dimmed:false});
 });
-test('final assassination copy is identical for early and normal, non-assassin has only waiting text',()=>{
+test('final assassination copy is identical for early and normal and for all viewers',()=>{
   const markup=read('pages/room/room.wxml');
-  assert.match(markup,/<view class="evil">最终刺杀<\/view>/);
-  assert.match(markup,/刺中梅林，邪恶获胜；刺错则正义获胜/);
-  assert.match(markup,/game.assassin \? '请选择刺杀梅林' : '等待刺客选择梅林'/);
+  assert.doesNotMatch(markup,/最终刺杀|刺中梅林，邪恶获胜；刺错则正义获胜|请选择刺杀梅林|等待刺客选择梅林/);
+  assert.match(markup,/<view class="gold">刺杀梅林阶段<\/view>/);
+  assert.match(markup,/\{\{assassinationText\}\}/);
   assert.doesNotMatch(markup,/game.assassinationEarly|正义已完成 3 个任务|邪恶最后机会|确认后不可更改/);
 });
 test('42/36 crowns remain above 38/34 identity marks; 30px tick and self badge fit independently at 375/390/430 widths',()=>{

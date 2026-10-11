@@ -21,6 +21,10 @@ function fixture(requiredTeamSize = 2) {
     timeline: async () => ({ missions: [], proposals: [] }),
     myRole: async () => ({ roleCode: 'LOYAL_SERVANT', visiblePlayers: [] }),
     submitTeam: async (...args) => calls.push(args),
+    selectAssassinationTarget: async (id,target) => {
+      snapshot = {...page.data.game,assassinationTarget:{playerId:target,seatNo:11-target,nickname:`玩家${target}`},assassinationTargetRevision:target};
+      return snapshot;
+    },
   };
   vm.runInNewContext(read('pages/room/room.js'), {
     Page: value => { page = value; }, wx: { showToast: value => toasts.push(value) },
@@ -95,11 +99,11 @@ test('non-leader busy result-overlay and non-selecting phases cannot edit a team
   }
 });
 
-test('ASSASSINATION remains single-target replacement and forbids targeting self', () => {
+test('ASSASSINATION remains single-target replacement and forbids targeting self', async () => {
   const { page, click } = fixture();
-  page.setData({ game: { phase: 'ASSASSINATION', assassin: true } });
-  click(2); assert.deepEqual(plain(page.data.selectedIds), [2]);
-  click(3); assert.deepEqual(plain(page.data.selectedIds), [3]);
+  page.setData({ game: { ...page.data.game, phase: 'ASSASSINATION', assassin: true } });
+  await click(2); assert.deepEqual(plain(page.data.selectedIds), [2]);
+  await click(3); assert.deepEqual(plain(page.data.selectedIds), [3]);
   click(1); assert.deepEqual(plain(page.data.selectedIds), [3]);
   assert.equal(page.data.assassinationTarget, 3);
   assert.equal(page.data.displayPlayers.find(player => player.playerId === 3).selectionClass, 'selected-assassination');

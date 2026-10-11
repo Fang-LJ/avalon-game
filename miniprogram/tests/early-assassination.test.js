@@ -16,7 +16,9 @@ function fixture(viewer='ASSASSIN', phase='TEAM_BUILDING') {
   const players = roles.map((_,i) => ({ playerId:i+1, seatNo:i+1, nickname:`玩家${i+1}`, avatarUrl:'https://images.example/avatar.jpg' }));
   const room = { roomId:7, currentGameId:7, status:'PLAYING', maxPlayers:10, myPlayerId:roles.indexOf(viewer)+1, players };
   const role = { roleCode:viewer, visiblePlayers:[] };
-  const api = { startAssassination: async id => { calls++; assert.equal(id,7); return snapshot('ASSASSINATION'); } };
+  const api = { startAssassination: async id => { calls++; assert.equal(id,7); return snapshot('ASSASSINATION'); },
+    selectAssassinationTarget: async (id,target) => ({...page.data.game,
+      assassinationTarget:{playerId:target,seatNo:target,nickname:`玩家${target}`},assassinationTargetRevision:target}) };
   vm.runInNewContext(read('pages/room/room.js'), {
     Page:value=>{page=value;}, wx:{showModal:options=>{modal=options;},getStorageSync:()=>0},
     clearInterval(){}, require:name=>name==='../../services/avalon'?api
@@ -119,12 +121,12 @@ test('reveal fields are ignored outside assassination and never disclose injecte
   f.page.setData({game:{...snapshot('ASSASSINATION'),revealedEvilIdentities:[...evil,{playerId:1,roleCode:'MERLIN'}]}});
   f.page.decoratePlayers(); assert.equal(f.page.data.displayPlayers.find(p=>p.playerId===1).markText,'');
 });
-test('only another non-revealed player can be selected as assassination target',()=>{
+test('only another non-revealed player can be selected as assassination target',async()=>{
   const f=fixture('ASSASSIN','ASSASSINATION');
   for(const playerId of [4,5,6,7,8]) f.page.togglePlayer({detail:{playerId}});
   assert.equal(f.page.data.assassinationTarget,null);
-  f.page.togglePlayer({detail:{playerId:1}}); assert.equal(f.page.data.assassinationTarget,1);
-  f.page.togglePlayer({detail:{playerId:2}}); assert.equal(f.page.data.assassinationTarget,2);
+  await f.page.togglePlayer({detail:{playerId:1}}); assert.equal(f.page.data.assassinationTarget,1);
+  await f.page.togglePlayer({detail:{playerId:2}}); assert.equal(f.page.data.assassinationTarget,2);
   assert.deepEqual(plain(f.page.data.selectedIds),[2]);
   assert.equal(f.page.data.displayPlayers.find(p=>p.playerId===2).selectionClass,'selected-assassination');
   const nonAssassin=fixture('MERLIN','ASSASSINATION'); nonAssassin.page.togglePlayer({detail:{playerId:2}});
@@ -165,7 +167,8 @@ test('final assassination blocks evil target even if caller bypasses seat handle
 test('UI keeps the role-gated early trigger but unifies the final assassination page copy',()=>{
   const wxml=read('pages/room/room.wxml');
   assert.match(wxml,/wx:if="\{\{canEarlyAssassination\}\}"[^>]*bindtap="requestEarlyAssassination"/);
-  assert.match(wxml,/最终刺杀/); assert.match(wxml,/刺中梅林，邪恶获胜；刺错则正义获胜/); assert.match(wxml,/请选择刺杀梅林/);
+  assert.doesNotMatch(wxml,/最终刺杀|刺中梅林，邪恶获胜；刺错则正义获胜|请选择刺杀梅林/);
+  assert.match(wxml,/刺杀梅林阶段/); assert.match(wxml,/\{\{assassinationText\}\}/);
   assert.match(read('pages/room/room.wxss'),/early-assassination-trigger[^}]+var\(--evil\)/);
   assert.match(ui.FINISH.EARLY_MERLIN_ASSASSINATED,/邪恶获胜/); assert.match(ui.FINISH.EARLY_ASSASSINATION_MISSED,/正义获胜/);
 });

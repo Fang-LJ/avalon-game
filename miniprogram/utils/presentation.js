@@ -120,6 +120,18 @@ function assassinationPlayerState(game, player, myPlayerId) {
     dimmed: false,
   };
 }
+function assassinationTarget(game) {
+  const target = game && game.phase === 'ASSASSINATION' && game.assassinationTarget;
+  if (!target || !Number.isSafeInteger(target.playerId) || target.playerId <= 0 ||
+      !Number.isInteger(target.seatNo) || target.seatNo < 1 || target.seatNo > 10 ||
+      typeof target.nickname !== 'string' || isRevealedEvil(game, target.playerId)) return null;
+  // Public target projection contains no GOOD role or private knowledge metadata.
+  return { playerId: target.playerId, seatNo: target.seatNo, nickname: target.nickname };
+}
+function assassinationText(game) {
+  const target = assassinationTarget(game);
+  return target ? `已选择：${target.seatNo}号 ${target.nickname}` : '等待刺客刺杀';
+}
 function rejectionState(game) {
   const max = game && Number.isInteger(game.maxRejections) && game.maxRejections > 0 && game.maxRejections <= 10
     ? game.maxRejections : 0;
@@ -332,6 +344,8 @@ module.exports = {
   revealedEvilIdentities,
   revealedEvilMark,
   assassinationPlayerState,
+  assassinationTarget,
+  assassinationText,
   rejectionState,
   isRevealedEvil,
   privateVisiblePlayer,

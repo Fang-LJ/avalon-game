@@ -451,6 +451,62 @@ class BotGameIntegrationTest {
         assertThrows(BusinessException.class,()->games.startAssassination(assassin.userId(),id));
         assertThrows(BusinessException.class,()->games.assassinate(assassin.userId(),id,target.id()));
     }
+    @Test void assassinationDraftCommitBroadcastsSharedTargetWithoutAnySqlOrHistoryWrite() throws Exception {
+        long id=humanGameWithKnownRoles(); var players=repository.players(id);
+        var assassin=players.stream().filter(p->p.role()==Role.ASSASSIN).findFirst().orElseThrow();
+        var good=players.stream().filter(p->p.alignment()==Alignment.GOOD).toList();
+        games.startAssassination(assassin.userId(),id);
+        var before=jdbc.queryForMap("select * from t_avalon_game where id=?",id);
+        var events=new java.util.concurrent.CopyOnWriteArrayList<RoomEventPublisher.RoomEvent>();
+        context.addApplicationListener((org.springframework.context.ApplicationListener<org.springframework.context.PayloadApplicationEvent<?>>)event->{
+            if(event.getPayload() instanceof RoomEventPublisher.RoomEvent roomEvent && roomEvent.type().equals("ASSASSINATION_TARGET_CHANGED")) {
+                assertNotNull(games.state(host,id).assassinationTarget(),"target is available before broadcasting invalidation");
+                events.add(roomEvent);
+            }
+        });
+        var tx=new org.springframework.transaction.support.TransactionTemplate(context.getBean(DataSourceTransactionManager.class));
+        tx.executeWithoutResult(status->{
+            var response=games.selectAssassinationTarget(assassin.userId(),id,good.getFirst().id());
+            assertEquals(good.getFirst().id(),response.assassinationTarget().playerId());
+            assertTrue(events.isEmpty());assertNull(games.state(host,id).assassinationTarget());
+            status.setRollbackOnly();
+        });
+        assertTrue(events.isEmpty());assertNull(games.state(host,id).assassinationTarget());
+        for(var target:good.subList(0,3)){
+            var response=games.selectAssassinationTarget(assassin.userId(),id,target.id());
+            for(var viewer:players)assertEquals(response.assassinationTarget(),games.state(viewer.userId(),id).assassinationTarget());
+        }
+        assertEquals(3,events.size());assertEquals(before,jdbc.queryForMap("select * from t_avalon_game where id=?",id));
+        assertTrue(repository.proposals(id).isEmpty());assertTrue(repository.missions(id).isEmpty());
+        games.assassinate(assassin.userId(),id,good.getFirst().id());
+        assertEquals(Phase.FINISHED,repository.game(id,false).orElseThrow().phase());
+        assertNull(games.state(host,id).assassinationTarget());
+        assertEquals(good.getFirst().id(),repository.game(id,false).orElseThrow().assassinationTargetGamePlayerId());
+    }
+    @Test void queuedAssassinationSelectionRevalidatesAfterFinalStrikeCommits() throws Exception {
+        long id=humanGameWithKnownRoles();var players=repository.players(id);
+        var assassin=players.stream().filter(p->p.role()==Role.ASSASSIN).findFirst().orElseThrow();
+        var good=players.stream().filter(p->p.alignment()==Alignment.GOOD).toList();
+        games.startAssassination(assassin.userId(),id);games.selectAssassinationTarget(assassin.userId(),id,good.getFirst().id());
+        var executor=java.util.concurrent.Executors.newSingleThreadExecutor();var started=new java.util.concurrent.CountDownLatch(1);
+        var pending=new java.util.concurrent.atomic.AtomicReference<java.util.concurrent.Future<String>>();
+        var tx=new org.springframework.transaction.support.TransactionTemplate(context.getBean(DataSourceTransactionManager.class));
+        try{
+            tx.executeWithoutResult(status->{
+                repository.game(id,true).orElseThrow();
+                pending.set(executor.submit(()->{started.countDown();
+                    try{games.selectAssassinationTarget(assassin.userId(),id,good.get(1).id());return "unexpected-success";}
+                    catch(BusinessException expected){return expected.getCode();}}));
+                try{assertTrue(started.await(5,java.util.concurrent.TimeUnit.SECONDS));
+                    assertThrows(java.util.concurrent.TimeoutException.class,()->pending.get().get(100,java.util.concurrent.TimeUnit.MILLISECONDS));}
+                catch(InterruptedException e){Thread.currentThread().interrupt();throw new RuntimeException(e);}
+                games.assassinate(assassin.userId(),id,good.getFirst().id());
+            });
+            assertEquals("INVALID_PHASE",pending.get().get(5,java.util.concurrent.TimeUnit.SECONDS));
+            assertNull(games.state(host,id).assassinationTarget());
+            assertEquals(good.getFirst().id(),repository.game(id,false).orElseThrow().assassinationTargetGamePlayerId());
+        }finally{executor.shutdownNow();}
+    }
     @Configuration @EnableTransactionManagement
     static class Config {
         @Bean DataSource dataSource() {
