@@ -7,7 +7,6 @@ const SIDE_MARKS = { GOOD_SIDE: ['蓝', 'blue'], EVIL_SIDE: ['红', 'evil'] };
 const OPTION_ORDER = ['MERLIN', 'PERCIVAL', 'LOYAL_SERVANT', 'GOOD_SIDE', 'ASSASSIN',
   'MORGANA', 'MINION', 'MORDRED', 'OBERON', 'EVIL_SIDE'];
 const isSide = code => Object.prototype.hasOwnProperty.call(SIDE_MARKS, code);
-const mixedAlignments = roles => roles.some(role => EVIL.includes(role)) && roles.some(role => !EVIL.includes(role));
 const idValid = id => Number.isSafeInteger(id) && id > 0;
 const allowedPhase = phase => PHASES.includes(phase);
 function storageKey(gameId, myPlayerId) {
@@ -48,6 +47,21 @@ function allowedRolesForTarget(c, targetId) {
   }
   return roles;
 }
+function possibleAlignmentsForTarget(c, targetId) {
+  const allowed = allowedRolesForTarget(c, targetId);
+  if (!allowed.length) return [];
+  // Ordinary evil knows every non-Oberon evil ally. This is a visibility rule,
+  // not a deduction from concrete notes or the remaining role inventory.
+  const roles = ORDINARY_EVIL.includes(c.viewerRole)
+    ? allowed.filter(role => !ORDINARY_EVIL.includes(role)) : allowed;
+  return ['GOOD', 'EVIL'].filter(alignment => roles.some(role =>
+    (EVIL.includes(role) ? 'EVIL' : 'GOOD') === alignment));
+}
+function sideCandidates(c, targetId) {
+  const alignments = possibleAlignmentsForTarget(c, targetId);
+  if (!alignments.length || percivalPair(c).includes(targetId) || knowledge(c, targetId).moon) return [];
+  return alignments.map(alignment => alignment === 'GOOD' ? 'GOOD_SIDE' : 'EVIL_SIDE');
+}
 function baseCounts(c) {
   if (!validContext(c)) return {};
   const counts = roleConfig(c.playerCount);
@@ -71,13 +85,11 @@ function sanitizeGuesses(c, raw) {
     if (String(id) !== key || pair.includes(id) || !allowedRolesForTarget(c, id).includes(role) || !(counts[role] > 0)) continue;
     result[id] = role; counts[role]--;
   }
-  // Side notes never allocate a role slot. Reconcile them only after concrete notes,
-  // against the same available candidates that the dialog will actually offer.
+  // Side validity depends only on system knowledge, never on concrete-note counts.
   for (const key of Object.keys(raw)) {
     const id = Number(key), code = raw[key];
     if (String(id) !== key || !isSide(code) || pair.includes(id)) continue;
-    const roles = allowedRolesForTarget(c, id).filter(role => counts[role] > 0);
-    if (mixedAlignments(roles)) result[id] = code;
+    if (sideCandidates(c, id).includes(code)) result[id] = code;
   }
   return result;
 }
@@ -94,9 +106,7 @@ function guessCandidates(c, targetId, guesses = {}) {
   return roles.filter(role => remaining[role] > 0);
 }
 function markCandidates(c, targetId, guesses = {}) {
-  const roles = guessCandidates(c, targetId, guesses);
-  return !percivalPair(c).includes(targetId) && mixedAlignments(roles)
-    ? [...roles, 'GOOD_SIDE', 'EVIL_SIDE'] : roles;
+  return [...guessCandidates(c, targetId, guesses), ...sideCandidates(c, targetId)];
 }
 function applyGuess(c, guesses, targetId, role) {
   const next = sanitizeGuesses(c, guesses);
@@ -143,5 +153,6 @@ function removeGuesses(key, storage) {
   try { storage.removeStorageSync(key); } catch (_) { /* Phase render gate still hides every guess. */ }
 }
 module.exports = { allowedPhase, storageKey, knowledge, percivalPair, allowedRolesForTarget, remainingRoleCounts,
+  possibleAlignmentsForTarget, sideCandidates,
   sanitizeGuesses, guessCandidates, markCandidates, applyGuess, clearGuess, displayIdentityMark, candidateOptions,
   loadGuesses, saveGuesses, removeGuesses };

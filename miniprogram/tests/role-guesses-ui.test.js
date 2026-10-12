@@ -45,8 +45,8 @@ test('flat options contain only available roles and reediting releases current c
   const f=fixture('ASSASSIN',7,[{playerId:2,knowledgeType:'EVIL_ALLY',roleCode:'MORGANA'}]);
   choose(f,'OBERON',3);
   const sheet=open(f,4);
-  assert.deepEqual(plain(sheet.options.map(p=>p.roleCode)),['MERLIN','PERCIVAL','LOYAL_SERVANT']);
-  assert.ok(sheet.options.every(p=>p.tone==='good'));
+  assert.deepEqual(plain(sheet.options.map(p=>p.roleCode)),['MERLIN','PERCIVAL','LOYAL_SERVANT','GOOD_SIDE','EVIL_SIDE']);
+  assert.ok(sheet.options.filter(p=>p.roleCode!=='EVIL_SIDE').every(p=>p.tone==='good'));
   f.page.closeRoleGuess({detail:{scope:sheet.scope}});
   assert.ok(open(f,3).options.some(p=>p.roleCode==='OBERON' && p.tone==='evil'));
   clear(f,3);assert.ok(open(f,4).options.some(p=>p.roleCode==='OBERON' && p.tone==='evil'));
@@ -303,4 +303,27 @@ for(const phase of ['ASSASSINATION','FINISHED']) test(`${phase}: clears concrete
   assert.equal(f.storage.has(d.storageKey(42,1)),false);
   assert.deepEqual(plain(f.page.data.personalGuesses),{});assert.equal(f.page.data.roleGuessSheet,null);
   assert.equal(f.page.data.displayPlayers.some(p=>p.markType==='GUESS'),false);
+});
+
+test('actual room dialog keeps side choices and saved side badges after all evil slots are marked',()=>{
+  const f=fixture('LOYAL_SERVANT',7,[]);
+  choose(f,'EVIL_SIDE',5);choose(f,'GOOD_SIDE',6);
+  choose(f,'ASSASSIN',2);choose(f,'MORGANA',3);choose(f,'OBERON',4);
+  assert.equal(display(f,5).markText,'红');assert.equal(display(f,6).markText,'蓝');
+  assert.equal(f.storage.get(d.storageKey(42,1)).guesses[5],'EVIL_SIDE');
+  const sheet=open(f,7);
+  assert.deepEqual(plain(sheet.options.map(p=>p.roleCode)),['MERLIN','PERCIVAL','LOYAL_SERVANT','GOOD_SIDE','EVIL_SIDE']);
+  choose(f,'EVIL_SIDE',7);choose(f,'EVIL_SIDE',7);
+  assert.equal(f.page.data.personalGuesses[7],undefined);assert.equal(f.page.data.personalGuesses[5],'EVIL_SIDE');
+  f.page.decoratePlayers();assert.equal(display(f,5).markText,'红');
+  const restored=fixture('LOYAL_SERVANT',7,[],f.storage);assert.equal(display(restored,5).markText,'红');
+  assert.deepEqual(f.calls,[]);assert.equal(f.vibration.length,0);
+});
+test('single-good system context offers blue through the unchanged dialog and supports click cancellation',()=>{
+  const f=fixture('MERLIN',5,[{playerId:2,knowledgeType:'EVIL'}]);
+  const sheet=open(f,3);
+  assert.deepEqual(plain(sheet.options.map(p=>p.roleCode)),['PERCIVAL','LOYAL_SERVANT','GOOD_SIDE']);
+  choose(f,'GOOD_SIDE',3);assert.equal(display(f,3).markText,'蓝');
+  choose(f,'GOOD_SIDE',3);assert.equal(display(f,3).markType,'');
+  assert.deepEqual(f.calls,[]);
 });
