@@ -4,7 +4,7 @@ Component({
   methods: {
     choose(e) {
       const sheet = this.data.sheet, roleCode = e.currentTarget.dataset.roleCode;
-      if (!sheet || ![...sheet.goodOptions, ...sheet.evilOptions].some(option => option.roleCode === roleCode)) return;
+      if (!sheet || !(sheet.options || []).some(option => option.roleCode === roleCode)) return;
       this.triggerEvent('choose', { scope: sheet.scope, playerId: sheet.playerId, roleCode });
     },
     clear() {

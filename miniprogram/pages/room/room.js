@@ -498,13 +498,11 @@ Page({
   buildRoleGuessSheet(playerId, scope) {
     if (!this.data.canGuessRoles) return null;
     const c = this.roleGuessContext(), options = deduction.candidateOptions(
-      deduction.guessCandidates(c, playerId, this.data.personalGuesses));
+      deduction.markCandidates(c, playerId, this.data.personalGuesses));
     const player = c.players.find(p => p.playerId === playerId);
     if (!player || !options.length) return null;
     const currentRole = this.data.personalGuesses[playerId] || '';
-    return { scope, playerId, seatNo: player.seatNo, nickname: player.nickname, currentRole,
-      currentName: ui.ROLE_NAMES[currentRole] || '',
-      goodOptions: options.filter(option => !option.evil), evilOptions: options.filter(option => option.evil) };
+    return { scope, playerId, currentRole, options };
   },
   openRoleGuess(e) {
     const { game, busy, missionResultOpen, missionOverlayOpen, roleOverlay, missionDetail, ladyResult } = this.data;
@@ -529,8 +527,9 @@ Page({
         deduction.storageKey(game.gameId, room.myPlayerId) !== this.roleGuessScope) return;
     const c = this.roleGuessContext();
     if (deduction.knowledge(c, sheet.playerId).exactRole ||
-        !clear && !deduction.guessCandidates(c, sheet.playerId, this.data.personalGuesses).includes(detail.roleCode)) return;
-    const next = clear ? deduction.clearGuess(c, this.data.personalGuesses, sheet.playerId)
+        !clear && !deduction.markCandidates(c, sheet.playerId, this.data.personalGuesses).includes(detail.roleCode)) return;
+    const cancel = clear || this.data.personalGuesses[sheet.playerId] === detail.roleCode;
+    const next = cancel ? deduction.clearGuess(c, this.data.personalGuesses, sheet.playerId)
       : deduction.applyGuess(c, this.data.personalGuesses, sheet.playerId, detail.roleCode);
     if (!deduction.saveGuesses(this.roleGuessScope, next, wx)) {
       if (typeof wx.showToast === 'function') wx.showToast({ title: '个人推测无法保存，请重试', icon: 'none' });

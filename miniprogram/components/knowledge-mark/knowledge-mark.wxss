@@ -7,6 +7,7 @@
 .role-mark { border: 1rpx solid; font-size: 22rpx; font-weight: 900; line-height: 1; }
 .role-evil { background: #6f2833; border-color: #c86472; color: #fff2f2; }
 .role-loyal { background: #255c62; border-color: #66c5c6; color: #dcffff; }
+.role-blue { background: #213f63; border-color: #4B86C6; color: #78B7FF; }
 .role-merlin { background: #594a22; border-color: #e2bf62; color: #f5dc91; }
 .role-percival { background: #493a69; border-color: #b69cff; color: #f1eaff; }
 .guess-role-mark { position: relative; overflow: visible; }

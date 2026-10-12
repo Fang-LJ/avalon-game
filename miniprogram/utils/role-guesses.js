@@ -3,6 +3,11 @@ const { roleConfig, ROLE_MARKS, ROLE_NAMES } = require('./presentation');
 const PHASES = Object.freeze(['TEAM_BUILDING', 'TEAM_VOTING', 'MISSION_EXECUTING', 'LADY_OF_LAKE']);
 const EVIL = ['MORGANA', 'ASSASSIN', 'MINION', 'MORDRED', 'OBERON'];
 const ORDINARY_EVIL = EVIL.filter(role => role !== 'OBERON');
+const SIDE_MARKS = { GOOD_SIDE: ['蓝', 'blue'], EVIL_SIDE: ['红', 'evil'] };
+const OPTION_ORDER = ['MERLIN', 'PERCIVAL', 'LOYAL_SERVANT', 'GOOD_SIDE', 'ASSASSIN',
+  'MORGANA', 'MINION', 'MORDRED', 'OBERON', 'EVIL_SIDE'];
+const isSide = code => Object.prototype.hasOwnProperty.call(SIDE_MARKS, code);
+const mixedAlignments = roles => roles.some(role => EVIL.includes(role)) && roles.some(role => !EVIL.includes(role));
 const idValid = id => Number.isSafeInteger(id) && id > 0;
 const allowedPhase = phase => PHASES.includes(phase);
 function storageKey(gameId, myPlayerId) {
@@ -66,12 +71,20 @@ function sanitizeGuesses(c, raw) {
     if (String(id) !== key || pair.includes(id) || !allowedRolesForTarget(c, id).includes(role) || !(counts[role] > 0)) continue;
     result[id] = role; counts[role]--;
   }
+  // Side notes never allocate a role slot. Reconcile them only after concrete notes,
+  // against the same available candidates that the dialog will actually offer.
+  for (const key of Object.keys(raw)) {
+    const id = Number(key), code = raw[key];
+    if (String(id) !== key || !isSide(code) || pair.includes(id)) continue;
+    const roles = allowedRolesForTarget(c, id).filter(role => counts[role] > 0);
+    if (mixedAlignments(roles)) result[id] = code;
+  }
   return result;
 }
 function remainingRoleCounts(c, guesses = {}, editingTargetId) {
   const counts = baseCounts(c), pair = percivalPair(c);
   for (const [id, role] of Object.entries(sanitizeGuesses(c, guesses)))
-    if (Number(id) !== editingTargetId && !pair.includes(Number(id))) counts[role]--;
+    if (!isSide(role) && Number(id) !== editingTargetId && !pair.includes(Number(id))) counts[role]--;
   return counts;
 }
 function guessCandidates(c, targetId, guesses = {}) {
@@ -80,15 +93,20 @@ function guessCandidates(c, targetId, guesses = {}) {
   const remaining = remainingRoleCounts(c, guesses, targetId);
   return roles.filter(role => remaining[role] > 0);
 }
+function markCandidates(c, targetId, guesses = {}) {
+  const roles = guessCandidates(c, targetId, guesses);
+  return !percivalPair(c).includes(targetId) && mixedAlignments(roles)
+    ? [...roles, 'GOOD_SIDE', 'EVIL_SIDE'] : roles;
+}
 function applyGuess(c, guesses, targetId, role) {
   const next = sanitizeGuesses(c, guesses);
-  if (!guessCandidates(c, targetId, next).includes(role)) return next;
+  if (!markCandidates(c, targetId, next).includes(role)) return next;
   const pair = percivalPair(c);
   if (pair.includes(targetId)) {
     const otherId = pair.find(id => id !== targetId);
     next[targetId] = role; next[otherId] = role === 'MERLIN' ? 'MORGANA' : 'MERLIN';
   } else next[targetId] = role;
-  return next;
+  return sanitizeGuesses(c, next);
 }
 function clearGuess(c, guesses, targetId) {
   const next = sanitizeGuesses(c, guesses), pair = percivalPair(c);
@@ -96,12 +114,16 @@ function clearGuess(c, guesses, targetId) {
   return next;
 }
 function displayIdentityMark(systemPlayer, role, phase) {
-  if (!allowedPhase(phase) || systemPlayer.me || systemPlayer.revealedEvil || systemPlayer.markType === 'ROLE' || !ROLE_MARKS[role])
+  const mark = isSide(role) ? SIDE_MARKS[role] : ROLE_MARKS[role];
+  if (!allowedPhase(phase) || systemPlayer.me || systemPlayer.revealedEvil || systemPlayer.markType === 'ROLE' || !mark)
     return {};
-  return { markType: 'GUESS', markText: ROLE_MARKS[role][0], markClass: ROLE_MARKS[role][1] };
+  return { markType: 'GUESS', markText: mark[0], markClass: mark[1] };
 }
 function candidateOptions(roles) {
-  return roles.map(roleCode => ({ roleCode, name: ROLE_NAMES[roleCode], evil: EVIL.includes(roleCode) }));
+  return [...roles].sort((a,b) => OPTION_ORDER.indexOf(a) - OPTION_ORDER.indexOf(b)).map(roleCode => ({
+    roleCode, name: roleCode === 'GOOD_SIDE' ? '蓝方' : roleCode === 'EVIL_SIDE' ? '红方' : ROLE_NAMES[roleCode],
+    tone: EVIL.includes(roleCode) || roleCode === 'EVIL_SIDE' ? 'evil' : 'good',
+  }));
 }
 function loadGuesses(key, c, storage) {
   if (!key) return {};
@@ -121,5 +143,5 @@ function removeGuesses(key, storage) {
   try { storage.removeStorageSync(key); } catch (_) { /* Phase render gate still hides every guess. */ }
 }
 module.exports = { allowedPhase, storageKey, knowledge, percivalPair, allowedRolesForTarget, remainingRoleCounts,
-  sanitizeGuesses, guessCandidates, applyGuess, clearGuess, displayIdentityMark, candidateOptions,
+  sanitizeGuesses, guessCandidates, markCandidates, applyGuess, clearGuess, displayIdentityMark, candidateOptions,
   loadGuesses, saveGuesses, removeGuesses };
