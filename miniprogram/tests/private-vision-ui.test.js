@@ -57,9 +57,14 @@ for (const file of ['components/card-deal-stage/card-deal-stage.wxss', 'pages/ro
   test(file + ' truncates only long nicknames while preserving seats and full labels', () => {
     const css = read(file);
     assert.match(css, /\.vision-seat, \.vision-label \{ flex-shrink: 0; white-space: nowrap; \}/);
-    assert.match(css, /\.vision-nickname \{ min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; \}/);
+    assert.match(css, /\.vision-nickname \{ flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; \}/);
     assert.match(css, /\.vision-label \{[^}]*border-radius: 12rpx; color: #FFFFFF;[^}]*\}/);
     assert.match(css, /\.vision-label-evil \{ background: #A93447; \}/);
     assert.match(css, /\.vision-label-candidate \{ background: #8052C1; \}/);
   });
 }
+test('revealed vision gives every player a full-width row with the label at its right edge', () => {
+  const css = read('components/card-deal-stage/card-deal-stage.wxss');
+  assert.match(css, /\.vision-chips \{ display: flex; flex-direction: column; gap: 16rpx; margin-top: 14rpx; \}/);
+  assert.match(css, /\.vision-chip \{[^}]*width: 100%;[^}]*\}/);
+});

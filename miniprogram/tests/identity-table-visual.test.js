@@ -14,7 +14,7 @@ for(const color of ['#A93447','#8052C1','#147FA7'])test(`white badge text on ${c
 });
 test('Merlin uses the specified bright gold without changing badge geometry or adding decoration',()=>{
   const css=read('components/knowledge-mark/knowledge-mark.wxss');
-  assert.match(css,/\.role-merlin \{ background: #D79A22; border-color: #D79A22; \}/);
+  assert.match(css,/\.role-merlin \{ background: #C98A1A; border-color: #C98A1A; \}/);
   assert.match(css,/color: #FFFFFF/);
   assert.doesNotMatch(css,/#A36B13/);
 });
