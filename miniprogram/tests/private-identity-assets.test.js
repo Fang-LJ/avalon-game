@@ -71,7 +71,7 @@ test('room decoration projects local marks, preserves public players, and suppor
 test('identity overlay and dealt identity share authorized character marks and role names', () => {
   for (const file of ['pages/room/room.wxml','components/card-deal-stage/card-deal-stage.wxml']) {
     const markup=read(file);assert.match(markup,/item.markType === 'ROLE'/);assert.match(markup,/item.roleName/);
-    assert.match(markup,/markType="\{\{item.markType\}\}"/);assert.doesNotMatch(markup,/item.roleCode/);
+    assert.match(markup,/item.markType === 'EVIL' \? '红方'/);assert.doesNotMatch(markup,/item.roleCode/);
   }
 });
 test('crown and identity grow independently, action tick stays 30rpx, compact badges fit 9/10 seats', () => {
@@ -84,7 +84,7 @@ test('crown and identity grow independently, action tick stays 30rpx, compact ba
   const compact=css.match(/\.compact \.knowledge-icon \{([^}]+)\}/)[1];
   for(const declaration of ['width: auto','min-width: 34rpx','height: 34rpx','--identity-mark-font-size: 20rpx','--guess-question-font-size: 18rpx','left: calc(100% - 29rpx)'])assert.ok(compact.includes(declaration));
   const mark=read('components/knowledge-mark/knowledge-mark.wxss');assert.match(mark,/--identity-mark-font-size, 22rpx/);
-  for (const color of ['#FFFFFF','#A93447','#147FA7','#A36B13','#8052C1'])assert.ok(mark.includes(color));
+  for (const color of ['#FFFFFF','#A93447','#147FA7','#D79A22','#8052C1'])assert.ok(mark.includes(color));
   for(const n of [5,6,7,8,9,10])assert.equal(new Set(Array.from({length:n},(_,i)=>ui.seatPosition(i+1,n,true))).size,n);
 });
 test('local and prod cards use one HTTPS versioned base without changing login modes', () => {

@@ -189,12 +189,18 @@
 .role-overlay-player {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 12rpx;
+  min-width: 0;
   margin-top: 14rpx !important;
   padding: 12rpx 18rpx;
   border-radius: 18rpx;
   background: var(--soft);
 }
+.vision-seat, .vision-label { flex-shrink: 0; white-space: nowrap; }
+.vision-nickname { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vision-label { padding: 6rpx 10rpx; border-radius: 12rpx; color: #FFFFFF; font-size: 22rpx; font-weight: 900; line-height: 1; }
+.vision-label-evil { background: #A93447; }
+.vision-label-candidate { background: #8052C1; }
 .knowledge-inline {
   display: inline-flex;
   align-items: center;

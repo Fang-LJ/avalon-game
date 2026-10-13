@@ -206,7 +206,7 @@ test('all identity types share white text and opaque rounded rectangles',()=>{
   const body=name=>rules.filter(([,selectors])=>selectors.split(',').map(s=>s.trim()).includes('.'+name)).map(([, ,declarations])=>declarations).join(' ');
   const role=body('role-mark');
   for(const declaration of ['width: max-content','border: 1rpx solid','border-radius: 12rpx','font-weight: 900','white-space: nowrap','color: #FFFFFF']) assert.ok(role.includes(declaration));
-  const tones={evil:'#A93447',loyal:'#147FA7',blue:'#147FA7',merlin:'#A36B13',percival:'#8052C1'};
+  const tones={evil:'#A93447',loyal:'#147FA7',blue:'#147FA7',merlin:'#D79A22',percival:'#8052C1'};
   for(const [tone,bg] of Object.entries(tones)){
     const rule=body('role-'+tone);
     assert.ok(rule.includes('background: '+bg));assert.ok(rule.includes('border-color: '+bg));

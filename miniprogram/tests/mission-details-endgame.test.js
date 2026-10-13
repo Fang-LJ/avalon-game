@@ -94,7 +94,8 @@ for(const type of ['EVIL','EVIL_ALLY'])test(`${type} uses shared red faction rec
   const w=read('components/knowledge-mark/knowledge-mark.wxml'),css=read('components/knowledge-mark/knowledge-mark.wxss');
   assert.match(w,/type === 'EVIL' \|\| type === 'EVIL_ALLY'/);assert.match(w,/class="knowledge-mark role-mark evil-mark">红<\/view>/);
   assert.doesNotMatch(w,/●|☾|🌙|type === 'ASSASSIN'|type === 'MORGANA'/);assert.match(css,/\.evil-mark \{ background: #A93447; border-color: #A93447/);assert.doesNotMatch(w+css,/crescent|cutout/);
-  for(const file of ['components/player-seat/player-seat.wxml','pages/room/room.wxml','components/card-deal-stage/card-deal-stage.wxml'])assert.match(read(file),/<knowledge-mark type=/);
+  assert.match(read('components/player-seat/player-seat.wxml'),/<knowledge-mark type=/);
+  for(const file of ['pages/room/room.wxml','components/card-deal-stage/card-deal-stage.wxml'])assert.match(read(file),/item.markType === 'EVIL' \? '红方'/);
 });
 test('Percival candidates are identical question marks and all private markers remain client-local',()=>{
   const a=ui.privateKnowledge({playerId:12,knowledgeType:'MERLIN_OR_MORGANA'}),b=ui.privateKnowledge({playerId:13,knowledgeType:'MERLIN_OR_MORGANA'});
