@@ -1,6 +1,7 @@
 :host { display: block; }
-.guest-header { padding-bottom: 30rpx; }
-.back { margin: 0 0 20rpx; padding: 6rpx 0; width: max-content; background: transparent; color: #d8b25c; font-size: 26rpx; line-height: 1.5; text-align: left; }
+.guest-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: #101713; }
+.back { position: absolute; left: 16px; display: flex; align-items: center; margin: 0; padding: 0 12px; width: max-content; box-sizing: border-box; border: 1rpx solid #324238; border-radius: 16rpx; background: #18221d; color: #d8b25c; font-size: 26rpx; line-height: 1.5; white-space: nowrap; }
 .back::after { border: 0; }
+.guest-header { padding-bottom: 24rpx; }
 .title { color: #f5f1e8; font-size: 38rpx; font-weight: 800; }
 .subtitle { margin-top: 8rpx; color: #b8b7af; font-size: 23rpx; line-height: 1.6; }

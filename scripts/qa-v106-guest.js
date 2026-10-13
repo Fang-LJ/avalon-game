@@ -35,9 +35,9 @@ fs.mkdirSync(output, { recursive: true });
   }
   try {
     await mini.callWxMethod('removeStorageSync', 'AVALON_GAME_TOKEN');
-    await mini.evaluate(() => { globalThis.__guestCalls = []; });
+    await mini.evaluate(() => { getApp().__guestCalls = []; });
     for (const method of ['login', 'request', 'connectSocket', 'getUserProfile'])
-      await mini.mockWxMethod(method, function () { globalThis.__guestCalls.push(arguments[0]); throw Error('Unexpected guest identity/network call'); });
+      await mini.mockWxMethod(method, function () { getApp().__guestCalls.push(arguments[0]); throw Error('Unexpected guest identity/network call'); });
     console.log('QA_MOCKS_READY');
     let page = await launch('/pages/login/login'); console.log('QA_LOGIN_READY'); await page.waitFor(300);
     const modules = await page.$$('.guest-feature'); check(modules.length === 4, 'four login cards');
@@ -62,17 +62,24 @@ fs.mkdirSync(output, { recursive: true });
         check((await page.data('config')).lady === true, '10-person Lady rule');
         check((await page.data('config')).tasks[3].fails === 2, 'fourth mission threshold');
       }
-      await snap(route); await page.callMethod('back'); await page.waitFor(200); page = await mini.currentPage();
+      const header = await page.$('guest-header'), back = await header.$('.back');
+      const before = await back.offset();
+      check(before.top >= (await mini.systemInfo()).statusBarHeight, 'return clears status bar ' + key);
+      check(before.left + (await back.size()).width < menu.left, 'return clears capsule ' + key);
+      check(await page.$('button[bindtap="back"]') === null, 'no bottom return ' + key);
+      await mini.callWxMethod('pageScrollTo', { scrollTop: 500, duration: 0 }); await page.waitFor(100);
+      const after = await back.offset();
+      check(Math.abs(after.top - (await page.scrollTop()) - before.top) < 1, 'return fixed while scrolling ' + key);
+      await snap(route); await back.tap(); await page.waitFor(200); page = await mini.currentPage();
       check(page.path === 'pages/login/login', 'return from ' + key);
     }
     await (await page.$('[data-key="demo"]')).tap(); await page.waitFor(300); page = await mini.currentPage();
     check(page.path === 'pages/demo-room/demo-room', 'enter demo from login card');
-    check((await page.data('room')).currentPlayers === 1, 'single visitor lobby');
-    await snap('demo-lobby'); await page.callMethod('addBot'); await page.callMethod('fillBots');
-    check((await page.data('room')).currentPlayers === 5, 'single and bulk bots');
-    await page.callMethod('start');
+    check((await page.data('room')).currentPlayers === 5, 'five players auto-created');
+    check((await page.data('game')).phase === 'ROLE_CONFIRM', 'immediate random identity deal');
+    check(await page.$('.demo-lobby') === null, 'no lobby rendering');
     const firstGame = (await page.data('game')).gameId;
-    let iteration = 0, previous = '', results = new Set();
+    let iteration = 0, previous = '', results = new Set(), checkedRole = false, checkedHistory = false;
     while (++iteration < 180) {
       const data = await page.data(), g = data.game;
       if (g.phase !== previous) { console.log('PHASE', g.phase, 'mission', g.missionNo); previous = g.phase; }
@@ -90,6 +97,15 @@ fs.mkdirSync(output, { recursive: true });
         const stage = await page.$('card-deal-stage'); const state = await stage.data('dealStage');
         if (state === 'BACK') await (await (await stage.$('play-card')).$('.card-scene')).tap();
         if (state === 'REVEALED' && !data.role.confirmed) { await snap('demo-identity'); await (await stage.$('.confirm-button')).tap(); }
+      } else if (g.phase !== 'ROLE_CONFIRM' && !checkedRole) {
+        const trigger = await page.$('.demo-role-trigger');
+        await trigger.tap(); check(await page.data('roleOverlay'), 'top identity button opens private card');
+        await snap('demo-role-popup'); const close = await page.$('.demo-role-close'); check(!!close, 'identity close button stays present across bot turns'); await close.tap();
+        check(!(await page.data('roleOverlay')), 'identity popup closes'); checkedRole = true;
+      } else if (data.entries.length && !checkedHistory) {
+        await (await page.$('.history-trigger')).tap(); check(await page.data('viewVotes'), 'small record entry opens history');
+        check(!!(await page.$('game-log')), 'completed public history rendered');
+        await snap('demo-history'); await page.callMethod('toggleVotes'); checkedHistory = true;
       } else if (g.phase === 'TEAM_BUILDING' && data.isLeader) {
         for (let id = 1; id <= g.requiredTeamSize; id++) if (!(await page.data('selectedIds')).includes(id)) await clickSeat(page, id);
         await snap('demo-team'); await page.callMethod('submitTeam');
@@ -108,10 +124,10 @@ fs.mkdirSync(output, { recursive: true });
     check(iteration < 180, 'full game completes without bot stall');
     await page.callMethod('restart'); check((await page.data('game')).gameId !== firstGame, 'rematch uses new random deal');
     check((await page.data('game')).phase === 'ROLE_CONFIRM', 'rematch resets animation phase');
-    await mini.mockWxMethod('showModal', { confirm: true, cancel: false });
-    await page.callMethod('exit'); await page.waitFor(900);
-    check((await mini.currentPage()).path === 'pages/login/login', 'confirmed exit returns login');
-    const calls = await mini.evaluate(() => globalThis.__guestCalls);
+    await mini.mockWxMethod('showModal', function () { throw Error('Exit must not request confirmation'); });
+    await (await (await page.$('guest-header')).$('.back')).tap(); await page.waitFor(900);
+    check((await mini.currentPage()).path === 'pages/login/login', 'direct exit returns login');
+    const calls = await mini.evaluate(() => getApp().__guestCalls);
     check(calls.length === 0, 'zero login, user profile, backend requests, or WebSocket calls');
     fs.writeFileSync(path.join(output,'report.json'), JSON.stringify({ system: await mini.systemInfo(), checks: checks.length, results: [...results], networkCalls: calls.length }, null, 2));
     console.log('NATIVE_GUEST_PASS', checks.length, 'checks', output);
@@ -120,6 +136,6 @@ fs.mkdirSync(output, { recursive: true });
     for (const method of ['login','request','connectSocket','getUserProfile','showModal']) await mini.restoreWxMethod(method);
     if (token) await mini.callWxMethod('setStorageSync','AVALON_GAME_TOKEN',token);
     else await mini.callWxMethod('removeStorageSync','AVALON_GAME_TOKEN');
-    await mini.evaluate(() => { delete globalThis.__guestCalls; }); mini.disconnect();
+    await mini.evaluate(() => { delete getApp().__guestCalls; }); mini.disconnect();
   }
 })().catch(error => { console.error(error); process.exitCode = 1; });

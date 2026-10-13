@@ -12,5 +12,4 @@
     <view wx:for="{{config.tasks}}" wx:key="n" class="task-detail"><text>第 {{item.n}} 轮 · {{item.size}} 人</text><text class="{{item.fails === 2 ? 'gold' : 'muted'}}">{{item.fails}} 张失败牌即失败</text></view>
   </view>
   <view class="guest-card"><view class="guest-heading">特殊规则</view><view class="guest-copy">{{config.fourth === 2 ? '第四轮需要两张失败牌才会失败，一张失败牌仍算任务成功。' : '每轮出现一张失败牌，任务就失败。'}}</view><view class="guest-note">{{config.lady ? '本局启用湖中仙女：第二、三、四轮任务结束后检查阵营并转交，不能检查自己或曾经的持有者。' : '本局不启用湖中仙女。'}}</view></view>
-  <button class="btn ghost guest-back" bindtap="back">返回登录页</button>
 </view>

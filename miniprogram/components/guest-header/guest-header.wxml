@@ -1,5 +1,7 @@
-<view class="guest-header" style="padding-top: {{top}}px;">
-  <button class="back" bindtap="back" aria-label="返回">‹ 返回</button>
-  <view class="title">{{title}}</view>
-  <view class="subtitle">{{subtitle}}</view>
+<view class="guest-nav" style="height: {{contentTop}}px;">
+  <button class="back" style="top: {{navTop}}px; height: {{navHeight}}px; max-width: {{navWidth}}px;" bindtap="back" aria-label="返回主页">‹ 返回主页</button>
+</view>
+<view class="guest-header" style="padding-top: {{contentTop}}px;">
+  <view wx:if="{{title}}" class="title">{{title}}</view>
+  <view wx:if="{{subtitle}}" class="subtitle">{{subtitle}}</view>
 </view>

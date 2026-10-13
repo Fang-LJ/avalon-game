@@ -31,5 +31,4 @@
     <view class="guest-copy">初始持有者是首任队长的前一号位。第二、三、四轮任务结束后，可私下查看一名玩家的阵营，再将湖中仙女交给对方。</view>
     <view class="guest-note">不能查自己或曾经持有过湖中仙女的玩家。如果第三次任务失败，对局直接结束；若已完成三个成功任务，湖中仙女结算后再进入刺杀。</view>
   </view>
-  <button class="btn ghost guest-back" bindtap="back">返回登录页</button>
 </view>

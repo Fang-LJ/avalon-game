@@ -1,12 +1,11 @@
+const { readNavigationMetrics } = require('../../utils/guest-navigation');
 Component({
   properties: { title: String, subtitle: String },
-  data: { top: 56 },
-  lifetimes: {
-    attached() {
-      const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
-      const capsule = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null;
-      this.setData({ top: Math.max((info.statusBarHeight || 20) + 40, capsule ? capsule.bottom + 12 : 0) });
-    },
+  data: { navTop: 24, navHeight: 32, navWidth: 288, contentTop: 68 },
+  lifetimes: { attached() { this.updateLayout(); } },
+  pageLifetimes: { resize() { this.updateLayout(); } },
+  methods: {
+    updateLayout() { this.setData(readNavigationMetrics()); },
+    back() { this.triggerEvent('back'); },
   },
-  methods: { back() { this.triggerEvent('back'); } },
 });
