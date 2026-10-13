@@ -55,9 +55,9 @@
 .feature-icon { width: 48rpx; height: 48rpx; }
 
 .agreement-area { font-size: 23rpx; display: flex; align-items: center; gap: 6px; margin-top: 14px; }
-.agreement-checkbox { flex-shrink: 0; width: 44px; height: 44px; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 50%; background: transparent; font-size: inherit; line-height: 1; }
+.agreement-checkbox { flex-shrink: 0; width: 44px; height: 44px; margin: 0; padding: 0; display: flex; align-items: center; justify-content: flex-end; border: 0; border-radius: 50%; background: transparent; font-size: inherit; line-height: 1; }
 .agreement-checkbox::after { border: 0; }
-.agreement-circle { width: 1em; height: 1em; border: 1px solid #819587; border-radius: 50%; background: transparent; display: flex; align-items: center; justify-content: center; color: var(--bg); font-size: inherit; font-weight: 700; line-height: 1; }
+.agreement-circle { width: 1.2em; height: 1.2em; border: 1px solid #819587; border-radius: 50%; background: transparent; display: flex; align-items: center; justify-content: center; color: var(--bg); font-size: inherit; font-weight: 700; line-height: 1; }
 .agreement-circle text { font-size: 0.8em; }
 .agreement-checkbox.checked .agreement-circle { background: var(--gold); border-color: var(--gold); }
 .agreement-copy { flex: 1; min-width: 0; font-size: inherit; line-height: 1.8; color: var(--muted); overflow-wrap: anywhere; }

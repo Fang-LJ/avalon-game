@@ -48,7 +48,7 @@ fs.mkdirSync(output, { recursive: true });
     check((await page.$$('.guest-feature')).length === 4, 'four guest modules retained');
     const circle = await (await page.$('.agreement-circle')).size(), hot = await (await page.$('.agreement-checkbox')).size();
     const copyFont = parseFloat(await (await page.$('.agreement-copy')).style('font-size'));
-    check(Math.abs(circle.width - copyFont) <= 1 && circle.width === circle.height, 'circle matches agreement text size');
+    check(Math.abs(circle.width - copyFont * 1.2) <= 1 && circle.width === circle.height, 'circle is slightly larger than agreement text');
     check(await page.$('.login-actions .footer-note') === null, 'account creation caption removed');
     check(hot.width >= 44 && hot.height >= 44, '44px checkbox touch target');
     check(await page.$('.agreement-hint') === null, 'no constant consent hint');
