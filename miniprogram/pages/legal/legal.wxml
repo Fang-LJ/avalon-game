@@ -1,0 +1,12 @@
+<view class="page guest-page legal-page" wx:if="{{document}}">
+  <guest-header title="{{document.title}}" goldTitle="{{true}}" backLabel="返回" bind:back="back" />
+  <view class="legal-metadata">
+    <view>版本 {{document.version}}</view>
+    <view>发布日期：{{document.publishedAt}}</view>
+    <view>生效日期：{{document.effectiveAt}}</view>
+  </view>
+  <view wx:for="{{document.sections}}" wx:key="title" class="guest-card legal-section">
+    <view class="guest-heading">{{item.title}}</view>
+    <view wx:for="{{item.blocks}}" wx:for-item="block" wx:key="text" class="legal-block legal-{{block.kind}}">{{block.kind === 'bullet' ? '• ' : ''}}{{block.text}}</view>
+  </view>
+</view>

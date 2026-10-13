@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "协议阅读",
+  "usingComponents": {
+    "guest-header": "/components/guest-header/guest-header"
+  }
+}

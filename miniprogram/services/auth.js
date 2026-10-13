@@ -1,6 +1,7 @@
 const { request } = require('../utils/request');
 const tokenStore = require('../utils/token');
 const { getConfig, getEnvironment } = require('../utils/config');
+const consent = require('../utils/legal-consent');
 const diagnostics = require('../utils/diagnostics');
 const MOCK_KEY = 'AVALON_MOCK_USER';
 const MOCK_USERS = Array.from({ length: 10 }, (_, i) => ({
@@ -19,7 +20,15 @@ function currentMockUser() {
     MOCK_USERS[0]
   );
 }
+function hasAgreementConsent() { return consent.isCurrent(tokenStore.getToken()); }
+function cancelLogin() { generation++; loginPromise = null; }
+function setAgreementConsent(agreed) {
+  cancelLogin();
+  if (agreed) return consent.accept(tokenStore.getToken());
+  consent.clear();
+}
 function login() {
+  if (!hasAgreementConsent()) return Promise.reject(new Error('请先阅读并同意协议'));
   if (loginPromise) return loginPromise;
   const attempt = ++generation;
   if (!isMockLogin()) diagnostics.loginEvent('wx.login started');
@@ -44,6 +53,7 @@ function login() {
       );
   loginPromise = credentials
     .then((data) => {
+      if (attempt !== generation || !hasAgreementConsent()) throw new Error('登录已取消，请确认协议后重试');
       if (!isMockLogin()) diagnostics.loginEvent('auth wx-login request started');
       return request({
         url: '/api/auth/wx-login',
@@ -53,7 +63,8 @@ function login() {
       });
     })
     .then((result) => {
-      if (attempt !== generation) throw new Error('登录已取消');
+      if (attempt !== generation || !hasAgreementConsent()) throw new Error('登录已取消，请确认协议后重试');
+      consent.bindSession(result.token, result.userId);
       tokenStore.setToken(result.token);
       return result;
     })
@@ -63,25 +74,32 @@ function login() {
   return loginPromise;
 }
 function validateSession() {
-  if (!tokenStore.getToken()) return Promise.resolve(null);
-  return request({ url: '/api/avalon/me/profile', showError: false }).catch(
-    (error) => {
-      if (error.statusCode === 401 || error.code === 'UNAUTHORIZED') {
-        tokenStore.clearToken();
-        return null;
-      }
-      throw error;
-    },
-  );
+  const token = tokenStore.getToken(), attempt = generation;
+  if (!token || !consent.isCurrent(token)) return Promise.resolve(null);
+  return request({ url: '/api/avalon/me/profile', showError: false,
+    sessionGuard: () => attempt === generation && token === tokenStore.getToken() && consent.isCurrent(token) }).then(profile => {
+    if (attempt !== generation || token !== tokenStore.getToken() || !consent.isCurrent(token)) return null;
+    const record = consent.receipt();
+    if (record.userId != null && profile.userId != null && record.userId !== profile.userId) {
+      setAgreementConsent(false); return null;
+    }
+    return profile;
+  }).catch(error => {
+    if (attempt !== generation || token !== tokenStore.getToken()) return null;
+    if (error.statusCode === 401 || error.code === 'UNAUTHORIZED') {
+      tokenStore.clearToken(); return null;
+    }
+    throw error;
+  });
 }
 function requireSession() {
-  if (tokenStore.getToken()) return true;
+  if (tokenStore.getToken() && hasAgreementConsent()) return true;
   wx.reLaunch({ url: '/pages/login/login' });
   return false;
 }
 function logout() {
-  generation++;
-  loginPromise = null;
+  cancelLogin();
+  consent.clear();
   tokenStore.clearToken();
 }
 function selectMockUser(key) {
@@ -89,12 +107,19 @@ function selectMockUser(key) {
     return Promise.reject(new Error('仅 local 环境允许模拟登录'));
   if (!MOCK_USERS.some((u) => u.key === String(key)))
     return Promise.reject(new Error('无效的模拟用户'));
-  logout();
+  if (!hasAgreementConsent()) return Promise.reject(new Error('请先阅读并同意协议'));
+  // The user explicitly selected this local account after checking the agreements.
+  cancelLogin();
+  tokenStore.clearToken();
+  consent.bindSession('', null);
   wx.setStorageSync(MOCK_KEY, String(key));
   return login();
 }
 module.exports = {
   login,
+  hasAgreementConsent,
+  setAgreementConsent,
+  cancelLogin,
   validateSession,
   requireSession,
   logout,

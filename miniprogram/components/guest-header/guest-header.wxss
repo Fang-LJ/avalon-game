@@ -5,3 +5,5 @@
 .guest-header { padding-bottom: 24rpx; }
 .title { color: #f5f1e8; font-size: 38rpx; font-weight: 800; }
 .subtitle { margin-top: 8rpx; color: #b8b7af; font-size: 23rpx; line-height: 1.6; }
+
+.title.gold-title { color: #d8b25c; }

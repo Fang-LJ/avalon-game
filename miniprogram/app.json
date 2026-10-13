@@ -12,7 +12,8 @@
     "pages/guide/guide",
     "pages/roles/roles",
     "pages/configuration/configuration",
-    "pages/demo-room/demo-room"
+    "pages/demo-room/demo-room",
+    "pages/legal/legal"
   ],
   "window": {
     "navigationStyle": "custom",

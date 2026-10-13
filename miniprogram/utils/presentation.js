@@ -323,14 +323,6 @@ function showRules() {
     showCancel: false,
   });
 }
-function showLegal() {
-  wx.showModal({
-    title: '用户协议与隐私说明',
-    content:
-      '本应用使用微信登录标识识别账号，保存昵称和对局记录。角色、任务出票及湖中仙女结果按游戏规则展示：进入刺杀时仅公开邪恶身份，正义身份仍保密；对局结束后，本局参与者可查看包含个人出票的完整复盘。正式上线前请以运营方公布的用户协议及微信隐私保护指引为准。',
-    showCancel: false,
-  });
-}
 module.exports = {
   ROLE_CONFIGS,
   ROLE_MARKS,
@@ -363,5 +355,4 @@ module.exports = {
   finishedGroups,
   missionDetail,
   showRules,
-  showLegal,
 };

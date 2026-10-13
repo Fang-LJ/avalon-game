@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
+const createConsent = require('./helpers/legal-consent-fixture');
 function moduleAt(file, mocks = {}, globals = {}) {
   const box = {
     module: { exports: {} },
@@ -56,6 +57,7 @@ function authFixture(env, flag) {
       wxLogins++;
       o.success({ code: 'wechat-code' });
     },
+    removeStorageSync: k => { delete store[k]; },
     reLaunch() {},
   };
   const auth = moduleAt(
@@ -65,6 +67,7 @@ function authFixture(env, flag) {
         getEnvironment: () => env,
         getConfig: () => ({ mockLogin: flag }),
       },
+      '../utils/legal-consent': createConsent(wx),
       '../utils/token': token,
       '../utils/request': {
         request: (o) => {
@@ -77,6 +80,7 @@ function authFixture(env, flag) {
     },
     { wx },
   );
+  auth.setAgreementConsent(true);
   return { auth, calls, store, wxLogins: () => wxLogins };
 }
 test('app launch never logs in', () => {
@@ -118,7 +122,7 @@ test('empty session does not silently login; token validates profile only', asyn
   const f = authFixture('prod', false);
   assert.equal(await f.auth.validateSession(), null);
   assert.equal(f.calls.length, 0);
-  f.store.token = 'saved';
+  f.store.token = 'saved'; f.auth.setAgreementConsent(true);
   await f.auth.validateSession();
   assert.equal(f.calls[0].url, '/api/avalon/me/profile');
   assert.equal(f.wxLogins(), 0);
@@ -126,7 +130,11 @@ test('empty session does not silently login; token validates profile only', asyn
 test('login requires explicit button', async () => {
   let calls = 0,
     redirect;
+  let agreed = false;
   const auth = {
+    hasAgreementConsent: () => agreed,
+    setAgreementConsent: value => { agreed = value; },
+    cancelLogin() {},
     isMockLogin: () => false,
     currentMockUser: () => ({ key: '1' }),
     validateSession: () => Promise.resolve(null),
@@ -147,7 +155,8 @@ test('login requires explicit button', async () => {
   page.onShow();
   await new Promise(setImmediate);
   assert.equal(calls, 0);
-  page.login();
+  page.login(); await new Promise(setImmediate); assert.equal(calls, 0);
+  page.toggleAgreement(); page.login();
   await new Promise(setImmediate);
   assert.equal(calls, 1);
   assert.equal(redirect, '/pages/index/index');
@@ -166,6 +175,7 @@ test('invalid token clears session without wx.login', async () => {
         getEnvironment: () => 'prod',
         getConfig: () => ({}),
       },
+      '../utils/legal-consent': { isCurrent: () => true },
       '../utils/token': token,
       '../utils/request': {
         request: () => Promise.reject({ statusCode: 401 }),

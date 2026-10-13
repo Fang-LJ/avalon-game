@@ -37,7 +37,8 @@ Page({
     wx.reLaunch({ url: '/pages/history/history' });
   },
   rules: ui.showRules,
-  legal: ui.showLegal,
+  agreement() { wx.navigateTo({ url: '/pages/legal/legal?type=agreement' }); },
+  privacy() { wx.navigateTo({ url: '/pages/legal/legal?type=privacy' }); },
   about() {
     wx.showModal({
       title: '关于阿瓦隆',

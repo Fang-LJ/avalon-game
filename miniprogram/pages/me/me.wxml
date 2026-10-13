@@ -33,7 +33,8 @@
   <view class="card settings-menu">
     <view bindtap="history">历史战绩 ›</view>
     <view bindtap="rules">规则与角色说明 ›</view>
-    <view bindtap="legal">用户协议与隐私政策 ›</view>
+    <view bindtap="agreement">用户服务协议 ›</view>
+    <view bindtap="privacy">隐私政策 ›</view>
     <view bindtap="about">关于阿瓦隆 ›</view>
   </view>
   <view class="logout actions">

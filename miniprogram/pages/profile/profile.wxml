@@ -2,7 +2,7 @@
   <page-head
     back="{{mode === 'edit'}}"
     title="完善个人资料"
-    subtitle="设置头像和昵称，让朋友更容易认出你。"
+    subtitle="可使用默认资料，也可自主设置头像和昵称。"
   />
   <view wx:if="{{loading}}" class="card empty">正在加载资料…</view>
   <view wx:else class="card profile-card">
@@ -23,10 +23,10 @@
       <view class="input-label">昵称</view>
       <input
         class="input"
-        type="nickname"
+        type="text"
         maxlength="32"
         value="{{nickname}}"
-        placeholder="选择或填写昵称"
+        placeholder="填写昵称"
         placeholder-class="input-placeholder"
         bindinput="nicknameInput"
         bindblur="nicknameInput"
@@ -41,7 +41,8 @@
       disabled="{{!canSave || uploading || saving}}"
       bindtap="save"
     >
-      {{uploading ? '上传中' : '保存并开始游戏'}}
+      {{uploading ? '上传中' : mode === 'edit' ? '保存资料' : '保存并开始游戏'}}
     </button>
+    <button wx:if="{{mode === 'first'}}" class="btn ghost profile-skip" bindtap="skip" disabled="{{loading || uploading || saving}}">跳过，使用默认资料</button>
   </view>
 </view>

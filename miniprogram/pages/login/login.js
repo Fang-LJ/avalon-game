@@ -1,9 +1,9 @@
 const auth = require('../../services/auth');
 const invite = require('../../utils/invite');
-const { showLegal } = require('../../utils/presentation');
 const { ROUTES } = require('../../utils/guest-content');
 Page({
   data: {
+    agreed: false,
     busy: false,
     checking: true,
     error: '',
@@ -29,36 +29,63 @@ Page({
     });
   },
   onShow() {
-    this.setData({ checking: true });
-    auth
-      .validateSession()
-      .then((profile) => {
-        if (profile) this.goAfterLogin(profile);
+    this.visible = true;
+    const epoch = this.epoch = (this.epoch || 0) + 1;
+    const agreed = auth.hasAgreementConsent();
+    this.setData({ agreed, checking: agreed, busy: false });
+    if (!agreed) return;
+    return auth.validateSession()
+      .then(profile => {
+        if (this.visible && epoch === this.epoch && auth.hasAgreementConsent() && profile) this.goAfterLogin(profile);
       })
-      .catch(() =>
-        this.setData({ error: '无法验证登录状态，请检查网络后重试' }),
-      )
-      .finally(() => this.setData({ checking: false }));
+      .catch(() => {
+        if (this.visible && epoch === this.epoch) this.setData({ error: '无法验证登录状态，请检查网络后重试' });
+      })
+      .finally(() => {
+        if (this.visible && epoch === this.epoch) this.setData({ checking: false, agreed: auth.hasAgreementConsent() });
+      });
+  },
+  onHide() { this.visible = false; this.epoch = (this.epoch || 0) + 1; auth.cancelLogin(); },
+  onUnload() { this.onHide(); },
+  toggleAgreement() {
+    // The links have their own handlers; reading never enters this path.
+    try {
+      const agreed = !this.data.agreed;
+      auth.setAgreementConsent(agreed);
+      this.epoch = (this.epoch || 0) + 1;
+      this.setData({ agreed: agreed && auth.hasAgreementConsent(), busy: false, checking: false, error: '' });
+    } catch (e) { this.setData({ agreed: false, error: e.message || '无法保存同意记录，请重试' }); }
   },
   login() {
-    if (this.data.busy || this.data.checking) return;
-    this.perform(() => auth.login());
+    if (!this.data.agreed || !auth.hasAgreementConsent() || this.data.busy || this.data.checking) return;
+    return this.perform(() => auth.login());
+  },
+  openLegal(e) {
+    const type = e.currentTarget.dataset.type;
+    if (['agreement', 'privacy'].includes(type)) wx.navigateTo({ url: `/pages/legal/legal?type=${type}` });
   },
   openGuestFeature(e) {
     const url = ROUTES[e.currentTarget.dataset.key];
     if (url) wx.navigateTo({ url });
   },
   perform(task) {
+    if (!this.data.agreed || !auth.hasAgreementConsent() || this.data.busy) return;
+    const epoch = this.epoch = (this.epoch || 0) + 1;
     this.setData({ busy: true, error: '' });
-    return task()
-      .then((result) => this.goAfterLogin(result))
-      .catch((e) => this.setData({ error: e.message || '登录失败，请重试' }))
-      .finally(() => this.setData({ busy: false }));
+    return Promise.resolve().then(() => {
+      if (!this.visible || epoch !== this.epoch || !this.data.agreed || !auth.hasAgreementConsent()) throw new Error('登录已取消');
+      return task();
+    })
+      .then(result => {
+        if (this.visible && epoch === this.epoch && this.data.agreed && auth.hasAgreementConsent()) this.goAfterLogin(result);
+      })
+      .catch(e => { if (this.visible && epoch === this.epoch) this.setData({ error: e.message || '登录失败，请重试' }); })
+      .finally(() => { if (this.visible && epoch === this.epoch) this.setData({ busy: false }); });
   },
   goAfterLogin(result) {
     const needsProfile =
       !auth.isMockLogin() &&
-      result &&
+      result && result.isNewUser === true &&
       (result.profileComplete === false ||
         (result.profileComplete == null && !result.avatarUrl));
     wx.reLaunch({
@@ -66,8 +93,7 @@ Page({
     });
   },
   selectMockUser(e) {
-    if (!auth.isMockLogin() || this.data.busy) return;
-    this.perform(() => auth.selectMockUser(e.currentTarget.dataset.key));
+    if (!this.data.agreed || !auth.hasAgreementConsent() || !auth.isMockLogin() || this.data.busy || this.data.checking) return;
+    return this.perform(() => auth.selectMockUser(e.currentTarget.dataset.key));
   },
-  legal: showLegal,
 });

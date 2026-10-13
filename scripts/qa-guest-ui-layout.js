@@ -54,7 +54,7 @@ function connect(url) {
         .replace(/\bpage\s*\{/g, 'body {').replace(/\bview(?=[,\s{])/g, 'div').replace(/\btext(?=[,\s{])/g, 'span')
         .replace(/env\(safe-area-inset-bottom\)/g, inset + 'px').replace(/:host/g, '.component-host');
       const header = sourceHeader.replace(/{{(navTop|navHeight|navWidth|contentTop)}}/g, (_, key) => metrics[key])
-        .replace(/{{title}}/g, '第 1 轮 · 队长选人').replace(/<view wx:if="{{subtitle}}"[^>]*>.*?<\/view>/g, '')
+        .replace(/{{goldTitle \? 'gold-title' : ''}}/g, '').replace(/{{backLabel}}/g, '返回主页').replace(/{{title}}/g, '第 1 轮 · 队长选人').replace(/<view wx:if="{{subtitle}}"[^>]*>.*?<\/view>/g, '')
         .replace(/<(\/?)view\b/g, '<$1div').replace(/wx:if="{{title}}"/g, '');
       const html = `<div class="page guest-page demo-page has-demo-actions">${header}
         <div class="demo-status-row"><mission-track class="component-host"><div class="track"><span class="muted">任务</span>${[2,3,2,3,3].map(n=>`<div class="dot PENDING">${n}</div>`).join('')}</div></mission-track>

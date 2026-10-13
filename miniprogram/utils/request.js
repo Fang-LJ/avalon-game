@@ -8,10 +8,11 @@ function request({
   data,
   requireAuth = true,
   showError = true,
+  sessionGuard,
 }) {
   const header = { 'content-type': 'application/json' };
-  if (requireAuth && tokenStore.getToken())
-    header.Authorization = `Bearer ${tokenStore.getToken()}`;
+  const sessionToken = requireAuth ? tokenStore.getToken() : '';
+  if (sessionToken) header.Authorization = `Bearer ${sessionToken}`;
   const requestUrl = `${getConfig().apiBaseUrl}${url}`;
   return new Promise((resolve, reject) =>
     wx.request({
@@ -26,7 +27,8 @@ function request({
           statusCode: res.statusCode,
         });
         const body = res.data || {};
-        if (res.statusCode === 401 || body.code === 'UNAUTHORIZED') {
+        if ((res.statusCode === 401 || body.code === 'UNAUTHORIZED') && requireAuth &&
+          sessionToken === tokenStore.getToken() && (!sessionGuard || sessionGuard())) {
           tokenStore.clearToken();
           const pages =
             typeof getCurrentPages === 'function' ? getCurrentPages() : [];

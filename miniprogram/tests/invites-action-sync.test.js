@@ -68,7 +68,7 @@ test('unauthenticated invitation survives login and complete or mock profiles ro
   }
 });
 test('profile is prioritized over invite; first save restores it exactly once, not home',async()=>{
-  const f=intent();f.invite.save('398398');login(f).goAfterLogin({profileComplete:false});
+  const f=intent();f.invite.save('398398');login(f).goAfterLogin({isNewUser:true,profileComplete:false});
   assert.equal(f.destinations.at(-1),'/pages/profile/profile');assert.equal(f.invite.get(),'398398');
   let updates=0;
   const p=pageAt('pages/profile/profile.js',{'../../utils/invite':f.invite,
@@ -76,7 +76,7 @@ test('profile is prioritized over invite; first save restores it exactly once, n
   p.setData({nickname:'玩家',avatarUrl:'https://images.invalid/a.png'});p.syncCanSave();await p.save();await p.save();
   assert.equal(updates,1);assert.equal(f.destinations.at(-1),'/pages/join/join?roomCode=398398');
   assert.equal(f.invite.get(),'398398');
-  assert.doesNotMatch(read('pages/profile/profile.wxml'),/跳过/,'existing required profile has no skip entry; do not add a bypass');
+  assert.match(read('pages/profile/profile.wxml'),/跳过，使用默认资料/);
 });
 test('editing profile keeps navigateBack and does not hijack it with an invite',async()=>{
   const f=intent();f.invite.save('398398');let back=0;f.wx.navigateBack=()=>back++;

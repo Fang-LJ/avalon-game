@@ -1,4 +1,5 @@
 const { getConfig } = require('../utils/config');
+const { requirePlatformPrivacy } = require('../utils/wechat-privacy');
 const tokenStore = require('../utils/token');
 
 function uploadError(message, code, statusCode, response) {
@@ -9,7 +10,8 @@ function uploadError(message, code, statusCode, response) {
   return error;
 }
 
-function chooseImage() {
+async function chooseImage() {
+  await requirePlatformPrivacy();
   return new Promise((resolve, reject) => {
     wx.chooseMedia({
       count: 1,

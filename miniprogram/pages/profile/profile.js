@@ -23,10 +23,7 @@ Page({
   async load() {
     try {
       const profile = await api.profile();
-      const nickname =
-        this.data.mode === 'first' && profile.nickname === '微信玩家'
-          ? ''
-          : profile.nickname || '';
+      const nickname = profile.nickname || '微信玩家';
       this.setData({
         nickname,
         avatarUrl: profile.avatarUrl || '',
@@ -80,12 +77,17 @@ Page({
     const nickname = (this.data.nickname || '').trim();
     this.setData({
       canSave:
-        !!this.data.avatarUrl &&
         !!nickname &&
         nickname.length <= 32 &&
         !this.data.uploading &&
         !this.data.saving,
     });
+  },
+  skip() {
+    if (this.data.mode !== 'first' || this.data.loading || this.data.uploading || this.data.saving || this.leaving) return;
+    if (!auth.requireSession()) return;
+    this.leaving = true;
+    wx.reLaunch({ url: invite.destinationOrHome() });
   },
   async save() {
     if (!this.data.canSave || this.data.saving || this.leaving) return;
@@ -93,7 +95,7 @@ Page({
     this.setData({ saving: true, error: '' });
     this.syncCanSave();
     try {
-      await api.updateProfile({ nickname, avatarUrl: this.data.avatarUrl });
+      await api.updateProfile({ nickname, ...(this.data.avatarUrl ? { avatarUrl: this.data.avatarUrl } : {}) });
       this.leaving = true;
       if (this.data.mode === 'edit') {
         wx.navigateBack({

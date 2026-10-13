@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const createConsent = require('./helpers/legal-consent-fixture');
 
 function load(file, globals, mocks = {}) {
   const context = {
@@ -104,19 +105,23 @@ function authFixture({ version = 'trial', failure = false, missingCode = false }
   const f = fixture(version);
   const requests = [];
   const tokens = [];
+  const storage = new Map();
+  Object.assign(f.wx, { getStorageSync: k => storage.get(k), setStorageSync: (k,v) => storage.set(k,v), removeStorageSync: k => storage.delete(k) });
   f.wx.login = (options) => {
     if (failure) options.fail({ errMsg: 'login:fail network error' });
     else options.success({ code: missingCode ? '' : 'never-print-this-code' });
   };
   f.auth = load('services/auth.js', { wx: f.wx }, {
+    '../utils/legal-consent': createConsent(f.wx),
     '../utils/diagnostics': f.diagnostics,
     '../utils/config': { getEnvironment: () => 'prod', getConfig: () => ({ mockLogin: false }) },
-    '../utils/token': { setToken: (token) => tokens.push(token) },
+    '../utils/token': { getToken: () => '', setToken: (token) => tokens.push(token) },
     '../utils/request': { request: (request) => {
       requests.push(request);
       return Promise.resolve({ token: 'never-print-this-token' });
     } },
   });
+  f.auth.setAgreementConsent(true);
   return { ...f, requests, tokens };
 }
 

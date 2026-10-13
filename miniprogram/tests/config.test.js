@@ -9,7 +9,7 @@ test('app registers login and all V1 pages', () => {
   );
   assert.deepEqual(
     app.pages,
-    ['login', 'profile', 'index', 'create', 'join', 'room', 'history', 'replay', 'me', 'guide', 'roles', 'configuration', 'demo-room'].map(
+    ['login', 'profile', 'index', 'create', 'join', 'room', 'history', 'replay', 'me', 'guide', 'roles', 'configuration', 'demo-room', 'legal'].map(
       (p) => `pages/${p}/${p}`,
     ),
   );

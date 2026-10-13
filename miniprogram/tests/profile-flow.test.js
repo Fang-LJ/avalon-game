@@ -35,9 +35,12 @@ function pageAt(file, mocks = {}, wx = {}) {
   return page;
 }
 
-function loginPage({ mock = false, profile, loginResult } = {}) {
+function loginPage({ mock = false, profile, loginResult, agreed = false } = {}) {
   let destination;
   const auth = {
+    hasAgreementConsent: () => agreed,
+    setAgreementConsent: value => { agreed = value; },
+    cancelLogin() {},
     isMockLogin: () => mock,
     currentMockUser: () => ({ key: '1' }),
     validateSession: () => Promise.resolve(profile || null),
@@ -51,32 +54,32 @@ function loginPage({ mock = false, profile, loginResult } = {}) {
   return { page, destination: () => destination };
 }
 
-test('new login and saved incomplete session both route to profile', async () => {
-  const fresh = loginPage({ loginResult: { profileComplete: false } });
+test('new user sees optional profile; an existing default-profile session goes home', async () => {
+  const fresh = loginPage({ loginResult: { isNewUser: true, profileComplete: false } });
   fresh.page.onLoad();
-  fresh.page.setData({ checking: false });
+  fresh.page.onShow(); fresh.page.toggleAgreement();
   fresh.page.login();
   await new Promise(setImmediate);
   assert.equal(fresh.destination(), '/pages/profile/profile');
 
-  const existing = loginPage({ profile: { avatarUrl: null, profileComplete: false } });
+  const existing = loginPage({ agreed: true, profile: { avatarUrl: null, profileComplete: false } });
   existing.page.onLoad();
   existing.page.onShow();
   await new Promise(setImmediate);
-  assert.equal(existing.destination(), '/pages/profile/profile');
+  assert.equal(existing.destination(), '/pages/index/index');
 });
 
 test('complete production profile routes home while local mock bypasses profile', async () => {
   const complete = loginPage({ loginResult: { profileComplete: true } });
   complete.page.onLoad();
-  complete.page.setData({ checking: false });
+  complete.page.onShow(); complete.page.toggleAgreement();
   complete.page.login();
   await new Promise(setImmediate);
   assert.equal(complete.destination(), '/pages/index/index');
 
-  const mock = loginPage({ mock: true, loginResult: { profileComplete: false } });
+  const mock = loginPage({ mock: true, loginResult: { isNewUser: true, profileComplete: false } });
   mock.page.onLoad();
-  mock.page.setData({ checking: false });
+  mock.page.onShow(); mock.page.toggleAgreement();
   mock.page.login();
   await new Promise(setImmediate);
   assert.equal(mock.destination(), '/pages/index/index');
@@ -106,10 +109,10 @@ test('chooseAvatar uploads the temp path and updates the permanent preview', asy
   assert.equal(page.data.canSave, true);
 });
 
-test('nickname input is capped in markup and avatar plus nickname are required', () => {
+test('nickname is capped, entered manually, and custom avatar is optional', () => {
   const markup = fs.readFileSync(path.join(__dirname, '../pages/profile/profile.wxml'), 'utf8');
   assert.match(markup, /open-type="chooseAvatar"/);
-  assert.match(markup, /type="nickname"/);
+  assert.match(markup, /type="text"/);
   assert.match(markup, /maxlength="32"/);
 
   const page = pageAt(

@@ -40,12 +40,6 @@
   margin-top: 46rpx;
   padding: 0 15rpx;
 }
-.legal {
-  text-align: center;
-  font-size: 19rpx;
-  margin-top: 38rpx;
-  padding-bottom: 24rpx;
-}
 .mock-users {
   margin: 25rpx 0;
 }
@@ -56,3 +50,12 @@
 .guest-feature { margin: 0; padding: 26rpx 16rpx; min-height: 158rpx; background: var(--elevated); border: 1rpx solid var(--border); border-radius: 24rpx; color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14rpx; font-size: 27rpx; line-height: 1.4; }
 .guest-feature::after { border: 0; }
 .feature-icon { width: 48rpx; height: 48rpx; }
+
+.agreement-area { display: flex; align-items: flex-start; gap: 14rpx; margin-top: 26rpx; }
+.agreement-checkbox { flex-shrink: 0; width: 42rpx; height: 42rpx; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; border: 2rpx solid var(--muted); border-radius: 6rpx; background: transparent; color: var(--bg); font-size: 28rpx; line-height: 1; }
+.agreement-checkbox::after { border: 0; }
+.agreement-checkbox.checked { background: var(--gold); border-color: var(--gold); }
+.agreement-copy { flex: 1; min-width: 0; font-size: 23rpx; line-height: 1.8; color: var(--muted); overflow-wrap: anywhere; }
+.legal-link { color: var(--gold); }
+.agreement-hint { margin: 12rpx 0 0 56rpx; font-size: 22rpx; color: var(--muted); }
+button.login-button[disabled] { background: #29372e !important; color: #87978b !important; opacity: 1; }
