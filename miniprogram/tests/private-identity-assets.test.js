@@ -78,12 +78,13 @@ test('crown and identity grow independently, action tick stays 30rpx, compact ba
   const css=read('components/player-seat/player-seat.wxss');
   const rule=name=>css.match(new RegExp(`\\.${name} \\{([^}]+)\\}`))[1];
   assert.match(rule('leader-icon'),/width: 42rpx/);assert.match(rule('leader-icon'),/height: 42rpx/);
-  assert.match(rule('knowledge-icon'),/width: 38rpx/);assert.match(rule('knowledge-icon'),/height: 38rpx/);
+  assert.match(rule('knowledge-icon'),/width: auto/);assert.match(rule('knowledge-icon'),/min-width: 38rpx/);assert.match(rule('knowledge-icon'),/overflow: visible/);assert.match(rule('knowledge-icon'),/left: calc\(100% - 33rpx\)/);assert.match(rule('knowledge-icon'),/height: 38rpx/);
   assert.match(rule('action-done-icon'),/width: 30rpx/);assert.doesNotMatch(rule('action-done-icon'),/height:/);
   assert.match(css,/\.formal.compact .leader-icon \{ width: 36rpx; height: 36rpx;/);
-  assert.match(css,/\.formal.compact .knowledge-icon \{ width: 34rpx; height: 34rpx;/);
-  const mark=read('components/knowledge-mark/knowledge-mark.wxss');assert.match(mark,/font-size: 24rpx/);assert.match(mark,/font-size: 22rpx/);
-  for (const color of ['#6f2833','#c86472','#fff2f2','#255c62','#66c5c6','#dcffff','#594a22','#e2bf62','#f5dc91','#493a69','#b69cff','#f1eaff'])assert.ok(mark.includes(color));
+  const compact=css.match(/\.compact \.knowledge-icon \{([^}]+)\}/)[1];
+  for(const declaration of ['width: auto','min-width: 34rpx','height: 34rpx','--identity-mark-font-size: 20rpx','--guess-question-font-size: 18rpx','left: calc(100% - 29rpx)'])assert.ok(compact.includes(declaration));
+  const mark=read('components/knowledge-mark/knowledge-mark.wxss');assert.match(mark,/font-size: 24rpx/);assert.match(mark,/--identity-mark-font-size, 22rpx/);
+  for (const color of ['#D66A76','#EE8E99','#172b2e','#66c5c6','#83d7d8','#2b261a','#e2bf62','#f5dc91','#262033','#b69cff','#cbb5ff'])assert.ok(mark.includes(color));
   for(const n of [5,6,7,8,9,10])assert.equal(new Set(Array.from({length:n},(_,i)=>ui.seatPosition(i+1,n,true))).size,n);
 });
 test('local and prod cards use one HTTPS versioned base without changing login modes', () => {

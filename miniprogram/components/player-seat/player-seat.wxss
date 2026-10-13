@@ -87,11 +87,20 @@
 .revealed-evil-ring { box-shadow: 0 0 0 4rpx var(--bg), 0 0 0 8rpx #C85C68, 0 0 14rpx rgba(200, 92, 104, .22); }
 .selected-lady { box-shadow: 0 0 0 4rpx var(--bg), 0 0 0 8rpx var(--gold); }
 .knowledge-icon {
-  right: -5rpx;
+  --identity-mark-size: 38rpx;
+  --identity-mark-font-size: 22rpx;
+  --identity-mark-padding: 9rpx;
+  --guess-question-font-size: 20rpx;
+  left: calc(100% - 33rpx);
   bottom: -5rpx;
-  width: 38rpx;
+  width: auto;
+  min-width: 38rpx;
   height: 38rpx;
   padding: 0;
+  border: 0;
+  border-radius: 0;
+  display: block;
+  overflow: visible;
 }
 .action-done-icon {
   top: -5rpx;
@@ -157,5 +166,5 @@
 .formal.compact .seat-avatar { width: 84rpx; height: 84rpx; }
 .formal.compact .action-done-icon { right: -9rpx; }
 .formal.compact .leader-icon { width: 36rpx; height: 36rpx; font-size: 23rpx; }
-.formal.compact .knowledge-icon { width: 34rpx; height: 34rpx; }
+.compact .knowledge-icon { --identity-mark-size: 34rpx; --identity-mark-font-size: 20rpx; --identity-mark-padding: 8rpx; --guess-question-font-size: 18rpx; left: calc(100% - 29rpx); width: auto; min-width: 34rpx; height: 34rpx; }
 .formal.compact .seat-number { font-size: 24rpx; line-height: 32rpx; }

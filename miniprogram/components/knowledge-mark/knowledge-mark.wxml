@@ -1,5 +1,5 @@
-<view wx:if="{{markType === 'GUESS'}}" class="knowledge-mark role-mark role-{{tone}} guess-role-mark">
-  <text class="guess-role-text">{{text}}</text>
+<view wx:if="{{markType === 'GUESS'}}" class="guess-wrapper">
+  <view class="knowledge-mark role-mark role-{{tone}}">{{text}}</view>
   <text class="guess-question">?</text>
 </view>
 <view wx:elif="{{markType === 'ROLE'}}" class="knowledge-mark role-mark role-{{tone}}">{{text}}</view>

@@ -187,44 +187,39 @@ test('one existing identity badge, custom private sheet, shared role style and n
   assert.doesNotMatch(sheet,/sheet\.(?:nickname|seatNo)|推测|仅自己可见|不是系统身份|当前判断|正义阵营|邪恶阵营|长按头像编辑|guess-close|guess-clear|scroll-view/);
   assert.doesNotMatch(read('components/role-guess-sheet/role-guess-sheet.js'),/showActionSheet|request|socket/);
   assert.doesNotMatch(read('utils/role-guesses.js'),/require\([^)]*(services|request|socket)/);
-  assert.match(read('components/knowledge-mark/knowledge-mark.wxml'),/class="knowledge-mark role-mark role-\{\{tone\}\} guess-role-mark"/);
+  assert.match(read('components/knowledge-mark/knowledge-mark.wxml'),/class="guess-wrapper"/);
   const room=read('pages/room/room.wxml');assert.match(room,/roleGuessSheet && canGuessRoles/);
   assert.ok(!fs.readFileSync(path.join(root,'services/avalon.js'),'utf8').includes('personalGuesses'));
 });
 
-test('GUESS role body and independent question belong only to the GUESS branch',()=>{
+test('GUESS uses the same role badge with a sibling question outside the body',()=>{
   const markup=read('components/knowledge-mark/knowledge-mark.wxml');
-  const guess=markup.match(/^<view wx:if="\{\{markType === 'GUESS'\}\}"[^>]*>([\s\S]*?)<\/view>/);
-  assert.ok(guess);
-  assert.match(guess[1],/<text class="guess-role-text">\{\{text\}\}<\/text>/);
-  assert.match(guess[1],/<text class="guess-question">\?<\/text>/);
+  assert.match(markup, /<view wx:if="\{\{markType === 'GUESS'\}\}" class="guess-wrapper">\s*<view class="knowledge-mark role-mark role-\{\{tone\}\}">\{\{text\}\}<\/view>\s*<text class="guess-question">\?<\/text>\s*<\/view>/);
   assert.equal((markup.match(/class="guess-question"/g)||[]).length,1);
-  // Exact identities and the full-size purple ambiguity badge are unchanged.
   assert.match(markup,/<view wx:elif="\{\{markType === 'ROLE'\}\}" class="knowledge-mark role-mark role-\{\{tone\}\}">\{\{text\}\}<\/view>/);
   assert.match(markup,/class="knowledge-mark candidate-mark">\?<\/view>/);
-  assert.doesNotMatch(markup,/guess-\{\{tone\}\}|replace\(/);
+  assert.doesNotMatch(markup,/guess-\{\{tone\}\}|guess-role-mark|replace\(/);
 });
-test('system role sizes typography colors and candidate badge remain unchanged',()=>{
+test('text badges are rounded rectangles with colored text; system symbols stay circular',()=>{
   const css=read('components/knowledge-mark/knowledge-mark.wxss');
-  const original={
-    'role-mark':'border: 1rpx solid; font-size: 22rpx; font-weight: 900; line-height: 1;',
-    'role-evil':'background: #6f2833; border-color: #c86472; color: #fff2f2;',
-    'role-loyal':'background: #255c62; border-color: #66c5c6; color: #dcffff;',
-    'role-merlin':'background: #594a22; border-color: #e2bf62; color: #f5dc91;',
-    'role-percival':'background: #493a69; border-color: #b69cff; color: #f1eaff;',
-    'candidate-mark':'background: #b69cff; color: #ffffff; font-size: 24rpx; font-weight: 900; line-height: 1; box-shadow: 0 0 10rpx rgba(182,156,255,.35);',
-  };
-  for(const [name,body] of Object.entries(original)) {
-    assert.equal(css.match(new RegExp(`\\.${name} \\{([^}]+)\\}`))[1].trim(),body);
+  const body=name=>css.match(new RegExp(`\\.${name} \\{([^}]+)\\}`))[1];
+  const role=body('role-mark');
+  for(const declaration of ['width: max-content','border: 1rpx solid','border-radius: 12rpx','font-weight: 900','white-space: nowrap']) assert.ok(role.includes(declaration));
+  for(const name of ['evil-mark','candidate-mark'])assert.match(body(name),/border-radius: 50%/);
+  const tones={evil:['rgba(90,35,45,.45)','#D66A76','#EE8E99'],loyal:['#172b2e','#66c5c6','#83d7d8'],
+    blue:['rgba(40,70,95,.55)','#5EA7E8','#7FC0FF'],merlin:['#2b261a','#e2bf62','#f5dc91'],percival:['#262033','#b69cff','#cbb5ff']};
+  for(const [tone,[bg,border,text]] of Object.entries(tones)){
+    const rule=body('role-'+tone);
+    for(const declaration of [`background: ${bg}`,`border-color: ${border}`,`color: ${text}`]) assert.ok(rule.includes(declaration));
   }
-  assert.doesNotMatch(css,/\.guess-(?:mark|evil|loyal|percival)\s*\{/);
-  assert.doesNotMatch(css,/\.guess-role-text\s*\{/); // Inherit exact role typography, no smaller overrides.
+  assert.match(body('candidate-mark'),/background: #b69cff; color: #ffffff; font-size: 24rpx/);
+  assert.doesNotMatch(css,/dashed|\.guess-(?:mark|evil|loyal|percival|role-text)\s*\{/);
 });
-test('external question is 16rpx at upper right without its own circle or background',()=>{
+test('standalone question is large centered on the right without a circle or background',()=>{
   const css=read('components/knowledge-mark/knowledge-mark.wxss');
-  assert.equal(css.match(/\.guess-role-mark \{([^}]+)\}/)[1].trim(),'position: relative; overflow: visible;');
+  assert.match(css,/\.guess-wrapper \{ position: relative; width: max-content; height: 100%; overflow: visible; \}/);
   const question=css.match(/\.guess-question \{([^}]+)\}/)[1];
-  for(const declaration of ['position: absolute','right: -7rpx','top: -8rpx','font-size: 16rpx','font-weight: 900','color: #f1ddb2'])
+  for(const declaration of ['position: absolute','right: -14rpx','top: 50%','transform: translateY(-50%)','font-size: var(--guess-question-font-size, 20rpx)','font-weight: 900','color: #E5C97A'])
     assert.ok(question.includes(declaration));
   assert.doesNotMatch(question,/(?:^|;)\s*(?:background(?:-[\w-]+)?|border(?:-[\w-]+)?|width|height)\s*:/);
 });
@@ -268,7 +263,7 @@ for(const code of ['ASSASSIN','GOOD_SIDE','EVIL_SIDE']) test(`${code}: re-click 
   assert.equal(display(f,2).markType,code==='ASSASSIN'?'EVIL':'');
   assert.deepEqual(f.calls,[]);assert.equal(f.vibration.length,0);
 });
-test('a different selection replaces side/concrete note directly and uses shared blue/red circle',()=>{
+test('a different selection replaces side/concrete note directly and uses shared blue/red rectangle',()=>{
   const f=fixture('LOYAL_SERVANT',7,[]), before=plain(f.room);
   choose(f,'EVIL_SIDE');assert.equal(display(f,2).markText,'红');assert.equal(display(f,2).markClass,'evil');
   choose(f,'ASSASSIN');assert.equal(display(f,2).markText,'刺');
@@ -276,7 +271,7 @@ test('a different selection replaces side/concrete note directly and uses shared
   assert.equal(display(f,2).markType,'GUESS');assert.equal(display(f,2).knowledgeType,undefined);
   assert.deepEqual(f.storage.get(d.storageKey(42,1)),{guesses:{2:'GOOD_SIDE'}});
   assert.deepEqual(plain(f.room),before);assert.deepEqual(f.calls,[]);
-  assert.match(read('components/knowledge-mark/knowledge-mark.wxss'),/\.role-blue \{ background: #213f63; border-color: #4B86C6; color: #78B7FF/);
+  assert.match(read('components/knowledge-mark/knowledge-mark.wxss'),/\.role-blue \{ background: rgba\(40,70,95,\.55\); border-color: #5EA7E8; color: #7FC0FF/);
 });
 test('Percival re-click clears both guesses and restores both identical question badges',()=>{
   const f=fixture('PERCIVAL',7,[2,3].map(playerId=>({playerId,knowledgeType:'MERLIN_OR_MORGANA'})));

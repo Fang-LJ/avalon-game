@@ -154,8 +154,8 @@ test('42/36 crowns remain above 38/34 identity marks; 30px tick and self badge f
   const css=read('components/player-seat/player-seat.wxss');
   assert.match(css,/\.leader-icon \{[^}]*top: -16rpx;[^}]*width: 42rpx;\s*height: 42rpx;\s*font-size: 26rpx/);
   assert.match(css,/\.formal.compact .leader-icon \{ width: 36rpx; height: 36rpx; font-size: 23rpx/);
-  assert.match(css,/\.knowledge-icon \{[^}]*width: 38rpx;\s*height: 38rpx/);
-  assert.match(css,/\.formal.compact .knowledge-icon \{ width: 34rpx; height: 34rpx/);
+  assert.match(css,/\.knowledge-icon \{[^}]*width: auto;\s*min-width: 38rpx;\s*height: 38rpx/);
+  assert.match(css,/\.compact .knowledge-icon \{[^}]*width: auto; min-width: 34rpx; height: 34rpx/);
   assert.match(css,/\.seat-badge \{[^}]*height: 30rpx/);
   assert.match(css,/\.seat-avatar \{[^}]*overflow: visible/);
   for(const screen of [375,390,430])for(const count of [5,6,7,8,9,10]) {
