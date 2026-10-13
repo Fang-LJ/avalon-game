@@ -15,7 +15,7 @@ public final class GameActionPolicy {
         if (actorPlayerId != leaderPlayerId) throw new BusinessException("FORBIDDEN", "只有当前队长可以提交队伍");
     }
     public static void requireTeamSize(Collection<Long> team, int expected) {
-        if (team == null || team.size() != expected || team.stream().distinct().count() != expected)
+        if (team == null || team.size() != expected || team.stream().anyMatch(java.util.Objects::isNull) || team.stream().distinct().count() != expected)
             throw new BusinessException("PARAM_ERROR", "任务队伍人数不正确");
     }
     public static void requireMissionMember(long actorPlayerId, Collection<Long> team) {

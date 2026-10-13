@@ -41,36 +41,36 @@ function fixture(requiredTeamSize = 2) {
   return { page, click, calls, toasts, patch: value => { snapshot = { ...snapshot, ...value }; } };
 }
 
-test('two-member selection appends, replaces only the last click, cancels, and refills', () => {
+test('two-member selection appends, replaces the earliest click, cancels, and refills', () => {
   const { page, click, calls, toasts } = fixture(2);
-  for (const [id, expected] of [[1,[1]], [2,[1,2]], [3,[1,3]], [4,[1,4]], [1,[4]], [5,[4,5]]]) {
+  for (const [id, expected] of [[1,[1]], [2,[1,2]], [3,[2,3]], [4,[3,4]], [3,[4]], [5,[4,5]]]) {
     click(id); assert.deepEqual(plain(page.data.selectedIds), expected);
   }
   assert.deepEqual(calls, []); assert.deepEqual(toasts, []);
 });
 
 for (const size of [2,3,4,5]) {
-  test(`${size}-member team always replaces last chosen ID without changing earlier selections`, () => {
+  test(`${size}-member team replaces earliest ID while preserving the remaining click order`, () => {
     const { page, click } = fixture(size);
     const chosen = [8,2,7,3,6].slice(0, size);
     chosen.forEach(click);
     const draft = page.data.selectedIds;
-    const earlier = chosen.slice(0, -1);
+    const remaining = chosen.slice(1);
     click(9);
-    assert.deepEqual(plain(page.data.selectedIds), [...earlier,9]);
+    assert.deepEqual(plain(page.data.selectedIds), [...remaining,9]);
     assert.deepEqual(plain(draft), chosen, 'update must use a copy');
     click(10);
-    assert.deepEqual(plain(page.data.selectedIds), [...earlier,10]);
+    assert.deepEqual(plain(page.data.selectedIds), [...remaining.slice(1),9,10]);
     assert.equal(page.data.displayPlayers.filter(player => player.selected).length, size);
     assert.ok(page.data.displayPlayers.filter(player => player.selected).every(player => player.selectionClass === 'selected-team'));
     assert.deepEqual(page.data.game.selectedPlayerIds, [], 'local draft never changes server snapshot');
   });
 }
 
-test('four-member example [1,2,3,4] clicking 5 preserves first three', () => {
+test('four-member example [1,2,3,4] clicking 5 replaces earliest member', () => {
   const { page, click } = fixture(4);
   [1,2,3,4,5].forEach(click);
-  assert.deepEqual(plain(page.data.selectedIds), [1,2,3,5]);
+  assert.deepEqual(plain(page.data.selectedIds), [2,3,4,5]);
 });
 
 test('canceling a middle member removes exactly that ID and keeps click order', () => {
@@ -78,14 +78,14 @@ test('canceling a middle member removes exactly that ID and keeps click order', 
   [1,2,3,2].forEach(click);
   assert.deepEqual(plain(page.data.selectedIds), [1,3]);
   click(4); click(5);
-  assert.deepEqual(plain(page.data.selectedIds), [1,3,5]);
+  assert.deepEqual(plain(page.data.selectedIds), [3,4,5]);
 });
 
-test('repeated full-team replacements preserve [1,2] while replacing 3 then 4 then 5', () => {
+test('repeated full-team replacements eventually replace every original member', () => {
   const { page, click } = fixture(3);
   [1,2,3].forEach(click);
   for (const id of [4,5,6]) {
-    click(id); assert.deepEqual(plain(page.data.selectedIds), [1,2,id]);
+    click(id); assert.deepEqual(plain(page.data.selectedIds), [id-2,id-1,id]);
   }
 });
 
@@ -129,7 +129,7 @@ test('same-draft polling and websocket refresh retain actual selection order for
   assert.equal(page.data.draftKey, key);
   assert.deepEqual(plain(page.data.selectedIds), [8,2,7]);
   click(3);
-  assert.deepEqual(plain(page.data.selectedIds), [8,2,3]);
+  assert.deepEqual(plain(page.data.selectedIds), [2,7,3]);
 });
 
 for (const patch of [{ gameId: 8 }, { missionNo: 2 }, { proposalNo: 2 }, { phase: 'TEAM_VOTING' }]) {
@@ -151,7 +151,7 @@ for (const size of [2,3,4,5]) {
     await page.submitTeam(); assert.equal(calls.length, 0);
     click(ids.at(-1)); click(9);
     await page.submitTeam();
-    assert.deepEqual(plain(calls), [[7,[...ids.slice(0, -1),9]]]);
+    assert.deepEqual(plain(calls), [[7,[...ids.slice(1),9]]]);
   });
 }
 

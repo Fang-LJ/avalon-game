@@ -4,6 +4,7 @@ const socket = require('../../utils/socket');
 const invite = require('../../utils/invite');
 const ui = require('../../utils/presentation');
 const deduction = require('../../utils/role-guesses');
+const teamDraft = require('../../utils/team-draft');
 const { roleCard, CARDS } = require('../../utils/cards');
 const { normalizeResult, storageKey } = require('../../utils/mission-result');
 const PHASES = {
@@ -27,6 +28,12 @@ Page({
     botPlayers: [],
     selectedIds: [],
     selectedText: '',
+    teamDraftSupported: false,
+    teamNominated: false,
+    nominatedPlayerIds: [],
+    nominatedText: '',
+    teamSyncPending: false,
+    teamSyncError: '',
     targetName: '',
     draftKey: '',
     assassinationTarget: null,
@@ -94,6 +101,7 @@ Page({
   },
   stop() {
     this.active = false;
+    this.closeTeamSync();
     this.setData({ roleGuessSheet: null });
     if (this.stopSocket) this.stopSocket();
     clearInterval(this.poller);
@@ -104,6 +112,7 @@ Page({
       this.exitClosedRoom();
       return;
     }
+    if (event.type === 'TEAM_DRAFT_UPDATED' && event.roomId === this.data.roomId && this.applyTeamDraft(event.teamDraft)) return;
     if (event.type === 'REMATCH_CREATED') this.setData({ roomId: event.roomId });
     if (this.refreshing) this.refreshing.finally(() => { if (this.active) this.refresh(); });
     else this.refresh();
@@ -163,7 +172,8 @@ Page({
     }
     const changed =
       room.currentGameId !== (this.data.game && this.data.game.gameId);
-    if (changed)
+    if (changed) {
+      this.closeTeamSync();
       this.setData({
         game: null,
         role: null,
@@ -193,6 +203,7 @@ Page({
         roleGuessSheet: null,
         canGuessRoles: false,
       });
+    }
     this.setData({
       room,
       roomId: room.roomId,
@@ -261,20 +272,23 @@ Page({
   gameStateUpdate(game) {
     if (['ASSASSINATION', 'FINISHED'].includes(game.phase))
       this.clearPrivateGuesses(game.gameId, this.data.room && this.data.room.myPlayerId);
+    const team = this.adoptTeamDraft(game);
     const current = this.data.game;
     if (current && current.gameId === game.gameId && current.phase === 'ASSASSINATION' &&
         game.phase === 'ASSASSINATION' && current.assassinationTarget && game.assassinationTarget &&
         current.assassinationTargetRevision > game.assassinationTargetRevision)
       game = { ...game, assassinationTarget: current.assassinationTarget,
         assassinationTargetRevision: current.assassinationTargetRevision };
-    const key = `${game.gameId}-${game.missionNo}-${game.proposalNo}-${game.phase}`;
+    const key = `${game.gameId}-${game.missionNo}-${game.proposalNo}-${game.phase}-${game.leaderPlayerId}`;
     const newPhase = key !== this.data.draftKey;
     const selecting = ['TEAM_BUILDING', 'ASSASSINATION', 'LADY_OF_LAKE'].includes(game.phase);
     const target = ui.assassinationTarget(game);
     return {
-      game, draftKey: key,
+      game: team.teamDraftSupported ? { ...game, teamDraft: this.teamSync.draft } : game, draftKey: key,
+      ...team,
       selectedIds: game.phase === 'ASSASSINATION' ? (target ? [target.playerId] : [])
-        : selecting ? (newPhase ? [] : this.data.selectedIds) : game.selectedPlayerIds || [],
+        : game.phase === 'TEAM_BUILDING' && team.teamDraftSupported ? team.selectedIds
+          : selecting ? (newPhase ? [] : this.data.selectedIds) : game.selectedPlayerIds || [],
       phaseTitle: PHASES[game.phase],
       isLeader: game.leaderPlayerId === this.data.room.myPlayerId,
       missionChoice: newPhase ? '' : this.data.missionChoice,
@@ -294,6 +308,52 @@ Page({
       ...(['ASSASSINATION', 'FINISHED', 'ROLE_CONFIRM'].includes(game.phase)
         ? { personalGuesses: {}, roleGuessSheet: null, canGuessRoles: false } : {}),
     };
+  },
+  closeTeamSync() {
+    if (this.teamSync) this.teamSync.close();
+    this.teamSync = null;
+  },
+  teamSyncUpdate(status) {
+    return { teamDraftSupported: true, teamNominated: status.draft.nominated,
+      nominatedPlayerIds: status.draft.nominatedPlayerIds, selectedIds: status.selectedIds,
+      teamSyncPending: status.pending, teamSyncError: status.error ? '选人同步失败，点击重试' : '' };
+  },
+  adoptTeamDraft(game) {
+    const draft = teamDraft.normalize(game.teamDraft, game);
+    if (!draft) {
+      this.closeTeamSync();
+      return { teamDraftSupported: false, teamNominated: false, nominatedPlayerIds: [], teamSyncPending: false, teamSyncError: '' };
+    }
+    if (!this.teamSync || teamDraft.scope(this.teamSync.draft) !== teamDraft.scope(draft)) {
+      this.closeTeamSync();
+      const scope = teamDraft.scope(draft);
+      this.teamSync = new teamDraft.DraftSync(draft, request => api.updateTeamDraft(draft.gameId, request), status => {
+        const current = this.data.game;
+        if (this.active === false || !current || current.phase !== 'TEAM_BUILDING' || teamDraft.scope(current) !== scope) return;
+        this.setData({ ...this.teamSyncUpdate(status), game: { ...current, teamDraft: status.draft } });
+        this.decoratePlayers();
+      }, game.requiredTeamSize);
+    } else this.teamSync.accept(draft, false);
+    return this.teamSyncUpdate(this.teamSync.status());
+  },
+  applyTeamDraft(value) {
+    const game = this.data.game, draft = game && teamDraft.normalize(value, game);
+    if (!draft) return false;
+    if (!this.teamSync) this.adoptTeamDraft({ ...game, teamDraft: draft });
+    this.teamSync.accept(draft);
+    return true;
+  },
+  async retryTeamDraft() {
+    const sync = this.teamSync, game = this.data.game;
+    if (!sync || !this.data.isLeader || this.data.busy || game.phase !== 'TEAM_BUILDING') return;
+    try {
+      const result = await api.game(game.gameId);
+      if (this.active === false || sync !== this.teamSync) return;
+      const draft = teamDraft.normalize(result.teamDraft, game);
+      if (!draft) { await this.refreshAfterMutation(); return; }
+      sync.retry(draft);
+      await sync.flush();
+    } catch (_) { /* Keep the explicit retry state until authority is restored. */ }
   },
   applyGameMutationResult(result, context) {
     const current = this.data.game;
@@ -437,6 +497,7 @@ Page({
       displayPlayers: players,
       ladyPlayers: players.filter((p) => !p.disabled),
       selectedText: selected.map((p) => p.seatNo).join(' · '),
+      nominatedText: players.filter(p => (this.data.nominatedPlayerIds || []).includes(p.playerId)).map(p => p.seatNo).join(' · '),
       targetName: selected.map((p) => p.nickname).join('、'),
       board,
       canEarlyAssassination: ui.canStartEarlyAssassination(game, role),
@@ -573,18 +634,20 @@ Page({
   },
   togglePlayer(e) {
     const game = this.data.game;
-    if (!game || this.data.busy || this.data.missionResultOpen) return;
+    if (this.active === false || !game || this.data.busy || this.data.missionResultOpen) return;
     const id = Number(e.detail.playerId);
     if (game.phase === 'TEAM_BUILDING' && this.data.isLeader) {
+      if (!(this.data.room.players || []).some(p => p.playerId === id)) return;
       const ids = this.data.selectedIds.slice(),
         i = ids.indexOf(id);
       if (i >= 0) ids.splice(i, 1);
       else if (ids.length < game.requiredTeamSize) ids.push(id);
       else {
-        ids.pop();
+        ids.shift();
         ids.push(id);
       }
       this.setData({ selectedIds: ids });
+      if (this.teamSync) this.teamSync.select(ids);
     } else if (
       game.phase === 'ASSASSINATION' &&
       game.assassin &&
@@ -707,12 +770,39 @@ Page({
       return api.confirmRole(gameId);
     });
   },
+  teamActionAllowed() {
+    const { game, isLeader, busy, selectedIds, missionResultOpen, teamSyncError } = this.data;
+    if (this.active === false || !game || game.phase !== 'TEAM_BUILDING' || !isLeader || busy || missionResultOpen || teamSyncError) return false;
+    if (selectedIds.length !== game.requiredTeamSize) {
+      wx.showToast({ title: `请选择 ${game.requiredTeamSize} 名任务成员`, icon: 'none' }); return false;
+    }
+    return true;
+  },
   submitTeam() {
-    if (this.data.selectedIds.length !== this.data.game.requiredTeamSize)
-      return;
-    return this.run(() =>
-      api.submitTeam(this.data.game.gameId, this.data.selectedIds),
-    );
+    if (!this.teamActionAllowed()) return;
+    // Legacy DTOs keep the released direct-dispatch API, with no nomination request.
+    if (!this.teamSync) return this.run(() => api.submitTeam(this.data.game.gameId, this.data.selectedIds));
+    return this.dispatchTeam(false);
+  },
+  nominateTeam() {
+    if (!this.teamActionAllowed() || !this.teamSync || this.data.teamNominated) return;
+    return this.dispatchTeam(true);
+  },
+  dispatchTeam(nominate) {
+    const sync = this.teamSync;
+    if (this.active === false || !sync) return;
+    return this.runGameMutation(async () => {
+      const draft = await sync.flush();
+      const game = this.data.game;
+      if (sync !== this.teamSync || !game || game.phase !== 'TEAM_BUILDING' || teamDraft.scope(game) !== teamDraft.scope(draft)) return;
+      if (nominate) {
+        const result = await api.nominateTeam(game.gameId, teamDraft.requestFor(draft));
+        if (this.active !== false && sync === this.teamSync) this.applyTeamDraft(result);
+        return; // Nomination remains TEAM_BUILDING and never generates a formal proposal.
+      }
+      return api.submitTeam(game.gameId, draft.selectedPlayerIds, { missionNo:draft.missionNo,
+        proposalNo:draft.proposalNo, leaderPlayerId:draft.leaderPlayerId, expectedDraftRevision:draft.revision });
+    }, { waitForCurrent: true });
   },
   approve() {
     return this.vote('APPROVE');

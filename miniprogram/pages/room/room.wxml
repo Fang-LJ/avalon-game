@@ -161,11 +161,12 @@
       </view>
       <view class="board-center {{game.phase === 'ASSASSINATION' ? 'assassination-center' : ''}} {{rejection.forced && (game.phase === 'TEAM_BUILDING' || game.phase === 'TEAM_VOTING') ? 'forced-turn' : ''}}">
         <block wx:if="{{game.phase === 'TEAM_BUILDING'}}">
-          <view class="gold">
-            {{isLeader ? '请选择任务成员' : '队长正在选择任务成员'}}
-          </view>
-          <view class="muted">本轮需要 {{game.requiredTeamSize}} 人</view>
-          <view class="good small">已选：{{selectedText || '暂无'}}</view>
+          <view wx:if="{{teamNominated}}" class="gold">队长已提名：{{nominatedText}}</view>
+          <block wx:else>
+            <view class="gold">{{isLeader ? '请选择任务成员' : '队长正在选择任务成员'}}</view>
+            <view class="muted">本轮需要 {{game.requiredTeamSize}} 人</view>
+            <view class="good small">已选：{{selectedText || '暂无'}}</view>
+          </block>
         </block>
         <block wx:elif="{{game.phase === 'TEAM_VOTING'}}">
           <view class="gold">是否同意这支队伍？</view>
@@ -228,14 +229,19 @@
       entries="{{entries}}"
     />
     <view class="phase-actions actions">
-      <button
-        wx:if="{{game.phase === 'TEAM_BUILDING'}}"
-        class="btn"
-        disabled="{{!isLeader || selectedIds.length !== game.requiredTeamSize || busy}}"
-        bindtap="submitTeam"
-      >
-        {{isLeader ? '确认发车' : '等待队长选人'}}
-      </button>
+      <block wx:if="{{game.phase === 'TEAM_BUILDING'}}">
+        <block wx:if="{{isLeader}}">
+          <view class="{{teamDraftSupported && !teamNominated ? 'two-buttons' : ''}}">
+            <button wx:if="{{teamDraftSupported && !teamNominated}}" class="btn ghost"
+              disabled="{{selectedIds.length !== game.requiredTeamSize || busy || teamSyncError}}" bindtap="nominateTeam">提名人选</button>
+            <button class="btn" disabled="{{selectedIds.length !== game.requiredTeamSize || busy || teamSyncError}}" bindtap="submitTeam">确认发车</button>
+          </view>
+          <view wx:if="{{teamSyncError}}" class="team-choice-hint link" bindtap="retryTeamDraft" aria-role="button">{{teamSyncError}}</view>
+          <view wx:elif="{{teamSyncPending || selectedIds.length !== game.requiredTeamSize}}" class="team-choice-hint muted">
+            {{teamSyncPending ? '正在同步人选…' : '请选择 ' + game.requiredTeamSize + ' 名任务成员'}}
+          </view>
+        </block>
+      </block>
       <view wx:elif="{{game.phase === 'TEAM_VOTING'}}">
         <view wx:if="{{!game.hasVoted}}" class="two-buttons">
           <button class="btn success" disabled="{{busy}}" bindtap="approve">

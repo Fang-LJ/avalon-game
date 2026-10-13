@@ -2,6 +2,7 @@ package com.avalon.game.realtime;
 
 import com.avalon.game.auth.JwtService;
 import com.avalon.game.game.AvalonRepository;
+import com.avalon.game.game.TeamDraft;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -57,6 +58,12 @@ public class AvalonWebSocketHandler extends TextWebSocketHandler {
             });
             return;
         }
+        if (event.teamDraft() != null) {
+            clients.values().stream().filter(c -> c.roomId == event.roomId() && c.session.isOpen()).forEach(c -> {
+                try { send(c.session, event.roomId(), event.type(), event.teamDraft()); } catch (Exception ignored) { }
+            });
+            return;
+        }
         broadcast(event.roomId(), event.type());
         if ("GAME_RESTARTED".equals(event.type())) {
             clients.values().stream().filter(c -> c.roomId == event.roomId() && c.session.isOpen()).forEach(c -> {
@@ -70,9 +77,13 @@ public class AvalonWebSocketHandler extends TextWebSocketHandler {
         });
     }
     private void send(WebSocketSession session, long roomId, String type) throws Exception {
-        synchronized (session) {
-            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(Map.of("type", type, "roomId", roomId, "at", Instant.now().toString()))));
-        }
+        send(session, roomId, type, null);
+    }
+    private void send(WebSocketSession session, long roomId, String type, TeamDraft draft) throws Exception {
+        Map<String, Object> message = new java.util.LinkedHashMap<>();
+        message.put("type", type); message.put("roomId", roomId); message.put("at", Instant.now().toString());
+        if (draft != null) message.put("teamDraft", draft);
+        synchronized (session) { session.sendMessage(new TextMessage(objectMapper.writeValueAsString(message))); }
     }
     private String queryParameter(WebSocketSession session, String name) {
         String query = session.getUri() == null ? null : session.getUri().getRawQuery();

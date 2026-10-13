@@ -90,19 +90,86 @@ public class GameService {
     }
 
     @Transactional
+    public TeamDraft updateTeamDraft(long userId, long gameId, TeamDraftRequest request) {
+        Context c = teamBuildingContext(userId, gameId);
+        TeamDraft draft = currentTeamDraft(c.game);
+        requireDraftVersion(c.game, draft, request.missionNo(), request.proposalNo(),
+                request.leaderPlayerId(), request.expectedRevision());
+        requireDraftMembers(gameId, request.playerIds(), GameRuleConfig.forPlayers(c.game.playerCount()).teamSize(c.game.missionNo()));
+        TeamDraft next = new TeamDraft(gameId, draft.missionNo(), draft.proposalNo(), draft.leaderPlayerId(),
+                request.playerIds(), draft.nominatedPlayerIds(), draft.nominated(), draft.revision() + 1);
+        repository.saveTeamDraft(gameId, next);
+        events.publishTeamDraft(gameId, next);
+        return next;
+    }
+
+    @Transactional
+    public TeamDraft nominateTeam(long userId, long gameId, TeamDraftRequest request) {
+        Context c = teamBuildingContext(userId, gameId);
+        TeamDraft draft = currentTeamDraft(c.game);
+        if (draft.nominated()) throw new BusinessException("ALREADY_NOMINATED", "本次提案已经提名，仍可调整人选后确认发车");
+        requireDraftVersion(c.game, draft, request.missionNo(), request.proposalNo(),
+                request.leaderPlayerId(), request.expectedRevision());
+        GameActionPolicy.requireTeamSize(request.playerIds(), GameRuleConfig.forPlayers(c.game.playerCount()).teamSize(c.game.missionNo()));
+        if (!draft.selectedPlayerIds().equals(request.playerIds()))
+            throw new BusinessException("STALE_DRAFT", "人选尚未同步，请刷新后重试");
+        TeamDraft next = new TeamDraft(gameId, draft.missionNo(), draft.proposalNo(), draft.leaderPlayerId(),
+                draft.selectedPlayerIds(), draft.selectedPlayerIds(), true, draft.revision() + 1);
+        repository.saveTeamDraft(gameId, next);
+        events.publishTeamDraft(gameId, next);
+        return next;
+    }
+
+    @Transactional
     public GameState submitTeam(long userId, long gameId, List<Long> playerIds) {
-        Context c = context(userId, gameId, true);
-        GameActionPolicy.requirePhase(c.game.phase(), Phase.TEAM_BUILDING);
-        GameActionPolicy.requireLeader(c.player.id(), c.game.leaderGamePlayerId());
+        return submitTeam(userId, gameId, new TeamRequest(playerIds));
+    }
+
+    @Transactional
+    public GameState submitTeam(long userId, long gameId, TeamRequest request) {
+        Context c = teamBuildingContext(userId, gameId);
+        List<Long> playerIds = request.playerIds();
+        // Missing context denotes a released legacy client or bot. Preserve direct /team semantics.
+        if (request.hasDraftContext()) {
+            if (request.missionNo() == null || request.proposalNo() == null || request.leaderPlayerId() == null || request.expectedDraftRevision() == null)
+                throw new BusinessException("PARAM_ERROR", "选人上下文不完整");
+            TeamDraft draft = currentTeamDraft(c.game);
+            requireDraftVersion(c.game, draft, request.missionNo(), request.proposalNo(),
+                    request.leaderPlayerId(), request.expectedDraftRevision());
+            if (!draft.selectedPlayerIds().equals(playerIds))
+                throw new BusinessException("STALE_DRAFT", "最终人选与同步草稿不一致，请刷新后重试");
+        }
         GameRuleConfig config = GameRuleConfig.forPlayers(c.game.playerCount());
         GameActionPolicy.requireTeamSize(playerIds, config.teamSize(c.game.missionNo()));
-        for (Long id : playerIds) repository.gamePlayer(gameId, id)
-                .orElseThrow(() -> new BusinessException("PARAM_ERROR", "队伍中包含无效玩家"));
+        requireDraftMembers(gameId, playerIds, config.teamSize(c.game.missionNo()));
         repository.insertProposal(gameId, c.game.missionNo(), c.game.proposalNo(), c.player.id(),
                 playerIds.stream().sorted().toList());
         repository.setPhase(gameId, Phase.TEAM_VOTING);
         events.publish(gameId, "TEAM_SUBMITTED");
         return state(userId, gameId);
+    }
+
+    private Context teamBuildingContext(long userId, long gameId) {
+        Context c = context(userId, gameId, true); // Same DB lock across drafts, bots, votes and final dispatch.
+        GameActionPolicy.requirePhase(c.game.phase(), Phase.TEAM_BUILDING);
+        if (!"PLAYING".equals(c.game.status())) throw new BusinessException("INVALID_PHASE", "当前对局不能选人");
+        GameActionPolicy.requireLeader(c.player.id(), c.game.leaderGamePlayerId());
+        return c;
+    }
+    private TeamDraft currentTeamDraft(GameRow game) {
+        TeamDraft draft = repository.teamDraft(game.id());
+        return draft != null && draft.matches(game) ? draft : TeamDraft.empty(game);
+    }
+    private void requireDraftVersion(GameRow game, TeamDraft draft, int missionNo, int proposalNo, long leaderPlayerId, long revision) {
+        if (missionNo != game.missionNo() || proposalNo != game.proposalNo() ||
+                !Long.valueOf(leaderPlayerId).equals(game.leaderGamePlayerId()) || revision != draft.revision())
+            throw new BusinessException("STALE_DRAFT", "选人状态已更新，请刷新后重试");
+    }
+    private void requireDraftMembers(long gameId, List<Long> ids, int maximum) {
+        if (ids == null || ids.size() > maximum || ids.stream().anyMatch(id -> id == null || id <= 0) ||
+                new HashSet<>(ids).size() != ids.size()) throw new BusinessException("PARAM_ERROR", "选人包含重复成员或超过人数上限");
+        for (Long id : ids) repository.gamePlayer(gameId, id)
+                .orElseThrow(() -> new BusinessException("PARAM_ERROR", "队伍中包含无效玩家"));
     }
 
     @Transactional
@@ -365,7 +432,7 @@ public class GameService {
                 isLadyHolder, ladyUsedCount, ladyEligibleTargetIds,
                 c.game.winner() == null ? null : c.game.winner().name(), identities, c.game.finishReason(),
                 revealedEvilIdentities, c.game.phase() == Phase.ASSASSINATION && c.game.goodScore() < 3,
-                target, draft.revision());
+                target, draft.revision(), c.game.phase() == Phase.TEAM_BUILDING ? currentTeamDraft(c.game) : null);
     }
 
     private Context context(long userId, long gameId, boolean lock) {
@@ -421,8 +488,12 @@ public class GameService {
                             Integer ladyHolderSeatNo, String ladyHolderNickname, boolean ladyHolder,
                             int ladyUsedCount, List<Long> ladyEligibleTargetIds, String winner, List<PublicIdentity> identities,
                             String finishReason, List<RevealedIdentity> revealedEvilIdentities, boolean assassinationEarly,
-                            AssassinationTarget assassinationTarget, long assassinationTargetRevision) {}
-    public record TeamRequest(List<Long> playerIds) {}
+                            AssassinationTarget assassinationTarget, long assassinationTargetRevision, TeamDraft teamDraft) {}
+    public record TeamDraftRequest(List<Long> playerIds, int missionNo, int proposalNo, long leaderPlayerId, long expectedRevision) {}
+    public record TeamRequest(List<Long> playerIds, Integer missionNo, Integer proposalNo, Long leaderPlayerId, Long expectedDraftRevision) {
+        public TeamRequest(List<Long> playerIds) { this(playerIds, null, null, null, null); }
+        public boolean hasDraftContext() { return missionNo != null || proposalNo != null || leaderPlayerId != null || expectedDraftRevision != null; }
+    }
     public record VoteRequest(VoteChoice choice) {}
     public record MissionRequest(MissionChoice choice) {}
     public record LadyInspectionRequest(long targetPlayerId) {}

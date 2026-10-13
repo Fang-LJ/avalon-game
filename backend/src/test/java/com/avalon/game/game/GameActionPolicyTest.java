@@ -56,7 +56,7 @@ class GameActionPolicyTest {
         var missionFields = Arrays.stream(GameService.MissionResult.class.getRecordComponents()).map(c -> c.getName()).toList();
         assertEquals(List.of("missionNo", "successCount", "failCount", "status"), missionFields);
         var eventFields = Arrays.stream(RoomEventPublisher.RoomEvent.class.getRecordComponents()).map(c -> c.getName()).toList();
-        assertEquals(List.of("roomId", "type"), eventFields);
+        assertEquals(List.of("roomId", "type", "teamDraft"), eventFields);
         var stateFields = Arrays.stream(GameService.GameState.class.getRecordComponents()).map(c -> c.getName()).toList();
         assertFalse(stateFields.contains("roleCode"));
         assertFalse(stateFields.contains("roleName"));

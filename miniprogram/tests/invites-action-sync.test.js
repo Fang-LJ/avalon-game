@@ -114,7 +114,7 @@ test('invalid stored invites are ignored and storage failures retain intent with
 });
 test('candidate uses opaque purple with shared white text, distinct from crown and selection',()=>{
   const css=read('components/knowledge-mark/knowledge-mark.wxss'),candidate=css.match(/\.candidate-mark \{([^}]+)\}/)[1];
-  assert.match(candidate,/background: #7046A6/);assert.match(css,/\.role-mark \{[^}]*color: #FFFFFF/);assert.doesNotMatch(candidate,/rgba|box-shadow/);
+  assert.match(candidate,/background: #8052C1/);assert.match(css,/\.role-mark \{[^}]*color: #FFFFFF/);assert.doesNotMatch(candidate,/rgba|box-shadow/);
   assert.doesNotMatch(candidate,/gold|d8b25c|55c8ff|animation/i);assert.doesNotMatch(css,/evil-crescent/);assert.match(css,/#A93447/);
   for(const file of ['components/player-seat/player-seat.wxss','components/card-deal-stage/card-deal-stage.wxss','pages/room/room.wxss']){
     const rules=read(file).match(/\.knowledge-(?:inline\.)?candidate \{([^}]+)\}/g)||[];

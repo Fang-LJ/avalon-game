@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS t_avalon_game (
   winner_alignment VARCHAR(16) NULL,
   finish_reason VARCHAR(64) NULL,
   assassination_target_game_player_id BIGINT NULL,
+  team_draft_json JSON NULL,
   started_at DATETIME NULL,
   finished_at DATETIME NULL,
   created_at DATETIME NOT NULL,

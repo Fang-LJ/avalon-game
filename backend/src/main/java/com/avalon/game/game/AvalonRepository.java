@@ -192,37 +192,50 @@ public class AvalonRepository {
         jdbc.update("update t_avalon_game_player set seat_no=?,updated_at=now() where id=?", seat, gamePlayerId);
     }
     public void updateGameOwner(long gameId, long userId) { jdbc.update("update t_avalon_game set owner_user_id=?,updated_at=now() where id=?", userId, gameId); }
-    public void closeGame(long gameId) { jdbc.update("update t_avalon_game set status='CLOSED',updated_at=now() where id=?", gameId); }
+    public void closeGame(long gameId) { jdbc.update("update t_avalon_game set status='CLOSED',team_draft_json=null,updated_at=now() where id=?", gameId); }
 
     public void assignRole(long gameId, long gamePlayerId, Role role) {
         jdbc.update("update t_avalon_game_player set role_code=?,alignment=?,role_confirmed=false,updated_at=now() where game_id=? and id=?",
                 role.name(), role.alignment().name(), gameId, gamePlayerId);
     }
     public void startGame(long gameId, long leaderGamePlayerId, Long ladyHolderGamePlayerId) {
-        jdbc.update("update t_avalon_game set status='PLAYING',phase='ROLE_CONFIRM',mission_no=1,proposal_no=1,leader_game_player_id=?,lady_holder_game_player_id=?,consecutive_rejections=0,good_score=0,evil_score=0,winner_alignment=null,finish_reason=null,assassination_target_game_player_id=null,started_at=now(),finished_at=null,updated_at=now() where id=?",
+        jdbc.update("update t_avalon_game set status='PLAYING',team_draft_json=null,phase='ROLE_CONFIRM',mission_no=1,proposal_no=1,leader_game_player_id=?,lady_holder_game_player_id=?,consecutive_rejections=0,good_score=0,evil_score=0,winner_alignment=null,finish_reason=null,assassination_target_game_player_id=null,started_at=now(),finished_at=null,updated_at=now() where id=?",
                 leaderGamePlayerId, ladyHolderGamePlayerId, gameId);
     }
     public void confirmRole(long gameId, long gamePlayerId) { jdbc.update("update t_avalon_game_player set role_confirmed=true,updated_at=now() where game_id=? and id=? and role_confirmed=false", gameId, gamePlayerId); }
     public int confirmedCount(long gameId) { return jdbc.queryForObject("select count(*) from t_avalon_game_player where game_id=? and role_confirmed=true", Integer.class, gameId); }
-    public void setPhase(long gameId, Phase phase) { jdbc.update("update t_avalon_game set phase=?,updated_at=now() where id=?", phase.name(), gameId); }
+    public void setPhase(long gameId, Phase phase) { jdbc.update("update t_avalon_game set phase=?,team_draft_json=null,updated_at=now() where id=?", phase.name(), gameId); }
     public void updateAfterRejectedTeam(long gameId, int proposalNo, int rejections, long leaderGamePlayerId) {
-        jdbc.update("update t_avalon_game set phase='TEAM_BUILDING',proposal_no=?,consecutive_rejections=?,leader_game_player_id=?,updated_at=now() where id=?",
+        jdbc.update("update t_avalon_game set phase='TEAM_BUILDING',team_draft_json=null,proposal_no=?,consecutive_rejections=?,leader_game_player_id=?,updated_at=now() where id=?",
                 proposalNo, rejections, leaderGamePlayerId, gameId);
     }
     public void finish(long gameId, Winner winner, String reason, Long assassinationTargetGamePlayerId) {
-        jdbc.update("update t_avalon_game set status='FINISHED',phase='FINISHED',winner_alignment=?,finish_reason=?,assassination_target_game_player_id=?,finished_at=now(),updated_at=now() where id=?",
+        jdbc.update("update t_avalon_game set status='FINISHED',team_draft_json=null,phase='FINISHED',winner_alignment=?,finish_reason=?,assassination_target_game_player_id=?,finished_at=now(),updated_at=now() where id=?",
                 winner == null ? null : winner.name(), reason, assassinationTargetGamePlayerId, gameId);
     }
     public void advanceRound(long gameId, int missionNo, long leaderGamePlayerId) {
-        jdbc.update("update t_avalon_game set mission_no=?,leader_game_player_id=?,proposal_no=1,consecutive_rejections=0,phase='TEAM_BUILDING',updated_at=now() where id=?",
+        jdbc.update("update t_avalon_game set team_draft_json=null,mission_no=?,leader_game_player_id=?,proposal_no=1,consecutive_rejections=0,phase='TEAM_BUILDING',updated_at=now() where id=?",
                 missionNo, leaderGamePlayerId, gameId);
     }
     public void advanceAfterMission(long gameId, int goodScore, int evilScore, int missionNo, long leaderGamePlayerId) {
-        jdbc.update("update t_avalon_game set good_score=?,evil_score=?,mission_no=?,leader_game_player_id=?,proposal_no=1,consecutive_rejections=0,phase='TEAM_BUILDING',updated_at=now() where id=?",
+        jdbc.update("update t_avalon_game set team_draft_json=null,good_score=?,evil_score=?,mission_no=?,leader_game_player_id=?,proposal_no=1,consecutive_rejections=0,phase='TEAM_BUILDING',updated_at=now() where id=?",
                 goodScore, evilScore, missionNo, leaderGamePlayerId, gameId);
     }
     public void applyMissionScore(long gameId, int goodScore, int evilScore, Phase phase) {
-        jdbc.update("update t_avalon_game set good_score=?,evil_score=?,phase=?,updated_at=now() where id=?", goodScore, evilScore, phase.name(), gameId);
+        jdbc.update("update t_avalon_game set team_draft_json=null,good_score=?,evil_score=?,phase=?,updated_at=now() where id=?", goodScore, evilScore, phase.name(), gameId);
+    }
+
+    public TeamDraft teamDraft(long gameId) {
+        String value = jdbc.queryForObject("select team_draft_json from t_avalon_game where id=?", String.class, gameId);
+        if (value == null) return null;
+        try { return JSON.readValue(value, TeamDraft.class); }
+        catch (Exception e) { throw new IllegalStateException("Invalid persisted team draft", e); }
+    }
+    public void saveTeamDraft(long gameId, TeamDraft draft) {
+        try {
+            jdbc.update("update t_avalon_game set team_draft_json=?,updated_at=now() where id=?",
+                    JSON.writeValueAsString(draft), gameId);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) { throw new IllegalStateException(e); }
     }
 
     public long insertProposal(long gameId, int missionNo, int proposalNo, long leaderGamePlayerId, List<Long> teamPlayerIds) {

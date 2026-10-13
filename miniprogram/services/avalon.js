@@ -42,12 +42,14 @@ module.exports = {
   myRole: (id) => request({ url: `/api/avalon/game/${id}/my-role` }),
   confirmRole: (id) =>
     request({ url: `/api/avalon/game/${id}/role-confirm`, method: 'POST' }),
-  submitTeam: (id, playerIds) =>
+  submitTeam: (id, playerIds, context) =>
     request({
       url: `/api/avalon/game/${id}/team`,
       method: 'POST',
-      data: { playerIds },
+      data: { playerIds, ...context },
     }),
+  updateTeamDraft: (id, data) => request({ url: `/api/avalon/game/${id}/team-draft`, method: 'PUT', data, showError: false }),
+  nominateTeam: (id, data) => request({ url: `/api/avalon/game/${id}/team-nomination`, method: 'POST', data }),
   vote: (id, choice) =>
     request({
       url: `/api/avalon/game/${id}/vote`,

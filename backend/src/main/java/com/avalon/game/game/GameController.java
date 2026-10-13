@@ -14,7 +14,13 @@ public class GameController {
     @GetMapping("/{gameId}") public ApiResponse<GameService.GameState> state(@PathVariable long gameId) { return ApiResponse.success(service.state(LoginUserContext.require(), gameId)); }
     @GetMapping("/{gameId}/my-role") public ApiResponse<GameService.MyRoleView> role(@PathVariable long gameId) { return ApiResponse.success(service.myRole(LoginUserContext.require(), gameId)); }
     @PostMapping("/{gameId}/role-confirm") public ApiResponse<GameService.GameState> confirm(@PathVariable long gameId) { return ApiResponse.success(service.confirmRole(LoginUserContext.require(), gameId)); }
-    @PostMapping("/{gameId}/team") public ApiResponse<GameService.GameState> team(@PathVariable long gameId, @RequestBody GameService.TeamRequest r) { return ApiResponse.success(service.submitTeam(LoginUserContext.require(), gameId, r.playerIds())); }
+    @PostMapping("/{gameId}/team") public ApiResponse<GameService.GameState> team(@PathVariable long gameId, @RequestBody GameService.TeamRequest r) { return ApiResponse.success(r.hasDraftContext() ? service.submitTeam(LoginUserContext.require(), gameId, r) : service.submitTeam(LoginUserContext.require(), gameId, r.playerIds())); }
+    @PutMapping("/{gameId}/team-draft") public ApiResponse<TeamDraft> draft(@PathVariable long gameId, @RequestBody GameService.TeamDraftRequest r) {
+        return ApiResponse.success(service.updateTeamDraft(LoginUserContext.require(), gameId, r));
+    }
+    @PostMapping("/{gameId}/team-nomination") public ApiResponse<TeamDraft> nominate(@PathVariable long gameId, @RequestBody GameService.TeamDraftRequest r) {
+        return ApiResponse.success(service.nominateTeam(LoginUserContext.require(), gameId, r));
+    }
     @PostMapping("/{gameId}/vote") public ApiResponse<GameService.GameState> vote(@PathVariable long gameId, @RequestBody GameService.VoteRequest r) { return ApiResponse.success(service.vote(LoginUserContext.require(), gameId, r.choice())); }
     @PostMapping("/{gameId}/mission") public ApiResponse<GameService.GameState> mission(@PathVariable long gameId, @RequestBody GameService.MissionRequest r) { return ApiResponse.success(service.mission(LoginUserContext.require(), gameId, r.choice())); }
     @PostMapping("/{gameId}/lady-of-lake") public ApiResponse<GameService.LadyInspectionResult> lady(

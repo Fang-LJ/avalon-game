@@ -92,6 +92,8 @@ const overlap = (a,b) => Math.min(a.left+a.width,b.left+b.width)>Math.max(a.left
         if(mark){
           const body=await mark.$('.role-mark');assert.ok(body,'all marks are rectangles');
           assert.equal(await body.style('color'),'rgb(255, 255, 255)');
+          const backgrounds={evil:'rgb(169, 52, 71)',merlin:'rgb(163, 107, 19)',percival:'rgb(128, 82, 193)',candidate:'rgb(128, 82, 193)',loyal:'rgb(20, 127, 167)',blue:'rgb(20, 127, 167)'};
+          assert.equal(await body.style('background-color'),backgrounds[await seat.data('player.markClass')]);
           const size=await body.size();assert.ok(Math.abs(size.height-(n>=9?34:38)*scale)<1);
           const b=await box(body);assert.ok(b.left>=0 && b.left+b.width<=system.windowWidth,'badge fits screen');
           assert.equal(await mark.$('.evil-crescent'),null);
@@ -152,7 +154,7 @@ const overlap = (a,b) => Math.min(a.left+a.width,b.left+b.width)>Math.max(a.left
           const body=await (await seat.$('knowledge-mark')).$('.candidate-mark');
           appearances.push({text:await body.text(),color:await body.style('background-color'),size:await body.size()});
         }
-        assert.deepEqual(appearances[0],appearances[1]);assert.equal(appearances[0].text,'?');assert.equal(appearances[0].color,'rgb(112, 70, 166)');
+        assert.deepEqual(appearances[0],appearances[1]);assert.equal(appearances[0].text,'?');assert.equal(appearances[0].color,'rgb(128, 82, 193)');
       }
       await capture(p,'10-'+viewer+'-system',10,'TEAM_BUILDING');
     }

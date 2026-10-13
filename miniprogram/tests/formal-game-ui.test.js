@@ -110,7 +110,7 @@ test('mission artworks live only in the private overlay and main footer opens it
   assert.doesNotMatch(markup, /class="mission-info|class="mission-select|class="mission-cards|class="privacy-note/);
   assert.match(markup, /<mission-card-overlay/);
   assert.match(markup, /bind:submit="submitMission"/);
-  const actions = markup.split('<view class="phase-actions actions">')[1].split('</block>')[0];
+  const actions = markup.split('<view class="phase-actions actions">')[1].split('<mission-card-overlay')[0];
   assert.doesNotMatch(actions, /bindtap="submitMission"|确认提交/);
   assert.match(actions, /bindtap="openMissionOverlay"/);
   assert.match(actions, /已秘密提交/);

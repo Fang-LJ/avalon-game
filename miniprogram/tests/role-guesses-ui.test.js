@@ -206,7 +206,7 @@ test('all identity types share white text and opaque rounded rectangles',()=>{
   const body=name=>rules.filter(([,selectors])=>selectors.split(',').map(s=>s.trim()).includes('.'+name)).map(([, ,declarations])=>declarations).join(' ');
   const role=body('role-mark');
   for(const declaration of ['width: max-content','border: 1rpx solid','border-radius: 12rpx','font-weight: 900','white-space: nowrap','color: #FFFFFF']) assert.ok(role.includes(declaration));
-  const tones={evil:'#A93447',loyal:'#176E78',blue:'#176E78',merlin:'#94701B',percival:'#7046A6'};
+  const tones={evil:'#A93447',loyal:'#147FA7',blue:'#147FA7',merlin:'#A36B13',percival:'#8052C1'};
   for(const [tone,bg] of Object.entries(tones)){
     const rule=body('role-'+tone);
     assert.ok(rule.includes('background: '+bg));assert.ok(rule.includes('border-color: '+bg));
@@ -272,7 +272,7 @@ test('a different selection replaces side/concrete note directly and uses shared
   assert.equal(display(f,2).markType,'GUESS');assert.equal(display(f,2).knowledgeType,undefined);
   assert.deepEqual(f.storage.get(d.storageKey(42,1)),{guesses:{2:'GOOD_SIDE'}});
   assert.deepEqual(plain(f.room),before);assert.deepEqual(f.calls,[]);
-  assert.match(read('components/knowledge-mark/knowledge-mark.wxss'),/\.role-blue \{ background: #176E78; border-color: #176E78/);
+  assert.match(read('components/knowledge-mark/knowledge-mark.wxss'),/\.role-blue \{ background: #147FA7; border-color: #147FA7/);
 });
 test('Percival re-click clears both guesses and restores both identical question badges',()=>{
   const f=fixture('PERCIVAL',7,[2,3].map(playerId=>({playerId,knowledgeType:'MERLIN_OR_MORGANA'})));
