@@ -23,7 +23,6 @@
     >
       微信授权登录
     </button>
-    <view class="footer-note">首次登录将自动创建阿瓦隆账号</view>
     <view class="error center" wx:if="{{error}}">{{error}}</view>
     <view class="agreement-area">
       <button class="agreement-checkbox {{agreed ? 'checked' : ''}}" aria-role="checkbox" aria-checked="{{agreed}}" aria-label="同意用户服务协议和隐私政策" bindtap="toggleAgreement"><view class="agreement-circle"><text wx:if="{{agreed}}">✓</text></view></button>

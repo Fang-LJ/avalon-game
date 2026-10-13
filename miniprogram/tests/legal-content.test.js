@@ -44,5 +44,5 @@ test('unverified log retention remains explicitly marked; round consent keeps ac
   const wxml = fs.readFileSync(path.join(root, 'pages/login/login.wxml'), 'utf8');
   assert.match(wxml, /aria-role="checkbox"/); assert.match(wxml, /aria-checked="{{agreed}}"/); assert.match(wxml, /class="agreement-circle"/);
   assert.match(wxml, /catchtap="openLegal"/); assert.doesNotMatch(wxml, /agreement-hint|请先阅读并同意协议/);
-  assert.match(wxml, /首次登录将自动创建阿瓦隆账号/);
+  assert.doesNotMatch(wxml, /首次登录将自动创建阿瓦隆账号/);
 });
