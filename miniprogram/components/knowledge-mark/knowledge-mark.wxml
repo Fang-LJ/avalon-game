@@ -3,7 +3,5 @@
   <text class="guess-question">?</text>
 </view>
 <view wx:elif="{{markType === 'ROLE'}}" class="knowledge-mark role-mark role-{{tone}}">{{text}}</view>
-<view wx:elif="{{markType === 'EVIL' || (!markType && (type === 'EVIL' || type === 'EVIL_ALLY'))}}" class="knowledge-mark evil-mark">
-  <view class="evil-crescent"><view class="crescent-cutout"></view></view>
-</view>
-<view wx:elif="{{markType === 'MERLIN_OR_MORGANA' || (!markType && type === 'MERLIN_OR_MORGANA')}}" class="knowledge-mark candidate-mark">?</view>
+<view wx:elif="{{markType === 'EVIL' || (!markType && (type === 'EVIL' || type === 'EVIL_ALLY'))}}" class="knowledge-mark role-mark evil-mark">红</view>
+<view wx:elif="{{markType === 'MERLIN_OR_MORGANA' || (!markType && type === 'MERLIN_OR_MORGANA')}}" class="knowledge-mark role-mark candidate-mark">?</view>

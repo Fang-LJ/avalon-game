@@ -87,7 +87,7 @@ test('public target projection never retains GOOD identity or private vision pro
   assert.equal(ui.assassinationTarget({...s.snapshot('ASSASSIN'),phase:'TEAM_BUILDING'}),null);
   s.target={playerId:4,seatNo:4,nickname:'坏人'};assert.equal(ui.assassinationTarget(s.snapshot('ASSASSIN')),null);
 });
-test('assassination room reuses full compact history, fixed three-layer card and existing fixed-action padding',()=>{
+test('assassination room reuses full compact history, wrapping three-layer center and existing fixed-action padding',()=>{
   const markup=read('pages/room/room.wxml');
   assert.match(markup,/<game-log\s+wx:if="\{\{board && entries.length\}\}"\s+compact="\{\{true\}\}"/);
   assert.doesNotMatch(markup,/最终刺杀|请选择刺杀梅林|等待刺客选择梅林|game.phase !== 'ASSASSINATION'/);
@@ -97,10 +97,10 @@ test('assassination room reuses full compact history, fixed three-layer card and
   const css=read('pages/room/room.wxss');assert.match(css,/\.game-status-row \{[^}]*flex-wrap: nowrap/);
   assert.match(css,/\.quick-action \{[^}]*min-width: 60rpx;[^}]*padding: 0 6rpx;[^}]*font-size: 21rpx/);
   assert.match(css,/\.has-phase-actions \{\s*padding-bottom: calc\(220rpx/);
-  assert.match(css,/\.board-center\.assassination-center \{[^}]*width: 60%;[^}]*height: 140rpx;/);
-  assert.match(css,/\.assassination-title \{[^}]*color: var\(--evil\);[^}]*font-size: 26rpx;[^}]*font-weight: 800/);
+  assert.match(css,/\.board-center\.assassination-center \{[^}]*width: 44%;[^}]*min-height: 140rpx;/);
+  assert.match(css,/\.assassination-title \{[^}]*color: var\(--gold\);[^}]*font-size: 26rpx;[^}]*font-weight: 800/);
   assert.match(css,/\.assassination-rule \{[^}]*color: var\(--muted\);[^}]*font-size: 18rpx/);
-  assert.match(css,/\.assassination-selection \{[^}]*color: var\(--gold\);[^}]*font-size: 22rpx/);
+  assert.match(css,/\.assassination-selection \{[^}]*color: var\(--text\);[^}]*font-size: 20rpx/);
   assert.match(read('components/player-seat/player-seat.wxss'),/revealed-evil-ring[^}]*#C85C68/);
 });
 test('same history component preserves swipe selection, all records and mission cards during assassination',()=>{

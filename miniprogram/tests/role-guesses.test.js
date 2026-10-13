@@ -12,7 +12,7 @@ function context(n, role, visiblePlayers = []) {
   return { playerCount: n, viewerPlayerId: 1, viewerRole: role, visiblePlayers,
     players: Array.from({ length: n }, (_, i) => ({ playerId: i + 1, seatNo: i + 1 })) };
 }
-const moon = playerId => ({ playerId, knowledgeType: 'EVIL' });
+const evilKnowledge = playerId => ({ playerId, knowledgeType: 'EVIL' });
 const pair = [2,3].map(playerId => ({ playerId, knowledgeType: 'MERLIN_OR_MORGANA' }));
 const ally = (playerId, roleCode) => ({ playerId, roleCode, knowledgeType: 'EVIL_ALLY' });
 
@@ -35,14 +35,14 @@ for (let n = 5; n <= 10; n++) {
     assert.equal(d.remainingRoleCounts(c)[role], ui.roleConfig(n)[role] - 1);
     assert.deepEqual(d.applyGuess(c, {}, 1, 'MERLIN'), {});
   });
-  test(`${n} Merlin: moon and nonmoon candidates obey system facts`, () => {
-    const c = context(n, 'MERLIN', [moon(2)]);
+  test(`${n} Merlin: known-evil and unmarked candidates obey system facts`, () => {
+    const c = context(n, 'MERLIN', [evilKnowledge(2)]);
     assert.deepEqual(sorted(d.guessCandidates(c, 2)), sorted(evil.filter(r => r !== 'MORDRED' && ui.roleConfig(n)[r])));
     assert.deepEqual(sorted(d.guessCandidates(c, 3)), sorted(['PERCIVAL','LOYAL_SERVANT', ...(n >= 9 ? ['MORDRED'] : [])]));
     assert.equal(d.guessCandidates(c,2).includes('MERLIN'), false);
     assert.equal(d.guessCandidates(c,2).includes('MORDRED'), false);
     assert.equal(d.guessCandidates(c,3).includes('OBERON'), false);
-    // A moon is ambiguous knowledge, not a known exact role/capacity allocation.
+    // An evil system mark is ambiguous knowledge, not a known exact role/capacity allocation.
     assert.equal(d.remainingRoleCounts(c).MORGANA, 1);
   });
   test(`${n} loyal servant duplicates stop at public capacity minus own identity`, () => {
@@ -126,7 +126,7 @@ test('sanitizer rejects absent roles, self, exact facts, removed players and ove
   assert.deepEqual(d.sanitizeGuesses({...c,players:[]},{3:'MERLIN'}),{});
 });
 test('corrupted saved facts cannot override Merlin exclusions or newer exact evil knowledge', () => {
-  assert.deepEqual(d.sanitizeGuesses(context(10,'MERLIN',[moon(2)]),{2:'MORDRED',3:'OBERON',4:'MORDRED'}),{4:'MORDRED'});
+  assert.deepEqual(d.sanitizeGuesses(context(10,'MERLIN',[evilKnowledge(2)]),{2:'MORDRED',3:'OBERON',4:'MORDRED'}),{4:'MORDRED'});
   const notes = {2:'MERLIN',3:'OBERON'};
   assert.deepEqual(d.sanitizeGuesses(context(7,'ASSASSIN',[ally(2,'MORGANA')]),notes),{3:'OBERON'});
   assert.deepEqual(notes,{2:'MERLIN',3:'OBERON'});

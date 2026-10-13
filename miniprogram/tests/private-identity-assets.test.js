@@ -28,7 +28,7 @@ for (const viewer of evil) test(`${viewer} sees exact ordinary evil teammates, n
   }
   assert.equal(ui.identityMark({knowledgeType:'EVIL_ALLY',roleCode:'OBERON'},viewer).markType,'');
 });
-test('Merlin sees only red moons even if accidental exact role metadata is present', () => {
+test('Merlin sees only red faction marks even if accidental exact role metadata is present', () => {
   for (const roleCode of ['MORGANA','ASSASSIN','MINION','OBERON']) {
     const visible = ui.privateVisiblePlayer({knowledgeType:'EVIL',roleCode,roleName:ui.ROLE_NAMES[roleCode]},'MERLIN');
     assert.equal(visible.markType,'EVIL'); assert.equal(visible.markText,'');
@@ -83,8 +83,8 @@ test('crown and identity grow independently, action tick stays 30rpx, compact ba
   assert.match(css,/\.formal.compact .leader-icon \{ width: 36rpx; height: 36rpx;/);
   const compact=css.match(/\.compact \.knowledge-icon \{([^}]+)\}/)[1];
   for(const declaration of ['width: auto','min-width: 34rpx','height: 34rpx','--identity-mark-font-size: 20rpx','--guess-question-font-size: 18rpx','left: calc(100% - 29rpx)'])assert.ok(compact.includes(declaration));
-  const mark=read('components/knowledge-mark/knowledge-mark.wxss');assert.match(mark,/font-size: 24rpx/);assert.match(mark,/--identity-mark-font-size, 22rpx/);
-  for (const color of ['#D66A76','#EE8E99','#172b2e','#66c5c6','#83d7d8','#2b261a','#e2bf62','#f5dc91','#262033','#b69cff','#cbb5ff'])assert.ok(mark.includes(color));
+  const mark=read('components/knowledge-mark/knowledge-mark.wxss');assert.match(mark,/--identity-mark-font-size, 22rpx/);
+  for (const color of ['#FFFFFF','#A93447','#176E78','#94701B','#7046A6'])assert.ok(mark.includes(color));
   for(const n of [5,6,7,8,9,10])assert.equal(new Set(Array.from({length:n},(_,i)=>ui.seatPosition(i+1,n,true))).size,n);
 });
 test('local and prod cards use one HTTPS versioned base without changing login modes', () => {

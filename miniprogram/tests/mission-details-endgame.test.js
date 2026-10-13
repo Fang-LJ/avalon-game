@@ -89,11 +89,11 @@ test('overlay mask and close button dismiss, card stops bubbling, size/layer lea
   assert.match(css,/width: 88vw; max-height: 76vh/);assert.match(css,/z-index: 80/);
   assert.match(read('components/mission-result-overlay/mission-result-overlay.wxss'),/z-index: 100/);
 });
-for(const type of ['EVIL','EVIL_ALLY'])test(`${type} uses shared CSS crescent, not white dot, emoji or role`,()=>{
+for(const type of ['EVIL','EVIL_ALLY'])test(`${type} uses shared red faction rectangle without exact role`,()=>{
   const view=ui.privateKnowledge({knowledgeType:type});assert.equal(view.knowledgeSymbol,'');assert.equal(view.knowledgeClass,'knowledge-evil');
   const w=read('components/knowledge-mark/knowledge-mark.wxml'),css=read('components/knowledge-mark/knowledge-mark.wxss');
-  assert.match(w,/type === 'EVIL' \|\| type === 'EVIL_ALLY'/);assert.match(w,/evil-crescent/);assert.match(w,/crescent-cutout/);
-  assert.doesNotMatch(w,/●|☾|🌙|type === 'ASSASSIN'|type === 'MORGANA'/);assert.match(css,/right: -18%/);
+  assert.match(w,/type === 'EVIL' \|\| type === 'EVIL_ALLY'/);assert.match(w,/class="knowledge-mark role-mark evil-mark">红<\/view>/);
+  assert.doesNotMatch(w,/●|☾|🌙|type === 'ASSASSIN'|type === 'MORGANA'/);assert.match(css,/\.evil-mark \{ background: #A93447; border-color: #A93447/);assert.doesNotMatch(w+css,/crescent|cutout/);
   for(const file of ['components/player-seat/player-seat.wxml','pages/room/room.wxml','components/card-deal-stage/card-deal-stage.wxml'])assert.match(read(file),/<knowledge-mark type=/);
 });
 test('Percival candidates are identical question marks and all private markers remain client-local',()=>{

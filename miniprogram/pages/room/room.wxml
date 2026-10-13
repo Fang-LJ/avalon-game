@@ -159,7 +159,7 @@
           bind:guess="openRoleGuess"
         />
       </view>
-      <view class="card board-center {{game.phase === 'ASSASSINATION' ? 'assassination-center' : ''}} {{rejection.forced && (game.phase === 'TEAM_BUILDING' || game.phase === 'TEAM_VOTING') ? 'forced-turn' : ''}}">
+      <view class="board-center {{game.phase === 'ASSASSINATION' ? 'assassination-center' : ''}} {{rejection.forced && (game.phase === 'TEAM_BUILDING' || game.phase === 'TEAM_VOTING') ? 'forced-turn' : ''}}">
         <block wx:if="{{game.phase === 'TEAM_BUILDING'}}">
           <view class="gold">
             {{isLeader ? '请选择任务成员' : '队长正在选择任务成员'}}

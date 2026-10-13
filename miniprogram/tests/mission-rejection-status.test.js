@@ -90,7 +90,7 @@ test('fifth proposal still sends REJECT through the existing API; no optimistic 
 });
 test('rejection indicators stay inside board center and only team-building/voting display them',()=>{
   const markup=read('pages/room/room.wxml');
-  const center=markup.split(/class="card board-center[^\n]*>/)[1].split('</view>\n    </view>')[0];
+  const center=markup.split(/class="board-center[^\n]*>/)[1].split('</view>\n    </view>')[0];
   assert.match(center,/<block wx:if="\{\{game.phase === 'TEAM_BUILDING' \|\| game.phase === 'TEAM_VOTING'\}\}">\s*<view wx:if="\{\{rejection.forced\}\}"/);
   assert.match(center,/本轮若再次否决，邪恶阵营直接获胜/); assert.match(center,/rejection.dots/);
   const css=read('pages/room/room.wxss');

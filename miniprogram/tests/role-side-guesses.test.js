@@ -5,7 +5,7 @@ const ui = require('../utils/presentation');
 const context = (n, viewerRole, visiblePlayers = []) => ({ playerCount: n, viewerPlayerId: 1, viewerRole,
   visiblePlayers, players: Array.from({length:n}, (_,i) => ({playerId:i+1,seatNo:i+1})) });
 const sides = ['GOOD_SIDE', 'EVIL_SIDE'];
-const moon = playerId => ({playerId,knowledgeType:'EVIL'});
+const evilKnowledge = playerId => ({playerId,knowledgeType:'EVIL'});
 const ally = (playerId,roleCode) => ({playerId,roleCode,knowledgeType:'EVIL_ALLY'});
 const pair = [2,3].map(playerId => ({playerId,knowledgeType:'MERLIN_OR_MORGANA'}));
 const ordinary = ['MORGANA','ASSASSIN','MINION','MORDRED'];
@@ -24,8 +24,8 @@ for (const n of [5,6,7,8,9,10]) {
       for (const role of ['MERLIN','MORGANA','ASSASSIN']) assert.ok(d.guessCandidates(c,id,g).includes(role));
     }
   });
-  test(`${n} Merlin moon: neither side can override system evil knowledge`, () => {
-    const c = context(n,'MERLIN',[moon(2)]);
+  test(`${n} Merlin system evil mark: neither side can override system evil knowledge`, () => {
+    const c = context(n,'MERLIN',[evilKnowledge(2)]);
     assert.deepEqual(d.possibleAlignmentsForTarget(c,2),['EVIL']);
     assert.deepEqual(d.sideCandidates(c,2),[]);
     assert.deepEqual(d.markCandidates(c,2),d.guessCandidates(c,2));
@@ -34,8 +34,8 @@ for (const n of [5,6,7,8,9,10]) {
       assert.deepEqual(d.sanitizeGuesses(c,{2:code}),{});
     }
   });
-  test(`${n} Merlin nonmoon: blue always available, red requires hidden Mordred`, () => {
-    const c = context(n,'MERLIN',[moon(2)]);
+  test(`${n} Merlin unmarked: blue always available, red requires hidden Mordred`, () => {
+    const c = context(n,'MERLIN',[evilKnowledge(2)]);
     assert.deepEqual(d.possibleAlignmentsForTarget(c,3),n>=9?['GOOD','EVIL']:['GOOD']);
     assert.deepEqual(d.sideCandidates(c,3),n>=9?sides:['GOOD_SIDE']);
     assert.ok(d.markCandidates(c,3).includes('GOOD_SIDE'));
@@ -79,7 +79,7 @@ test('system knowledge changes reconcile illegal sides without losing valid conc
   const original = {2:'EVIL_SIDE',3:'GOOD_SIDE',4:'MORDRED',5:'PERCIVAL'};
   const mixed = {2:'EVIL_SIDE',3:'GOOD_SIDE',5:'PERCIVAL'};
   assert.deepEqual(d.sanitizeGuesses(c,mixed),mixed);
-  assert.deepEqual(d.sanitizeGuesses({...c,visiblePlayers:[moon(2)]},mixed),{3:'GOOD_SIDE',5:'PERCIVAL'});
+  assert.deepEqual(d.sanitizeGuesses({...c,visiblePlayers:[evilKnowledge(2)]},mixed),{3:'GOOD_SIDE',5:'PERCIVAL'});
   assert.deepEqual(d.sanitizeGuesses(c,original),original);
   assert.deepEqual(original,{2:'EVIL_SIDE',3:'GOOD_SIDE',4:'MORDRED',5:'PERCIVAL'});
 });
@@ -137,7 +137,7 @@ test('reconciliation only removes sides made illegal by system knowledge, never 
   assert.deepEqual(d.sanitizeGuesses({...c,visiblePlayers:[ally(2,'MORGANA'),ally(3,'ASSASSIN')]},notes),{4:'GOOD_SIDE',5:'OBERON'});
   const merlin = context(7,'MERLIN');
   assert.deepEqual(d.sanitizeGuesses(merlin,{2:'GOOD_SIDE',3:'EVIL_SIDE'}),{2:'GOOD_SIDE'});
-  assert.deepEqual(d.sanitizeGuesses({...merlin,visiblePlayers:[moon(2)]},{2:'GOOD_SIDE'}),{});
+  assert.deepEqual(d.sanitizeGuesses({...merlin,visiblePlayers:[evilKnowledge(2)]},{2:'GOOD_SIDE'}),{});
 });
 test('system alignment helpers fail closed on invalid self exact missing and incomplete pair contexts', () => {
   const c = context(7,'LOYAL_SERVANT');
