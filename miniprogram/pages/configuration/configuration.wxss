@@ -1,0 +1,8 @@
+@import "../../utils/guest-pages.wxss";
+.count-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16rpx; margin-bottom: 24rpx; }
+.count-option { margin: 0; padding: 20rpx 0; color: var(--muted); background: var(--elevated); border: 1rpx solid var(--border); border-radius: 18rpx; font-size: 27rpx; line-height: 1.4; }
+.count-option::after { border: 0; }
+.count-option.active { border-color: var(--gold); color: var(--gold); background: #2b3123; }
+.composition { display: flex; gap: 52rpx; margin: 6rpx 0 30rpx; font-size: 26rpx; }
+.big-count { font-size: 60rpx; font-weight: 800; padding-right: 14rpx; }
+.task-detail { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12rpx; padding: 18rpx 0; font-size: 24rpx; border-bottom: 1rpx solid var(--border); }

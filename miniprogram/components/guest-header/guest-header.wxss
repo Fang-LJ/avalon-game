@@ -1,0 +1,6 @@
+:host { display: block; }
+.guest-header { padding-bottom: 30rpx; }
+.back { margin: 0 0 20rpx; padding: 6rpx 0; width: max-content; background: transparent; color: #d8b25c; font-size: 26rpx; line-height: 1.5; text-align: left; }
+.back::after { border: 0; }
+.title { color: #f5f1e8; font-size: 38rpx; font-weight: 800; }
+.subtitle { margin-top: 8rpx; color: #b8b7af; font-size: 23rpx; line-height: 1.6; }

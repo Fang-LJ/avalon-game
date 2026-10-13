@@ -1,6 +1,7 @@
 const auth = require('../../services/auth');
 const invite = require('../../utils/invite');
 const { showLegal } = require('../../utils/presentation');
+const { ROUTES } = require('../../utils/guest-content');
 Page({
   data: {
     busy: false,
@@ -9,9 +10,19 @@ Page({
     mockLogin: false,
     mockUsers: [],
     currentMockKey: '1',
+    brandTop: 90,
+    guestFeatures: [
+      { key: 'rules', label: '游戏规则', icon: 'book' },
+      { key: 'roles', label: '角色介绍', icon: 'people' },
+      { key: 'configuration', label: '人数配置', icon: 'calculator' },
+      { key: 'demo', label: '体验玩法', icon: 'gamepad' },
+    ],
   },
   onLoad() {
+    const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync ? wx.getSystemInfoSync() : {};
+    const capsule = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null;
     this.setData({
+      brandTop: Math.max((info.statusBarHeight || 20) + 52, capsule ? capsule.bottom + 32 : 90),
       mockLogin: auth.isMockLogin(),
       mockUsers: auth.isMockLogin() ? auth.MOCK_USERS : [],
       currentMockKey: auth.currentMockUser().key,
@@ -32,6 +43,10 @@ Page({
   login() {
     if (this.data.busy || this.data.checking) return;
     this.perform(() => auth.login());
+  },
+  openGuestFeature(e) {
+    const url = ROUTES[e.currentTarget.dataset.key];
+    if (url) wx.navigateTo({ url });
   },
   perform(task) {
     this.setData({ busy: true, error: '' });

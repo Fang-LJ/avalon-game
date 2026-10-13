@@ -1,0 +1,8 @@
+@import "../../utils/guest-pages.wxss";
+.stage { display: grid; grid-template-columns: 54rpx minmax(0, 1fr); gap: 18rpx; padding: 20rpx 0; }
+.stage + .stage { border-top: 1rpx solid var(--border); }
+.stage-number { color: var(--gold); font-size: 26rpx; font-weight: 800; }
+.stage-title { font-size: 27rpx; font-weight: 700; margin-bottom: 8rpx; }
+.outcome { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10rpx; padding: 16rpx 0; font-size: 24rpx; }
+.task-row { display: grid; grid-template-columns: 1.5fr repeat(5, 1fr); text-align: center; padding: 16rpx 0; font-size: 25rpx; border-bottom: 1rpx solid var(--border); }
+.task-head { color: var(--muted); font-size: 22rpx; }

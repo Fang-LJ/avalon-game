@@ -1,0 +1,5 @@
+<view class="guest-header" style="padding-top: {{top}}px;">
+  <button class="back" bindtap="back" aria-label="返回">‹ 返回</button>
+  <view class="title">{{title}}</view>
+  <view class="subtitle">{{subtitle}}</view>
+</view>

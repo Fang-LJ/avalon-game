@@ -1,0 +1,9 @@
+.guest-page { padding-bottom: calc(50rpx + env(safe-area-inset-bottom)); }
+.guest-card { margin-bottom: 24rpx; padding: 28rpx; border: 1rpx solid var(--border); border-radius: 26rpx; background: var(--elevated); }
+.guest-heading { font-size: 29rpx; font-weight: 800; color: var(--gold); margin-bottom: 14rpx; }
+.guest-copy { font-size: 25rpx; line-height: 1.8; color: var(--text); }
+.guest-note { font-size: 22rpx; line-height: 1.7; color: var(--muted); margin-top: 14rpx; }
+.guest-good { color: #83d7d8; }
+.guest-evil { color: #ee8e99; }
+.guest-chip { display: inline-block; padding: 8rpx 14rpx; border: 1rpx solid var(--border); border-radius: 12rpx; font-size: 23rpx; margin: 0 12rpx 12rpx 0; }
+.guest-back { margin-top: 28rpx; }

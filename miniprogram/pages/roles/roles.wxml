@@ -1,0 +1,15 @@
+<view class="page guest-page">
+  <guest-header title="角色介绍" subtitle="了解八种身份，读懂每个人的视野" bind:back="back" />
+  <view wx:for="{{roles}}" wx:key="code" class="guest-card role-row" data-code="{{item.code}}" bindtap="openRole" aria-role="button" aria-label="查看{{item.name}}卡牌">
+    <image class="role-thumbnail" src="{{item.card}}" mode="aspectFit" lazy-load="{{true}}" />
+    <view class="role-copy"><view class="role-name">{{item.name}}</view><view class="role-alignment {{item.alignment === 'GOOD' ? 'guest-good' : 'guest-evil'}}">{{item.alignmentName}}</view><view class="guest-copy">{{item.ability}}</view><view class="guest-note gold">查看身份卡牌 ›</view></view>
+  </view>
+  <button class="btn ghost guest-back" bindtap="back">返回登录页</button>
+  <view wx:if="{{selectedRole}}" class="role-preview" style="padding-top: {{overlayTop}}px;" bindtap="closeRole">
+    <scroll-view scroll-y="{{true}}" class="preview-content" catchtap="ignoreTap">
+      <view class="preview-card"><play-card front="{{selectedRole.card}}" back="{{cardBack}}" flipped="{{true}}" size="large" interactive="{{false}}" /></view>
+      <view class="role-name">{{selectedRole.name}}</view><view class="guest-copy">{{selectedRole.ability}}</view>
+      <button class="btn preview-close" bindtap="closeRole">关闭卡牌</button>
+    </scroll-view>
+  </view>
+</view>

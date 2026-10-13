@@ -1,5 +1,5 @@
 <view class="page login-page">
-  <view class="brand">
+  <view class="brand" style="padding-top: {{brandTop}}px;">
     <view class="brand-mark">
       <image src="/assets/avalon-mark.svg" />
       <text>A</text>
@@ -7,6 +7,12 @@
     <view class="brand-name">阿瓦隆</view>
     <view class="gold small">AVALON</view>
     <view class="tagline muted">在谎言与忠诚之间，找到真正的同伴。</view>
+  </view>
+  <view class="guest-features">
+    <button wx:for="{{guestFeatures}}" wx:key="key" class="guest-feature" data-key="{{item.key}}" bindtap="openGuestFeature">
+      <image class="feature-icon" src="/assets/guest/{{item.icon}}.svg" mode="aspectFit" />
+      <text>{{item.label}}</text>
+    </button>
   </view>
   <view class="login-actions">
     <button

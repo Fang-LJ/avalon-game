@@ -1,0 +1,16 @@
+<view class="page guest-page">
+  <guest-header title="人数配置" subtitle="选择人数，查看本局身份与任务安排" bind:back="back" />
+  <view class="count-selector"><button wx:for="{{counts}}" wx:key="*this" class="count-option {{config.count === item ? 'active' : ''}}" data-count="{{item}}" bindtap="choose">{{item}} 人</button></view>
+  <view class="guest-card">
+    <view class="composition"><view class="guest-good"><text class="big-count">{{config.good}}</text>正义</view><view class="guest-evil"><text class="big-count">{{config.evil}}</text>邪恶</view></view>
+    <view class="guest-heading">本局身份</view>
+    <text wx:for="{{config.roles}}" wx:key="code" class="guest-chip {{item.alignment === 'GOOD' ? 'guest-good' : 'guest-evil'}}">{{item.name}} × {{item.quantity}}</text>
+  </view>
+  <view class="guest-card">
+    <view class="guest-heading">五轮任务</view>
+    <mission-track current="{{0}}" missions="{{[]}}" teamSizes="{{config.teamSizes}}" />
+    <view wx:for="{{config.tasks}}" wx:key="n" class="task-detail"><text>第 {{item.n}} 轮 · {{item.size}} 人</text><text class="{{item.fails === 2 ? 'gold' : 'muted'}}">{{item.fails}} 张失败牌即失败</text></view>
+  </view>
+  <view class="guest-card"><view class="guest-heading">特殊规则</view><view class="guest-copy">{{config.fourth === 2 ? '第四轮需要两张失败牌才会失败，一张失败牌仍算任务成功。' : '每轮出现一张失败牌，任务就失败。'}}</view><view class="guest-note">{{config.lady ? '本局启用湖中仙女：第二、三、四轮任务结束后检查阵营并转交，不能检查自己或曾经的持有者。' : '本局不启用湖中仙女。'}}</view></view>
+  <button class="btn ghost guest-back" bindtap="back">返回登录页</button>
+</view>

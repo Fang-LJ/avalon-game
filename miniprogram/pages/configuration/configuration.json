@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "人数配置",
+  "usingComponents": {
+    "guest-header": "/components/guest-header/guest-header"
+  }
+}

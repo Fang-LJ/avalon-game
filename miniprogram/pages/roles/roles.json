@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "角色介绍",
+  "usingComponents": {
+    "guest-header": "/components/guest-header/guest-header",
+    "play-card": "/components/play-card/play-card"
+  }
+}

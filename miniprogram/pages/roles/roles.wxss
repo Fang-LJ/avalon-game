@@ -1,0 +1,10 @@
+@import "../../utils/guest-pages.wxss";
+.role-row { display: grid; grid-template-columns: 132rpx minmax(0, 1fr); gap: 22rpx; }
+.role-thumbnail { width: 132rpx; height: 236rpx; }
+.role-name { font-size: 29rpx; font-weight: 800; }
+.role-alignment { margin: 6rpx 0 12rpx; font-size: 22rpx; }
+.role-copy { min-width: 0; }
+.role-preview { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.9); display: flex; align-items: center; padding: calc(28px + env(safe-area-inset-top)) 38rpx calc(28rpx + env(safe-area-inset-bottom)); }
+.preview-content { height: 100%; text-align: center; }
+.preview-card { margin: 12rpx auto 22rpx; display: flex; justify-content: center; }
+.preview-close { margin-top: 24rpx; }

@@ -1,0 +1,35 @@
+<view class="page guest-page">
+  <guest-header title="游戏规则" subtitle="在隐藏身份中，寻找值得信任的同伴" bind:back="back" />
+  <view class="guest-card">
+    <view class="guest-heading">两种阵营 · 一场博弈</view>
+    <view class="guest-copy"><text class="guest-good">正义</text>需要完成三个任务，并保护梅林免遭刺杀。</view>
+    <view class="guest-copy"><text class="guest-evil">邪恶</text>隐藏在队伍中，破坏任务，或在刺杀阶段找出梅林。</view>
+    <view class="guest-note">每局五轮任务。身份信息因角色而异，请结合表决与任务结果判断。</view>
+  </view>
+  <view class="guest-card">
+    <view class="guest-heading">一局如何进行</view>
+    <view wx:for="{{stages}}" wx:key="n" class="stage">
+      <view class="stage-number">{{item.n}}</view>
+      <view><view class="stage-title">{{item.title}}</view><view class="guest-copy">{{item.text}}</view></view>
+    </view>
+  </view>
+  <view class="guest-card">
+    <view class="guest-heading">胜负节点</view>
+    <view class="outcome"><text class="guest-evil">连续五次否决</text><text>邪恶立即获胜</text></view>
+    <view class="outcome"><text class="guest-evil">三个任务失败</text><text>邪恶立即获胜</text></view>
+    <view class="outcome"><text class="guest-good">三个任务成功</text><text>进入刺杀，尚未获胜</text></view>
+    <view class="guest-note">连续否决次数在进入下一轮任务时归零。本项目允许刺客在组队、表决、任务或湖中仙女阶段提前发动刺杀，胜负同样取决于是否刺中梅林。</view>
+  </view>
+  <view class="guest-card">
+    <view class="guest-heading">任务人数对照</view>
+    <view class="task-row task-head"><text>人数</text><text>Ⅰ</text><text>Ⅱ</text><text>Ⅲ</text><text>Ⅳ</text><text>Ⅴ</text></view>
+    <view wx:for="{{configurations}}" wx:key="count" class="task-row"><text class="gold">{{item.count}} 人</text><text wx:for="{{item.tasks}}" wx:for-item="task" wx:key="n">{{task.size}}</text></view>
+    <view class="guest-note">5～6 人：每轮至少一张失败牌，任务就失败。7～10 人：第四轮需要至少两张失败牌，其余轮次仍是一张。</view>
+  </view>
+  <view class="guest-card">
+    <view class="guest-heading">10 人局 · 湖中仙女</view>
+    <view class="guest-copy">初始持有者是首任队长的前一号位。第二、三、四轮任务结束后，可私下查看一名玩家的阵营，再将湖中仙女交给对方。</view>
+    <view class="guest-note">不能查自己或曾经持有过湖中仙女的玩家。如果第三次任务失败，对局直接结束；若已完成三个成功任务，湖中仙女结算后再进入刺杀。</view>
+  </view>
+  <button class="btn ghost guest-back" bindtap="back">返回登录页</button>
+</view>

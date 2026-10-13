@@ -1,0 +1,18 @@
+@import "../room/room.wxss";
+@import "../../utils/guest-pages.wxss";
+.demo-label { color: var(--gold); font-size: 22rpx; margin-bottom: 24rpx; }
+.demo-lobby { height: 760rpx; }
+.demo-status { padding: 22rpx 0; }
+.demo-buttons { display: flex; gap: 20rpx; margin: 20rpx 0; }
+.demo-buttons .btn { flex: 1; min-width: 0; margin: 0; padding: 22rpx 14rpx; font-size: 25rpx; }
+.demo-tools { display: flex; flex-wrap: wrap; justify-content: center; gap: 24rpx; padding: 24rpx 0; }
+.demo-tools button { margin: 0; padding: 8rpx 16rpx; color: var(--gold); background: transparent; font-size: 24rpx; line-height: 1.5; }
+.demo-tools button::after { border: 0; }
+.demo-exit { position: fixed; left: 24rpx; z-index: 120; width: 150rpx; margin: 0; padding: 8rpx 10rpx; border-radius: 14rpx; border: 1rpx solid #324238; background: #18221d; color: #d8b25c; font-size: 22rpx; line-height: 1.4; }
+.demo-exit::after { border: 0; }
+.demo-identity { display: grid; grid-template-columns: 54rpx minmax(0, 1fr) max-content; gap: 14rpx; align-items: center; padding: 18rpx 0; font-size: 24rpx; }
+.demo-identity image { width: 54rpx; height: 54rpx; border-radius: 50%; }
+.result-summary { text-align: center; }
+.result-summary .winner { font-size: 38rpx; }
+.demo-role-card { height: 80vh; }
+.demo-role-art { display: flex; justify-content: center; padding: 20rpx 0; }

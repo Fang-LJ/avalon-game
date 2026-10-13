@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "体验玩法",
+  "usingComponents": {
+    "guest-header": "/components/guest-header/guest-header",
+    "play-card": "/components/play-card/play-card",
+    "card-deal-stage": "/components/card-deal-stage/card-deal-stage",
+    "mission-card-overlay": "/components/mission-card-overlay/mission-card-overlay",
+    "mission-result-overlay": "/components/mission-result-overlay/mission-result-overlay",
+    "knowledge-mark": "/components/knowledge-mark/knowledge-mark"
+  }
+}

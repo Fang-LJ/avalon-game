@@ -8,7 +8,11 @@
     "pages/room/room",
     "pages/history/history",
     "pages/replay/replay",
-    "pages/me/me"
+    "pages/me/me",
+    "pages/guide/guide",
+    "pages/roles/roles",
+    "pages/configuration/configuration",
+    "pages/demo-room/demo-room"
   ],
   "window": {
     "navigationStyle": "custom",
