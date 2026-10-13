@@ -1,5 +1,6 @@
 const auth = require('../../services/auth');
 const invite = require('../../utils/invite');
+const { navigationMetrics } = require('../../utils/guest-navigation');
 const { ROUTES } = require('../../utils/guest-content');
 Page({
   data: {
@@ -19,14 +20,18 @@ Page({
     ],
   },
   onLoad() {
-    const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync ? wx.getSystemInfoSync() : {};
-    const capsule = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null;
+    this.updateLayout();
     this.setData({
-      brandTop: Math.max((info.statusBarHeight || 20) + 52, capsule ? capsule.bottom + 32 : 90),
       mockLogin: auth.isMockLogin(),
       mockUsers: auth.isMockLogin() ? auth.MOCK_USERS : [],
       currentMockKey: auth.currentMockUser().key,
     });
+  },
+  onResize() { this.updateLayout(); },
+  updateLayout() {
+    const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync ? wx.getSystemInfoSync() : {};
+    const capsule = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : {};
+    this.setData({ brandTop: Math.max(90, navigationMetrics(info, capsule || {}).contentTop + 20) });
   },
   onShow() {
     this.visible = true;

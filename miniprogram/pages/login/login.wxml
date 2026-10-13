@@ -26,10 +26,9 @@
     <view class="footer-note">首次登录将自动创建阿瓦隆账号</view>
     <view class="error center" wx:if="{{error}}">{{error}}</view>
     <view class="agreement-area">
-      <button class="agreement-checkbox {{agreed ? 'checked' : ''}}" aria-role="checkbox" aria-checked="{{agreed}}" aria-label="同意用户服务协议和隐私政策" bindtap="toggleAgreement"><text wx:if="{{agreed}}">✓</text></button>
+      <button class="agreement-checkbox {{agreed ? 'checked' : ''}}" aria-role="checkbox" aria-checked="{{agreed}}" aria-label="同意用户服务协议和隐私政策" bindtap="toggleAgreement"><view class="agreement-circle"><text wx:if="{{agreed}}">✓</text></view></button>
       <view class="agreement-copy">我已阅读并同意<text class="legal-link" data-type="agreement" catchtap="openLegal">《用户服务协议》</text>和<text class="legal-link" data-type="privacy" catchtap="openLegal">《隐私政策》</text></view>
     </view>
-    <view wx:if="{{!agreed}}" class="agreement-hint">请先阅读并同意协议</view>
   </view>
   <view wx:if="{{mockLogin}}" class="card mock-users">
     <view class="gold">仅本地开发 · 模拟用户</view>

@@ -7,6 +7,6 @@
   </view>
   <view wx:for="{{document.sections}}" wx:key="title" class="guest-card legal-section">
     <view class="guest-heading">{{item.title}}</view>
-    <view wx:for="{{item.blocks}}" wx:for-item="block" wx:key="text" class="legal-block legal-{{block.kind}}">{{block.kind === 'bullet' ? '• ' : ''}}{{block.text}}</view>
+    <view wx:for="{{item.blocks}}" wx:for-item="block" wx:key="text" class="legal-block legal-{{block.kind}}">{{block.kind === 'bullet' ? '• ' : ''}}{{block.displayText || block.text}}</view>
   </view>
 </view>

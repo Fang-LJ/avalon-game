@@ -57,7 +57,7 @@ for (const type of ['agreement', 'privacy']) test(`reading ${type} does not reco
   p.openLegal({ currentTarget: { dataset: { type } } }); p.onHide();
   const legal = f.open('legal', { type });
   const document = require(`../utils/legal/${type === 'privacy' ? 'privacy-policy' : 'user-agreement'}`);
-  assert.deepEqual(legal.data.document, document); assert.ok(legal.data.document.sections.length > 0);
+  assert.deepEqual(plain({ ...legal.data.document, sections: legal.data.document.sections.map(section => ({ ...section, blocks: section.blocks.map(({ displayText, ...block }) => block) })) }), document); assert.ok(legal.data.document.sections.length > 0);
   legal.back(); p.onShow(); p.login(); await flush();
   assert.equal(p.data.agreed, false); assert.equal(f.storage.has(f.consent.KEY), false); assert.equal(f.calls.length, 0);
   assert.deepEqual(f.destinations, [`/pages/legal/legal?type=${type}`, '/pages/login/login']);
@@ -65,7 +65,7 @@ for (const type of ['agreement', 'privacy']) test(`reading ${type} does not reco
 test('checkbox records both versions/time, can revoke, and never acts as WeChat platform authorization', async () => {
   const f = fixture(), p = f.open(); p.toggleAgreement();
   assert.equal(p.data.agreed, true); const r = f.consent.receipt();
-  assert.equal(r.agreementVersion, '1.0.0'); assert.equal(r.privacyVersion, '1.0.0'); assert.ok(r.confirmedAt > 0);
+  assert.equal(r.agreementVersion, require('../utils/legal/user-agreement').version); assert.equal(r.privacyVersion, require('../utils/legal/privacy-policy').version); assert.ok(r.confirmedAt > 0);
   assert.equal(f.calls.length, 0); p.toggleAgreement(); assert.equal(p.data.agreed, false);
   p.login(); await flush(); assert.equal(f.calls.length, 0); assert.equal(f.consent.receipt(), null);
 });
@@ -103,10 +103,10 @@ for (const field of ['agreementVersion', 'privacyVersion', 'documentsSignature',
   });
 test('updating protocol version or content invalidates an otherwise genuine local receipt', () => {
   const f = fixture(); f.auth.setAgreementConsent(true); const record = f.storage.get(f.consent.KEY);
-  const doc = structuredClone(require('../utils/legal/privacy-policy')); doc.version = '1.0.1';
+  const doc = structuredClone(require('../utils/legal/privacy-policy')), currentVersion = doc.version; doc.version = 'future-version';
   const next = fixture({ documents: { [path.join(root, 'utils/legal/privacy-policy.js')]: doc } });
   next.storage.set(next.consent.KEY, record); assert.equal(next.consent.isCurrent(), false);
-  doc.version = '1.0.0'; doc.sections[0].blocks[0].text += '更新';
+  doc.version = currentVersion; doc.sections[0].blocks[0].text += '更新';
   const edited = fixture({ documents: { [path.join(root, 'utils/legal/privacy-policy.js')]: doc } });
   edited.storage.set(edited.consent.KEY, record); assert.equal(edited.consent.isCurrent(), false);
 });
@@ -179,7 +179,8 @@ test('full agreement rendering covers every structured block kind with no trunca
   const css = fs.readFileSync(path.join(root, 'pages/legal/legal.wxss'), 'utf8'); assert.doesNotMatch(css, /line-clamp|overflow:\s*hidden/);
   for (const file of ['user-agreement', 'privacy-policy']) {
     const doc = require(`../utils/legal/${file}`); assert.ok(doc.sections.every(s => s.blocks.every(b => ['paragraph', 'bullet', 'subheading'].includes(b.kind))));
-    assert.match(JSON.stringify(doc), /【开发者真实姓名】/); assert.match(JSON.stringify(doc), /【联系邮箱】/);
+    assert.match(JSON.stringify(doc), /方良军/); assert.match(JSON.stringify(doc), /842515974@qq.com/);
+    assert.doesNotMatch(JSON.stringify(doc), /【开发者真实姓名】|【联系邮箱】/);
   }
   assert.match(JSON.stringify(require('../utils/legal/privacy-policy')), /【运行日志保存期限/);
 });
@@ -216,4 +217,28 @@ test('failed consent revocation still blocks all login calls in memory', async (
   const f = fixture(), p = f.open(); p.toggleAgreement();
   f.wx.removeStorageSync = () => { throw Error('Storage error'); }; p.toggleAgreement();
   assert.equal(p.data.agreed, false); await assert.rejects(f.auth.login()); assert.equal(f.calls.length, 0);
+});
+
+test('real-information revision invalidates a genuine 1.0.0 receipt while retaining the old token and game data', async () => {
+  const oldDocuments = {};
+  for (const file of ['user-agreement', 'privacy-policy']) {
+    const document = structuredClone(require(`../utils/legal/${file}`)); document.version = '1.0.0';
+    for (const section of document.sections) for (const block of section.blocks)
+      block.text = block.text.replaceAll('方良军', '【开发者真实姓名】').replaceAll('[842515974@qq.com](mailto:842515974@qq.com)', '【联系邮箱】');
+    oldDocuments[path.join(root, `utils/legal/${file}.js`)] = document;
+  }
+  const old = fixture({ token: 'saved-account', documents: oldDocuments }); old.auth.setAgreementConsent(true);
+  const f = fixture({ token: 'saved-account' }); f.storage.set(f.consent.KEY, plain(old.consent.receipt()));
+  f.storage.set('formal-records', [123]); const page = f.open(); await flush();
+  assert.equal(page.data.agreed, false); assert.equal(await f.auth.validateSession(), null);
+  page.login(); await assert.rejects(f.auth.login()); assert.equal(f.calls.length, 0);
+  assert.equal(f.storage.get('AVALON_GAME_TOKEN'), 'saved-account'); assert.deepEqual(f.storage.get('formal-records'), [123]);
+  page.toggleAgreement(); assert.equal(page.data.agreed, true);
+  assert.equal(f.consent.receipt().agreementVersion, '1.0.1'); assert.equal(f.consent.receipt().privacyVersion, '1.0.1');
+});
+test('login resize recomputes safe branding without changing agreement choice', () => {
+  const f = fixture(), page = f.open(); page.toggleAgreement();
+  f.wx.getWindowInfo = () => ({ statusBarHeight: 59, safeArea: { top: 59 } });
+  f.wx.getMenuButtonBoundingClientRect = () => ({ top: 63, bottom: 95, height: 32, left: 330 });
+  page.onResize(); assert.ok(page.data.brandTop > 95); assert.equal(page.data.agreed, true); assert.equal(f.calls.length, 0);
 });

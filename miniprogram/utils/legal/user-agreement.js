@@ -2,7 +2,7 @@
 module.exports = {
   "key": "user-agreement",
   "title": "圆桌秘境用户服务协议",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publishedAt": "2026-10-13",
   "effectiveAt": "2026-10-13",
   "sections": [
@@ -11,7 +11,7 @@ module.exports = {
       "blocks": [
         {
           "kind": "paragraph",
-          "text": "1. “圆桌秘境”（以下简称“本小程序”或“本服务”）是一款提供阿瓦隆类阵营推理桌游规则说明、人数配置、游客体验及多人在线对局辅助功能的微信小程序。本小程序由【开发者真实姓名】（个人开发者，以下简称“开发者”）提供与维护。"
+          "text": "1. “圆桌秘境”（以下简称“本小程序”或“本服务”）是一款提供阿瓦隆类阵营推理桌游规则说明、人数配置、游客体验及多人在线对局辅助功能的微信小程序。本小程序由方良军（个人开发者，以下简称“开发者”）提供与维护。"
         },
         {
           "kind": "paragraph",
@@ -209,7 +209,7 @@ module.exports = {
       "blocks": [
         {
           "kind": "bullet",
-          "text": "服务提供者（个人信息处理者）：【开发者真实姓名】"
+          "text": "服务提供者（个人信息处理者）：方良军"
         },
         {
           "kind": "bullet",
@@ -217,7 +217,7 @@ module.exports = {
         },
         {
           "kind": "bullet",
-          "text": "联系邮箱：【联系邮箱】"
+          "text": "联系邮箱：[842515974@qq.com](mailto:842515974@qq.com)"
         },
         {
           "kind": "bullet",
