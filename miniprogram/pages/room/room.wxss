@@ -254,7 +254,7 @@ button.bot-add[disabled] { background: var(--soft) !important; color: var(--mute
 button.quick-action.private-role-trigger { color: var(--gold); }
 button.quick-action.early-assassination-trigger { color: var(--evil); white-space: nowrap; }
 button.quick-action[disabled] { background: transparent !important; color: var(--muted) !important; opacity: 0.45; }
-.lobby-card { padding: 12rpx 0 0; }
+.lobby-card { padding: 24rpx; }
 .lobby-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
 .lobby-close-action { flex-shrink: 0; padding-left: 12rpx; line-height: 44rpx; font-size: 22rpx; color: var(--evil); white-space: nowrap; }
 .lobby-close-action.disabled { opacity: 0.4; }
@@ -268,3 +268,14 @@ button.quick-action[disabled] { background: transparent !important; color: var(-
 
 button.nomination-button { background: #D8B25C; color: #101713; font-weight: 700; }
 button.nomination-button[disabled] { background: #D8B25C !important; color: #101713 !important; opacity: .45; }
+
+.lobby-card-heading { flex-wrap: wrap; row-gap: 14rpx; }
+.lobby-room-actions { display: flex; align-items: center; justify-content: flex-end; gap: 10rpx; margin-left: auto; }
+.lobby-room-actions .lobby-room-button { display: flex; align-items: center; justify-content: center; flex-shrink: 0; min-width: 64rpx; height: 56rpx; margin: 0; padding: 0 12rpx; border: 1rpx solid var(--border); border-radius: 14rpx; background: var(--soft); color: var(--gold); font-size: 22rpx; font-weight: 700; line-height: 1; white-space: nowrap; }
+.lobby-room-actions .lobby-room-button::after { border: 0; }
+.lobby-room-actions .bot-add { width: 64rpx; font-size: 32rpx; }
+.lobby-room-actions .lobby-room-button[disabled] { background: var(--soft) !important; color: var(--muted) !important; opacity: .45; }
+.lobby-card .lobby-invite-actions { margin-top: 20rpx; }
+.lobby-card .lobby-rules { margin-top: 24rpx; padding-top: 18rpx; border-top: 1rpx solid var(--border); line-height: 1.7; }
+.lobby-card .lobby-rules > .gold { font-size: 23rpx; font-weight: 700; }
+.lobby-card .lobby-rules > view + view { margin-top: 8rpx; }

@@ -19,17 +19,27 @@
     </view>
   </view>
   <block wx:if="{{!game}}">
-    <view class="lobby-card">
+    <view class="card lobby-card">
       <view class="lobby-card-heading">
         <view class="lobby-title">房间 <text class="lobby-room-code gold">{{room.roomCode}}</text></view>
-        <view wx:if="{{room.host}}" class="lobby-close-action {{busy ? 'disabled' : ''}}" aria-role="button" aria-disabled="{{busy}}" bindtap="endGame">关闭房间</view>
+        <view class="lobby-room-actions">
+          <button wx:if="{{room.host}}" class="lobby-room-button bot-add" aria-label="添加机器人" disabled="{{busy || room.currentPlayers >= room.maxPlayers}}" bindtap="addBot">＋</button>
+          <button class="lobby-room-button lobby-leave-action" disabled="{{busy}}" bindtap="leaveRoom">退出</button>
+          <button wx:if="{{room.host}}" class="lobby-room-button lobby-close-action" disabled="{{busy}}" bindtap="endGame">结束</button>
+        </view>
       </view>
       <view class="lobby-invite-actions">
         <button wx:if="{{room.status === 'WAITING'}}" class="invite-button" open-type="share">邀请好友</button>
         <button class="copy-code-button" bindtap="copyCode">复制房号</button>
       </view>
+      <view class="lobby-rules">
+        <view class="gold">本局规则</view>
+        <view class="muted small">
+          {{room.maxPlayers}} 人局 · {{rule.evilRoles}} · 第 4 个任务需
+          {{rule.fourth}} 张失败票{{rule.lady ? ' · 湖中仙女' : ''}}
+        </view>
+      </view>
     </view>
-    <view class="section-title lobby-label"><text>座位 · {{room.maxPlayers}}人局</text><button wx:if="{{room.host}}" class="bot-add" disabled="{{busy || room.currentPlayers >= room.maxPlayers}}" bindtap="addBot">＋ 机器人</button></view>
     <view class="lobby-board {{room.maxPlayers >= 9 ? 'large-table' : ''}}">
       <view
         wx:for="{{displayPlayers}}"
@@ -54,13 +64,6 @@
         {{item.nickname}}{{item.me ? '（我）' : ''}}
       </view>
     </view>
-    <view class="lobby-rules">
-      <view class="gold">本局规则</view>
-      <view class="muted small">
-        {{room.maxPlayers}} 人局 · {{rule.evilRoles}} · 第 4 个任务需
-        {{rule.fourth}} 张失败票{{rule.lady ? ' · 湖中仙女' : ''}}
-      </view>
-    </view>
     <view class="lobby-actions actions">
       <button
         class="btn"
@@ -70,7 +73,6 @@
       >
         {{room.host ? '开始游戏' : '等待房主开始'}}
       </button>
-      <view class="link center small" bindtap="leaveRoom">退出房间</view>
     </view>
   </block>
   <block wx:elif="{{game.phase === 'ROLE_CONFIRM'}}">
@@ -230,9 +232,6 @@
             <button class="btn" disabled="{{selectedIds.length !== game.requiredTeamSize || busy || teamSyncError}}" bindtap="submitTeam">确认发车</button>
           </view>
           <view wx:if="{{teamSyncError}}" class="team-choice-hint link" bindtap="retryTeamDraft" aria-role="button">{{teamSyncError}}</view>
-          <view wx:elif="{{teamSyncPending}}" class="team-choice-hint muted">
-            正在同步人选…
-          </view>
         </block>
       </block>
       <view wx:elif="{{game.phase === 'TEAM_VOTING'}}">

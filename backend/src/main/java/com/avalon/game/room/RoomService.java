@@ -11,7 +11,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.dao.DuplicateKeyException;
 
 import java.security.SecureRandom;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -219,9 +218,7 @@ public class RoomService {
                 .orElseThrow(() -> new BusinessException("房间没有空座位"));
     }
     private GamePlayerRow nextOwner(List<GamePlayerRow> players) {
-        return players.stream().min(Comparator
-                .comparing(GamePlayerRow::seatNo, Comparator.nullsLast(Comparator.naturalOrder()))
-                .thenComparingLong(GamePlayerRow::id)).orElseThrow();
+        return players.get(random.nextInt(players.size()));
     }
     private BusinessException seatTaken() {
         return new BusinessException("SEAT_TAKEN", "该座位刚刚被其他玩家占用，请重新选择");
