@@ -194,7 +194,7 @@ function seats(players, selected = [], leaderId, maxPlayers = players.length, ph
     };
   });
 }
-function lobbySeats(players, maxPlayers) {
+function lobbySeats(players, maxPlayers, responsive = false) {
   const bySeat = Object.fromEntries(
     players.filter((p) => p.seatNo != null).map((p) => [p.seatNo, p]),
   );
@@ -210,7 +210,10 @@ function lobbySeats(players, maxPlayers) {
       }),
       seatNo,
       initial: player ? initial(player.nickname) : '+',
-      position: seatPosition(seatNo, maxPlayers),
+      position: responsive ? seatPosition(seatNo, maxPlayers).replace(/top:([\d.]+)%;/, (_, top) => {
+        const fraction = (Number(top) - 2) / (maxPlayers >= 9 ? 78 : 73);
+        return `top:calc(${(fraction * 100).toFixed(3)}% - ${(fraction * 190).toFixed(3)}rpx);`;
+      }) : seatPosition(seatNo, maxPlayers),
     };
   });
 }

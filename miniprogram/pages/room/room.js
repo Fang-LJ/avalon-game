@@ -442,7 +442,7 @@ Page({
     if (!game) {
       const lobbyStatus = ui.lobbyStatus(room);
       this.setData({
-        displayPlayers: ui.lobbySeats(room.players, room.maxPlayers),
+        displayPlayers: ui.lobbySeats(room.players, room.maxPlayers, true),
         lobbyStatus,
         lobbyStatusLines: lobbyStatus.split(' · '),
         standingPlayers: room.players.filter((player) => !player.seated),

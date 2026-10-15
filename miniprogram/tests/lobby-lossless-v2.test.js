@@ -9,7 +9,7 @@ const { CARDS, CARD_BASE } = require('../utils/cards');
 const root = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const markup = read('pages/room/room.wxml');
-const lobby = markup.split('<view class="lobby-card">')[1].split('<view class="section-title lobby-label">')[0];
+const lobby = markup.split('<view class="lobby-info">')[1].split('<view class="lobby-board')[0];
 for (const [currentPlayers,maxPlayers,seatedPlayers,expected] of [
   [1,5,1,'1 / 5 人 · 等待 4 人加入'],
   [3,7,3,'3 / 7 人 · 等待 4 人加入'],
@@ -40,15 +40,15 @@ test('lobby is one compact room heading, one status line, unchanged share/copy r
   assert.equal((lobby.match(/\{\{room.roomCode\}\}/g)||[]).length,1);
   assert.match(markup,/aria-label="\{\{lobbyStatus\}\}"/);
   assert.doesNotMatch(lobby,/邀请好友加入|房间号|等待全员入座|可以开始游戏|lobby-status/);
-  assert.match(lobby,/open-type="share">邀请好友/);
-  assert.match(lobby,/bindtap="copyCode">复制房号/);
-  assert.match(lobby,/wx:if="\{\{room.host\}\}" class="lobby-close-action/);
+  assert.match(markup,/class="lobby-invite"/);
+  assert.match(lobby,/bindtap="copyCode">复制/);
+  assert.match(lobby,/wx:if="\{\{room.host\}\}" class="lobby-room-button lobby-close-action/);
   assert.match(markup,/lobbyStatusLines/);
   const css = read('pages/room/room.wxss');
   assert.match(css,/\.lobby-room-code \{\s*font-size: 38rpx;\s*font-weight: 700/);
   assert.match(css,/\.lobby-label \{\s*margin-top: 30rpx/);
   assert.match(css,/grid-template-columns: minmax\(0, 2fr\) minmax\(0, 1fr\)/);
-  assert.match(markup,/disabled="\{\{!room.canStart \|\| busy\}\}"/);
+  assert.match(markup,/disabled="\{\{!room.canStart \|\| busy \|\| room.currentPlayers < room.maxPlayers\}\}"/);
 });
 
 test('v2 provenance has exactly 19 original PNG crops, 2x dimensions, RGB pixels and matching hashes', () => {

@@ -39,8 +39,8 @@ test('WAITING share uses the real six-digit code; playing/closed/malformed rooms
   }
   p.data.room.status='WAITING';p.data.game={gameId:1};assert.equal(p.onShareAppMessage().path,'/pages/index/index');
   p.data.game=null;p.data.room.roomCode='123456&roomId=1';assert.equal(p.onShareAppMessage().path,'/pages/index/index');
-  const markup=read('pages/room/room.wxml');assert.match(markup,/room.status === 'WAITING'[^>]*open-type="share"/);
-  assert.match(markup,/copy-code-button[^>]*bindtap="copyCode"/);
+  const markup=read('pages/room/room.wxml');assert.match(markup,/open-type="\{\{!busy && room.currentPlayers < room.maxPlayers && room.status === 'WAITING' \? 'share' : ''\}\}"/);
+  assert.match(markup,/lobby-copy[^>]*bindtap="copyCode"/);
 });
 test('Join query accepts six-digit strings only, saves before session checks and never auto-joins',()=>{
   const f=intent();let joins=0,checks=0;

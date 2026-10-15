@@ -63,28 +63,23 @@ test('special settlement tags use gold and purple pills, not ordinary cyan or bl
   const rules = roomCss.split('\n').filter(line => /role-merlin|role-percival|special-role-tag/.test(line)).join('\n');
   assert.doesNotMatch(rules, /animation|blink/);
 });
-test('lobby close action is inside the single room card, only for host and busy-safe', () => {
+test('lobby close action remains host-only and busy-safe', () => {
   assert.doesNotMatch(roomMarkup + roomCss, /host-controls|host-end/);
-  const card = roomMarkup.split('<view class="lobby-card">')[1].split('<view class="section-title lobby-label">')[0];
+  const card = roomMarkup.split('<view class="lobby-info">')[1].split('<view class="lobby-board')[0];
   assert.match(card, /lobby-card-heading/);
-  assert.match(card, /wx:if="\{\{room.host\}\}" class="lobby-close-action \{\{busy \? 'disabled' : ''\}\}"[^>]*bindtap="endGame">关闭房间/);
+  assert.match(card, /wx:if="\{\{room.host\}\}" class="lobby-room-button lobby-close-action" disabled="\{\{busy\}\}"[^>]*bindtap="endGame">关闭房间/);
   for (const field of ['room.roomCode']) assert.ok(card.includes(field));
   assert.match(read('pages/room/room.js'), /const lobbyStatus = ui.lobbyStatus\(room\)/);
-  assert.match(roomMarkup, /disabled="\{\{!room.canStart \|\| busy\}\}"/);
+  assert.match(roomMarkup, /disabled="\{\{!room.canStart \|\| busy \|\| room.currentPlayers < room.maxPlayers\}\}"/);
   assert.match(roomCss, /\.lobby-close-action \{[^}]*font-size: 22rpx; color: var\(--evil\)/);
   const js = read('pages/room/room.js').split('  endGame() {')[1].split('  identityRevealed')[0];
   assert.match(js, /!room.host \|\| busy/); assert.match(js, /wx.showModal/); assert.match(js, /if \(!result.confirm\) return/);
   const gameTop = roomMarkup.split('class="game-status-row">')[1].split('  <block wx:if=')[0];
   assert.match(gameTop, /bindtap="endGame">结束/);
 });
-test('lobby share and copy remain in one 2:1 row of equal-height rounded buttons', () => {
-  const actions = roomMarkup.split('<view class="lobby-invite-actions">')[1].split('</view>')[0];
-  assert.match(actions, /room.status === 'WAITING'[^>]*class="invite-button" open-type="share">邀请好友/);
-  assert.match(actions, /class="copy-code-button" bindtap="copyCode">复制房号/);
-  assert.match(roomCss, /\.lobby-invite-actions \{ display: grid; grid-template-columns: minmax\(0, 2fr\) minmax\(0, 1fr\); gap: 16rpx/);
-  assert.match(roomCss, /\.invite-button, \.copy-code-button \{[^}]*height: 74rpx[^}]*border-radius: 24rpx; white-space: nowrap/);
-  assert.match(roomCss, /\.invite-button \{ color: var\(--bg\); background: var\(--gold\)/);
-  assert.match(roomCss, /\.copy-code-button \{[^}]*background: var\(--soft\); border-color: var\(--border\)/);
+test('lobby separates copy from the permission-aware footer share button', () => {
+  assert.match(roomMarkup, /class="lobby-copy" bindtap="copyCode">复制/);
+  assert.match(roomMarkup, /class="lobby-invite"[\s\S]*?open-type="\{\{!busy && room.currentPlayers < room.maxPlayers/);
 });
 test('lobby centre reuses population status without a card or personal-seat instructions', () => {
   assert.match(roomMarkup, /class="lobby-center" aria-label="\{\{lobbyStatus\}\}"/);

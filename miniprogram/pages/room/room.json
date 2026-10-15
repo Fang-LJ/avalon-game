@@ -1,6 +1,6 @@
 {
   "navigationBarTitleText": "阿瓦隆房间",
-  "enablePullDownRefresh": true,
+  "enablePullDownRefresh": false,
   "usingComponents": {
     "role-guess-sheet": "/components/role-guess-sheet/role-guess-sheet",
     "knowledge-mark": "/components/knowledge-mark/knowledge-mark",

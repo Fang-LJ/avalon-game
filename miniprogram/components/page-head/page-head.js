@@ -1,6 +1,6 @@
 Component({
   options: { styleIsolation: 'apply-shared', multipleSlots: true },
-  properties: { title: String, subtitle: String, back: Boolean, compact: Boolean },
+  properties: { title: String, subtitle: String, back: Boolean, compact: Boolean, contained: Boolean },
   data: { top: 48 },
   lifetimes: {
     attached() {

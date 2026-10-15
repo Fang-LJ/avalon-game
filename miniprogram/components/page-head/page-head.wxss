@@ -20,3 +20,6 @@
 .compact-head .heading-row { min-height: 44rpx; }
 .compact-head .title { font-size: 32rpx; }
 .compact-head .subtitle { font-size: 21rpx; }
+
+.contained-head { padding-bottom: 16rpx; }
+.contained-head .title { max-width: calc(100vw - 260rpx); }
