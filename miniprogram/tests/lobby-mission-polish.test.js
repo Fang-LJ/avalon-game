@@ -67,10 +67,10 @@ test('lobby close action remains host-only and busy-safe', () => {
   assert.doesNotMatch(roomMarkup + roomCss, /host-controls|host-end/);
   const card = roomMarkup.split('<view class="lobby-info">')[1].split('<view class="lobby-board')[0];
   assert.match(card, /lobby-card-heading/);
-  assert.match(card, /wx:if="\{\{room.host\}\}" class="lobby-room-button lobby-close-action" disabled="\{\{busy\}\}"[^>]*bindtap="endGame">关闭房间/);
+  assert.match(card, /wx:if="\{\{room.host\}\}" class="lobby-room-button lobby-close-action" disabled="\{\{busy \|\| botAdding\}\}"[^>]*bindtap="endGame">关闭/);
   for (const field of ['room.roomCode']) assert.ok(card.includes(field));
   assert.match(read('pages/room/room.js'), /const lobbyStatus = ui.lobbyStatus\(room\)/);
-  assert.match(roomMarkup, /disabled="\{\{!room.canStart \|\| busy \|\| room.currentPlayers < room.maxPlayers\}\}"/);
+  assert.match(roomMarkup, /disabled="\{\{!room.canStart \|\| busy \|\| botAdding \|\| room.currentPlayers < room.maxPlayers\}\}"/);
   assert.match(roomCss, /\.lobby-close-action \{[^}]*font-size: 22rpx; color: var\(--evil\)/);
   const js = read('pages/room/room.js').split('  endGame() {')[1].split('  identityRevealed')[0];
   assert.match(js, /!room.host \|\| busy/); assert.match(js, /wx.showModal/); assert.match(js, /if \(!result.confirm\) return/);
@@ -78,11 +78,11 @@ test('lobby close action remains host-only and busy-safe', () => {
   assert.match(gameTop, /bindtap="endGame">结束/);
 });
 test('lobby separates copy from the permission-aware footer share button', () => {
-  assert.match(roomMarkup, /class="lobby-copy" bindtap="copyCode">复制/);
+  assert.match(roomMarkup, /class="lobby-room-button lobby-copy" bindtap="copyCode">复制/);
   assert.match(roomMarkup, /class="lobby-invite"[\s\S]*?open-type="\{\{!busy && room.currentPlayers < room.maxPlayers/);
 });
 test('lobby centre reuses population status without a card or personal-seat instructions', () => {
-  assert.match(roomMarkup, /class="lobby-center" aria-label="\{\{lobbyStatus\}\}"/);
+  assert.match(roomMarkup, /class="lobby-center"[^>]*aria-label="\{\{lobbyStatus\}\}"/);
   assert.match(roomMarkup, /lobbyStatusLines/);
   assert.doesNotMatch(roomMarkup, /我的座位|当前站立|class="card lobby-center"/);
 });

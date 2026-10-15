@@ -25,15 +25,15 @@
     <view class="lobby-info">
       <view class="lobby-card-heading">
         <view class="lobby-title">房间 <text class="lobby-room-code gold">{{room.roomCode}}</text></view>
-        <button class="lobby-copy" bindtap="copyCode">复制</button>
       </view>
       <view class="lobby-room-actions">
-        <button wx:if="{{room.host}}" class="lobby-room-button bot-add" disabled="{{busy || room.currentPlayers >= room.maxPlayers}}" bindtap="addBot">＋ 机器人</button>
-        <button class="lobby-room-button lobby-leave-action" disabled="{{busy}}" bindtap="leaveRoom">退出房间</button>
-        <button wx:if="{{room.host}}" class="lobby-room-button lobby-close-action" disabled="{{busy}}" bindtap="endGame">关闭房间</button>
+        <button class="lobby-room-button bot-add" disabled="{{!room.host || busy || botAdding || room.currentPlayers >= room.maxPlayers || room.status !== 'WAITING'}}" loading="{{botAdding}}" bindtap="addBot">＋机器人</button>
+        <button class="lobby-room-button lobby-copy" bindtap="copyCode">复制</button>
+        <button class="lobby-room-button lobby-leave-action" disabled="{{busy || botAdding}}" bindtap="leaveRoom">退出</button>
+        <button wx:if="{{room.host}}" class="lobby-room-button lobby-close-action" disabled="{{busy || botAdding}}" bindtap="endGame">关闭</button>
       </view>
     </view>
-    <view class="lobby-board lobby-size-{{room.maxPlayers}} {{room.maxPlayers >= 9 ? 'large-table' : ''}}">
+    <view class="lobby-board lobby-size-{{room.maxPlayers}} {{room.maxPlayers >= 9 ? 'large-table' : ''}}" style="height:{{lobbyLayout.height}}rpx;">
       <view
         wx:for="{{displayPlayers}}"
         wx:key="playerId"
@@ -47,7 +47,7 @@
           bind:select="handleLobbySeat"
         />
       </view>
-      <view class="lobby-center" aria-label="{{lobbyStatus}}">
+      <view class="lobby-center" style="top:{{lobbyLayout.centerTop}}rpx;" aria-label="{{lobbyStatus}}">
         <view wx:for="{{lobbyStatusLines}}" wx:key="*this" class="{{index === 0 ? 'gold lobby-population' : 'muted small'}}">{{item}}</view>
       </view>
     </view>
@@ -65,7 +65,7 @@
     </scroll-view>
     <view class="lobby-footer {{room.host ? 'host-footer' : ''}} {{room.currentPlayers >= room.maxPlayers ? 'room-full' : ''}}">
       <button class="lobby-invite" disabled="{{busy || room.currentPlayers >= room.maxPlayers || room.status !== 'WAITING'}}" open-type="{{!busy && room.currentPlayers < room.maxPlayers && room.status === 'WAITING' ? 'share' : ''}}">邀请好友</button>
-      <button wx:if="{{room.host}}" class="btn lobby-start" disabled="{{!room.canStart || busy || room.currentPlayers < room.maxPlayers}}" loading="{{busy}}" bindtap="startGame">开始游戏</button>
+      <button wx:if="{{room.host}}" class="btn lobby-start {{botAdding && room.canStart && !busy && room.currentPlayers >= room.maxPlayers ? 'bot-add-locked' : ''}}" disabled="{{!room.canStart || busy || botAdding || room.currentPlayers < room.maxPlayers}}" loading="{{busy}}" bindtap="startGame">开始游戏</button>
     </view>
   </block>
   <block wx:elif="{{game.phase === 'ROLE_CONFIRM'}}">

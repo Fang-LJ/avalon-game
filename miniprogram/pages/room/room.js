@@ -57,7 +57,9 @@ Page({
     phaseTitle: '',
     lobbyStatus: '',
     lobbyStatusLines: [],
+    lobbyLayout: null,
     busy: false,
+    botAdding: false,
     error: '',
     timeline: { missions: [], proposals: [] },
     entries: [],
@@ -443,6 +445,7 @@ Page({
       const lobbyStatus = ui.lobbyStatus(room);
       this.setData({
         displayPlayers: ui.lobbySeats(room.players, room.maxPlayers, true),
+        lobbyLayout: ui.lobbyGeometry(room.maxPlayers),
         lobbyStatus,
         lobbyStatusLines: lobbyStatus.split(' · '),
         standingPlayers: room.players.filter((player) => !player.seated),
@@ -609,7 +612,7 @@ Page({
     if (!e || sheet && e.detail && e.detail.scope === sheet.scope) this.setData({ roleGuessSheet: null });
   },
   handleLobbySeat(e) {
-    if (this.data.game || this.data.busy) return;
+    if (this.data.game || this.data.busy || this.data.botAdding) return;
     const detail = e.detail || {};
     if (detail.empty)
       return this.run(() => api.seat(this.data.roomId, Number(detail.seatNo)));
@@ -667,7 +670,7 @@ Page({
     this.decoratePlayers();
   },
   async run(task) {
-    if (this.data.busy) return;
+    if (this.data.busy || this.data.botAdding) return;
     this.setData({ busy: true });
     try {
       await this.refreshing;
@@ -685,7 +688,11 @@ Page({
     }
   },
   startGame() {
-    return this.run(() => api.start(this.data.roomId));
+    return this.run(() => {
+      const { room, game } = this.data;
+      if (this.active !== false && room && room.host && !game && room.status === 'WAITING' &&
+          room.canStart && room.currentPlayers >= room.maxPlayers) return api.start(this.data.roomId);
+    });
   },
   requestEarlyAssassination() {
     const { game, role, roomId, busy } = this.data;
@@ -711,12 +718,27 @@ Page({
       fail: () => { this.earlyAssassinationDialog = false; },
     });
   },
-  addBot() {
-    const { room, game, busy } = this.data;
-    if (!room || !room.host || game || busy || room.currentPlayers >= room.maxPlayers) return;
-    return this.run(() => {
-      if (!this.data.game && this.data.roomId === room.roomId) return api.addBot(room.roomId);
-    });
+  async addBot() {
+    const { room, game, busy, botAdding } = this.data;
+    if (this.active === false || !room || !room.host || game || busy || botAdding ||
+        room.status !== 'WAITING' || room.currentPlayers >= room.maxPlayers) return;
+    const roomId = room.roomId, epoch = this.stateEpoch || 0;
+    const current = () => this.active !== false && this.data.roomId === roomId &&
+      (this.stateEpoch || 0) === epoch;
+    this.setData({ botAdding: true });
+    try {
+      await this.refreshing;
+      const latest = this.data.room;
+      if (!current() || this.data.game || !latest || !latest.host || latest.status !== 'WAITING' ||
+          latest.currentPlayers >= latest.maxPlayers) return;
+      await api.addBot(roomId);
+      // Do not reuse a poll/socket GET that started before the POST completed.
+      if (current()) await this.refreshAfterMutation();
+    } catch (_) {
+      /* Request helper reports failures; keep the roster authoritative and allow retry. */
+    } finally {
+      this.setData({ botAdding: false });
+    }
   },
   removeBot(playerId) {
     const { room, game, busy } = this.data;
@@ -731,7 +753,7 @@ Page({
   },
   endGame() {
     const { room, game, busy } = this.data;
-    if (!room || !room.host || busy || (game && game.phase === 'FINISHED')) return;
+    if (!room || !room.host || busy || this.data.botAdding || (game && game.phase === 'FINISHED')) return;
     const roomId = room.roomId;
     wx.showModal({
       title: game ? '结束当前对局？' : '关闭等待房间？',
@@ -959,7 +981,7 @@ Page({
     });
   },
   leaveRoom() {
-    if (this.data.busy) return;
+    if (this.data.busy || this.data.botAdding) return;
     this.setData({ busy: true });
     api
       .leaveRoom(this.data.roomId)

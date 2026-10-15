@@ -194,6 +194,22 @@ function seats(players, selected = [], leaderId, maxPlayers = players.length, ph
     };
   });
 }
+// Lobby coordinates use one rpx scale for both axes, independent of free viewport height.
+// Leave room below the bottom avatar for its nickname and possible host badge.
+function lobbyGeometry(maxPlayers) {
+  const radius = maxPlayers <= 6 ? 216 : maxPlayers <= 8 ? 260 : 280;
+  const avatarSize = maxPlayers >= 9 ? 100 : 112;
+  return { radius, centerTop: radius + avatarSize / 2, height: radius * 2 + avatarSize + 90 };
+}
+function lobbySeatPosition(seatNo, maxPlayers) {
+  const { radius } = lobbyGeometry(maxPlayers);
+  // Wider side gaps keep a host badge clear of the next avatar after ownership changes.
+  const angles = maxPlayers === 10 ? [0, 35, 70, 110, 145, 180, 215, 250, 290, 325]
+    : maxPlayers === 8 ? [0, 42, 90, 138, 180, 222, 270, 318] : null;
+  const degrees = angles ? angles[seatNo - 1] : (seatNo - 1) * 360 / maxPlayers;
+  const angle = (degrees - 90) * Math.PI / 180;
+  return `left:calc(50% + ${(radius * Math.cos(angle)).toFixed(3)}rpx);top:${(radius + radius * Math.sin(angle)).toFixed(3)}rpx;`;
+}
 function lobbySeats(players, maxPlayers, responsive = false) {
   const bySeat = Object.fromEntries(
     players.filter((p) => p.seatNo != null).map((p) => [p.seatNo, p]),
@@ -210,10 +226,7 @@ function lobbySeats(players, maxPlayers, responsive = false) {
       }),
       seatNo,
       initial: player ? initial(player.nickname) : '+',
-      position: responsive ? seatPosition(seatNo, maxPlayers).replace(/top:([\d.]+)%;/, (_, top) => {
-        const fraction = (Number(top) - 2) / (maxPlayers >= 9 ? 78 : 73);
-        return `top:calc(${(fraction * 100).toFixed(3)}% - ${(fraction * 190).toFixed(3)}rpx);`;
-      }) : seatPosition(seatNo, maxPlayers),
+      position: responsive ? lobbySeatPosition(seatNo, maxPlayers) : seatPosition(seatNo, maxPlayers),
     };
   });
 }
@@ -352,6 +365,7 @@ module.exports = {
   actionDone,
   seats,
   lobbySeats,
+  lobbyGeometry,
   logs,
   liveLogs,
   finishedIdentities,

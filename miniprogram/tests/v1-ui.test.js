@@ -441,7 +441,10 @@ test('all core room phase controls still invoke existing API methods', async () 
   });
   p.run = (t) => t();
   p.runGameMutation = (t) => t();
+  const roleConfirmGame = p.data.game;
+  p.setData({ game: null, room: { host: true, canStart: true, currentPlayers: 5, maxPlayers: 5, status: 'WAITING' } });
   await p.startGame();
+  p.setData({ game: roleConfirmGame });
   await p.confirmRole({ detail: { gameId: 9 } });
   p.setData({ game: { ...p.data.game, phase: 'TEAM_BUILDING' }, isLeader: true });
   await p.submitTeam();

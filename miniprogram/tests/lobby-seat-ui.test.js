@@ -13,7 +13,8 @@ test('all room sizes retain one untruncated seat number and a CSS-truncated nick
 });
 test('lobby actions move without changing sharing, bot or seat event bindings',()=>{
   assert.doesNotMatch(markup,/座位 ·/);
-  assert.match(markup,/wx:if="\{\{room.host\}\}" class="lobby-room-button bot-add" disabled="\{\{busy \|\| room.currentPlayers >= room.maxPlayers\}\}" bindtap="addBot"/);
+  assert.match(markup,/class="lobby-room-button bot-add" disabled="\{\{!room.host \|\| busy \|\| botAdding/);
+  assert.match(markup,/loading="\{\{botAdding\}\}" bindtap="addBot"/);
   for(const binding of ['class="lobby-invite"','bindtap="copyCode"','bind:select="handleLobbySeat"','bindtap="leaveRoom"'])assert.ok(markup.includes(binding));
   assert.doesNotMatch(markup,/card lobby-card|card lobby-center|card lobby-rules|我的座位|点击机器人头像可移除|可添加机器人补充空位|仅房主可开始/);
   assert.match(read('pages/room/room.js'),/lobbyStatusLines: lobbyStatus.split\(' · '\)/);

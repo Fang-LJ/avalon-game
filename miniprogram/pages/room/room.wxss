@@ -283,17 +283,13 @@ button.nomination-button[disabled] { background: #D8B25C !important; color: #101
 .lobby-body { display: flex; flex-direction: column; min-height: 100%; box-sizing: border-box; padding-bottom: 12rpx; }
 .lobby-info { border-top: 1rpx solid #324238; border-bottom: 1rpx solid #324238; padding: 18rpx 0; }
 .lobby-info .lobby-card-heading { flex-wrap: nowrap; }
-.lobby-copy { min-width: 88rpx; margin: 0; padding: 0 18rpx; line-height: 54rpx; font-size: 22rpx; border-radius: 14rpx; background: var(--soft); color: var(--gold); }
-.lobby-copy::after { border: 1rpx solid var(--border); border-radius: 14rpx; }
 .lobby-info .lobby-room-actions { margin: 16rpx 0 0; justify-content: flex-start; gap: 12rpx; }
-.lobby-info .lobby-room-button { flex: 1; min-width: 0; width: auto; padding: 0 8rpx; font-size: 23rpx; height: 60rpx; }
+.lobby-info .lobby-room-button { flex: 1; min-width: 0; width: auto; padding: 0 4rpx; font-size: 21rpx; height: 60rpx; }
 .lobby-info .lobby-leave-action { background: transparent; color: var(--muted); }
 .lobby-info .lobby-close-action { background: transparent; color: #c95d68; border-color: #69383d; }
-.preparation-page .lobby-board { flex: 1; height: auto; min-height: 480rpx; margin-top: 22rpx; }
-.preparation-page .lobby-size-6 { min-height: 600rpx; }
-.preparation-page .lobby-size-7, .preparation-page .lobby-size-8 { min-height: 700rpx; }
-.preparation-page .lobby-board.large-table { height: auto; min-height: 740rpx; }
-.preparation-page .lobby-center { top: 48%; }
+/* Natural orbit height is supplied by lobbyGeometry; free space cannot stretch its axes. */
+.preparation-page .lobby-board, .preparation-page .lobby-board.large-table { flex: 0 0 auto; min-height: 0; width: 100%; margin-top: 22rpx; }
+.lobby-info .bot-add[disabled] { background: #29392f !important; color: #86958b !important; opacity: 1; }
 .preparation-page .lobby-rules { margin-top: 20rpx; line-height: 1.6; }
 .lobby-footer { flex-shrink: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16rpx; padding: 16rpx 0 calc(16rpx + env(safe-area-inset-bottom)); }
 .lobby-footer.host-footer { grid-template-columns: minmax(0, 65fr) minmax(0, 35fr); }
@@ -302,5 +298,8 @@ button.nomination-button[disabled] { background: #D8B25C !important; color: #101
 .lobby-footer button::after { border: 0; }
 .lobby-invite { background: #D8B25C; color: #101713; }
 .lobby-footer button[disabled] { background: #29392f !important; color: #86958b !important; opacity: 1; }
+/* Keep the ready appearance on the final roster update while the add request unlocks.
+   The native disabled attribute and handler still prevent concurrent start requests. */
+.lobby-footer .lobby-start.bot-add-locked[disabled] { background: var(--accent) !important; color: var(--text) !important; }
 .identity-body { padding: 12rpx 0 calc(20rpx + env(safe-area-inset-bottom)); }
 .identity-body .role-progress { margin-bottom: 0; }

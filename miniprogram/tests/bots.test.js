@@ -24,7 +24,7 @@ function pageAt(api = {}, wx = {}) {
   page.setData = values => Object.assign(page.data, values);
   page.active = true;
   page.refresh = async () => {};
-  page.setData({ roomId: 7, room: { roomId: 7, host: true, maxPlayers: 5, currentPlayers: 1, players: [] } });
+  page.setData({ roomId: 7, room: { roomId: 7, host: true, status: 'WAITING', maxPlayers: 5, currentPlayers: 1, players: [] } });
   return page;
 }
 
@@ -268,4 +268,51 @@ test('bot and host termination services use authenticated REST endpoints', async
   assert.deepEqual(calls.map(c => [c.url, c.method]), [
     ['/api/avalon/room/7/bots', 'POST'], ['/api/avalon/room/7/bots/3', 'DELETE'], ['/api/avalon/game/7/end', 'POST'],
   ]);
+});
+
+const deferred=()=>{let resolve,reject;const promise=new Promise((r,j)=>{resolve=r;reject=j;});return {promise,resolve,reject};};
+test('bot request uses its own loading flag, rejects duplicates and blocks conflicting mutations',async()=>{
+ const pending=deferred(),calls=[];
+ const page=pageAt({addBot:async()=>{calls.push('add');await pending.promise;},start:async()=>calls.push('start'),leaveRoom:async()=>calls.push('leave')});
+ const states=[];page.setData=values=>{Object.assign(page.data,values);states.push({...page.data});};
+ const first=page.addBot();await new Promise(setImmediate);
+ assert.equal(page.data.botAdding,true);assert.equal(page.data.busy,false);
+ await page.addBot();await page.startGame();page.leaveRoom();await page.run(()=>calls.push('other'));
+ assert.deepEqual(calls,['add']);assert.ok(states.every(s=>s.busy===false));
+ pending.resolve();await first;assert.equal(page.data.botAdding,false);
+ await page.addBot();assert.deepEqual(calls,['add','add']);
+});
+test('add bot revalidates full roster, host, phase and room after an in-flight refresh',async()=>{
+ for(const change of [p=>{p.data.room.host=false;},p=>{p.data.room.currentPlayers=5;},p=>{p.data.room.status='PLAYING';},p=>{p.data.game={phase:'ROLE_CONFIRM'};},p=>{p.data.roomId=8;},p=>{p.active=false;}]){
+  const calls=[],page=pageAt({addBot:async()=>calls.push('add')});
+  page.refreshing=Promise.resolve().then(()=>change(page));await page.addBot();
+  assert.deepEqual(calls,[]);assert.equal(page.data.botAdding,false);assert.equal(page.data.busy,false);
+ }
+});
+test('bot failure unlocks request for retry without changing roster or footer busy',async()=>{
+ let calls=0;const page=pageAt({addBot:async()=>{if(++calls===1)throw Error('offline');}});
+ const before=structuredClone(page.data.room);await page.addBot();
+ assert.equal(page.data.botAdding,false);assert.equal(page.data.busy,false);assert.deepEqual(page.data.room,before);
+ await page.addBot();assert.equal(calls,2);
+});
+test('bot completion waits for an older GET then obtains a fresh authoritative snapshot',async()=>{
+ const post=deferred(),get=deferred();let gets=0;
+ const page=pageAt({addBot:()=>post.promise});page.refresh=async()=>{gets++;page.data.room.currentPlayers=3;};
+ const add=page.addBot();await new Promise(setImmediate);
+ page.refreshing=get.promise.then(()=>{page.data.room.currentPlayers=2;page.refreshing=null;});
+ post.resolve();await new Promise(setImmediate);assert.equal(gets,0);assert.equal(page.data.botAdding,true);
+ get.resolve();await add;assert.equal(gets,1);assert.equal(page.data.room.currentPlayers,3);assert.equal(page.data.botAdding,false);
+});
+test('late bot completion cannot refresh a different or closed room',async()=>{
+ for(const change of [p=>{p.data.roomId=8;},p=>{p.active=false;},p=>{p.stateEpoch=1;}]){
+  const post=deferred(),page=pageAt({addBot:()=>post.promise});let refreshes=0;page.refresh=async()=>{refreshes++;};
+  const add=page.addBot();await new Promise(setImmediate);change(page);post.resolve();await add;
+  assert.equal(refreshes,0);assert.equal(page.data.botAdding,false);
+ }
+});
+test('start revalidates host, canStart and room status after polling while keeping bot operations locked',async()=>{
+ for(const [change,expected] of [[()=>{},1],[p=>{p.data.room.host=false;},0],[p=>{p.data.room.canStart=false;},0],[p=>{p.data.room.currentPlayers=4;},0],[p=>{p.data.room.status='CLOSED';},0]]){
+  let starts=0;const page=pageAt({start:async()=>{starts++;}});Object.assign(page.data.room,{canStart:true,currentPlayers:5});
+  page.refreshing=Promise.resolve().then(()=>change(page));await page.startGame();assert.equal(starts,expected);
+ }
 });
