@@ -1,5 +1,5 @@
 <view
-  class="seat {{compact ? 'compact' : ''}} {{formal ? 'formal' : ''}} {{player.empty ? 'empty-seat' : ''}} {{player.disabled ? 'disabled' : ''}}"
+  class="seat {{compact ? 'compact' : ''}} {{formal ? 'formal' : ''}} {{dense ? 'dense' : ''}} {{player.empty ? 'empty-seat' : ''}} {{player.disabled ? 'disabled' : ''}}"
   bindtap="choose"
   bindtouchstart="beginTouch"
 >
@@ -18,12 +18,11 @@
     <view wx:if="{{player.markType || player.knowledgeType}}" class="seat-badge knowledge-icon {{player.knowledgeClass}}"><knowledge-mark type="{{player.knowledgeType}}" markType="{{player.markType}}" text="{{player.markText}}" tone="{{player.markClass}}" /></view>
     <text wx:if="{{player.me}}" class="seat-badge me-icon">我</text>
   </view>
-  <view class="seat-number">{{player.seatNo}}号位</view>
-  <view wx:if="{{player.isBot}}" class="seat-bot">机器人</view>
-  <view wx:if="{{!player.empty && !hideNickname}}" class="seat-name">
-    {{player.nickname}}
+  <view class="seat-caption">
+    <text class="seat-number">{{player.seatNo}}</text>
+    <text class="seat-divider">·</text>
+    <text class="seat-name">{{player.empty ? '空座' : player.nickname}}</text>
   </view>
-  <view wx:if="{{player.empty}}" class="seat-empty-label">空座</view>
   <view class="badges" wx:if="{{lobby && !player.empty && player.host}}">
     <text class="badge leader-badge">房主</text>
   </view>

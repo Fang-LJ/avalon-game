@@ -3,6 +3,7 @@ Component({
   properties: {
     player: Object,
     compact: Boolean,
+    dense: Boolean,
     lobby: Boolean,
     formal: Boolean,
     hideNickname: Boolean,

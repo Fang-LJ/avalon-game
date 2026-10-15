@@ -19,18 +19,17 @@
     </view>
   </view>
   <block wx:if="{{!game}}">
-    <view class="card lobby-card">
+    <view class="lobby-card">
       <view class="lobby-card-heading">
         <view class="lobby-title">房间 <text class="lobby-room-code gold">{{room.roomCode}}</text></view>
         <view wx:if="{{room.host}}" class="lobby-close-action {{busy ? 'disabled' : ''}}" aria-role="button" aria-disabled="{{busy}}" bindtap="endGame">关闭房间</view>
       </view>
-      <view class="muted small lobby-player-count">{{lobbyStatus}}</view>
       <view class="lobby-invite-actions">
         <button wx:if="{{room.status === 'WAITING'}}" class="invite-button" open-type="share">邀请好友</button>
         <button class="copy-code-button" bindtap="copyCode">复制房号</button>
       </view>
     </view>
-    <view class="section-title lobby-label">固定座位</view>
+    <view class="section-title lobby-label"><text>座位 · {{room.maxPlayers}}人局</text><button wx:if="{{room.host}}" class="bot-add" disabled="{{busy || room.currentPlayers >= room.maxPlayers}}" bindtap="addBot">＋ 机器人</button></view>
     <view class="lobby-board {{room.maxPlayers >= 9 ? 'large-table' : ''}}">
       <view
         wx:for="{{displayPlayers}}"
@@ -45,9 +44,8 @@
           bind:select="handleLobbySeat"
         />
       </view>
-      <view class="card lobby-center">
-        <view class="gold lobby-seat-number">{{room.mySeatNo ? room.mySeatNo + '号位' : '当前站立'}}</view>
-        <view class="muted small">{{room.mySeatNo ? '我的座位' : '请选择座位'}}</view>
+      <view class="lobby-center" aria-label="{{lobbyStatus}}">
+        <view wx:for="{{lobbyStatusLines}}" wx:key="*this" class="{{index === 0 ? 'gold lobby-population' : 'muted small'}}">{{item}}</view>
       </view>
     </view>
     <view wx:if="{{standingPlayers.length}}" class="card standing-list">
@@ -56,7 +54,7 @@
         {{item.nickname}}{{item.me ? '（我）' : ''}}
       </view>
     </view>
-    <view class="card lobby-rules">
+    <view class="lobby-rules">
       <view class="gold">本局规则</view>
       <view class="muted small">
         {{room.maxPlayers}} 人局 · {{rule.evilRoles}} · 第 4 个任务需
@@ -64,10 +62,6 @@
       </view>
     </view>
     <view class="lobby-actions actions">
-      <view wx:if="{{room.host}}" class="bot-tools">
-        <text class="muted small">{{botPlayers.length ? '点击机器人头像可移除' : '可添加机器人补充空位'}}</text>
-        <button class="bot-add" disabled="{{busy || room.currentPlayers >= room.maxPlayers}}" bindtap="addBot">＋ 添加机器人</button>
-      </view>
       <button
         class="btn"
         disabled="{{!room.canStart || busy}}"
@@ -76,7 +70,6 @@
       >
         {{room.host ? '开始游戏' : '等待房主开始'}}
       </button>
-      <view class="footer-note">仅房主可开始 · 开局后身份随机分配</view>
       <view class="link center small" bindtap="leaveRoom">退出房间</view>
     </view>
   </block>
@@ -152,7 +145,7 @@
         <player-seat
           compact="{{room.maxPlayers >= 9}}"
           formal="{{true}}"
-          hideNickname="{{room.maxPlayers >= 8}}"
+          dense="{{room.maxPlayers === 8}}"
           player="{{item}}"
           bind:select="togglePlayer"
           guessEnabled="{{canGuessRoles && !busy}}"
@@ -232,13 +225,13 @@
       <block wx:if="{{game.phase === 'TEAM_BUILDING'}}">
         <block wx:if="{{isLeader}}">
           <view class="{{teamDraftSupported && !teamNominated ? 'two-buttons' : ''}}">
-            <button wx:if="{{teamDraftSupported && !teamNominated}}" class="btn ghost"
+            <button wx:if="{{teamDraftSupported && !teamNominated}}" class="btn nomination-button"
               disabled="{{selectedIds.length !== game.requiredTeamSize || busy || teamSyncError}}" bindtap="nominateTeam">提名人选</button>
             <button class="btn" disabled="{{selectedIds.length !== game.requiredTeamSize || busy || teamSyncError}}" bindtap="submitTeam">确认发车</button>
           </view>
           <view wx:if="{{teamSyncError}}" class="team-choice-hint link" bindtap="retryTeamDraft" aria-role="button">{{teamSyncError}}</view>
-          <view wx:elif="{{teamSyncPending || selectedIds.length !== game.requiredTeamSize}}" class="team-choice-hint muted">
-            {{teamSyncPending ? '正在同步人选…' : '请选择 ' + game.requiredTeamSize + ' 名任务成员'}}
+          <view wx:elif="{{teamSyncPending}}" class="team-choice-hint muted">
+            正在同步人选…
           </view>
         </block>
       </block>

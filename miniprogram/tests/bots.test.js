@@ -68,7 +68,7 @@ test('host removes a bot through its lobby avatar menu rather than a separate li
   assert.deepEqual(calls, [[7, 3]]);
   const markup = fs.readFileSync(path.join(__dirname, '../pages/room/room.wxml'), 'utf8');
   assert.doesNotMatch(markup, /bot-list|bot-row|机器人测试局/);
-  assert.match(markup, /点击机器人头像可移除/);
+  assert.doesNotMatch(markup, /点击机器人头像可移除/);
 });
 test('bot avatar actions are unavailable for guests humans busy and playing states', () => {
   let menus = 0;
@@ -256,7 +256,7 @@ test('host-ended human game is neutral rather than an evil win or a loss', () =>
   assert.match(markup, /房主已结束本局/);
   assert.match(markup, /wx:if="\{\{!room.testGame\}\}"[^>]*bindtap="replay"/);
   assert.match(markup, /bindtap="endGame"/);
-  assert.match(fs.readFileSync(path.join(__dirname, '../components/player-seat/player-seat.wxml'), 'utf8'), /player.isBot/);
+  assert.match(fs.readFileSync(path.join(__dirname, '../components/player-seat/player-seat.wxml'), 'utf8'), /player.nickname/);
 });
 test('bot and host termination services use authenticated REST endpoints', async () => {
   const calls = [];

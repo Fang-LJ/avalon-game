@@ -24,7 +24,7 @@
       <view wx:else class="guest-note">暂无已完成的表决或任务</view>
     </block>
     <view class="board">
-      <view wx:for="{{displayPlayers}}" wx:key="seatNo" class="positioned-seat" style="{{item.position}}"><player-seat player="{{item}}" formal="{{true}}" hideNickname="{{true}}" bind:select="selectSeat" /></view>
+      <view wx:for="{{displayPlayers}}" wx:key="seatNo" class="positioned-seat" style="{{item.position}}"><player-seat player="{{item}}" formal="{{true}}" bind:select="selectSeat" /></view>
       <view class="board-center"><view>{{game.phase === 'ASSASSINATION' ? '刺杀梅林' : '队伍 ' + game.requiredTeamSize + ' 人'}}</view><view>成功 {{game.goodScore}} · 失败 {{game.evilScore}}</view><view class="gold">{{selectedText || '等待选择'}}</view><view wx:if="{{game.phase !== 'ASSASSINATION'}}" class="rejection-status"><text class="rejection-label">否决</text><view wx:for="{{rejection.dots}}" wx:key="index" class="rejection-dot {{item ? 'rejected' : ''}}"></view></view></view>
     </view>
     <view class="phase-actions">

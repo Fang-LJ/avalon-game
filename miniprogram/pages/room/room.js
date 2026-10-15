@@ -56,6 +56,7 @@ Page({
     rejection: { dots: [], forced: false },
     phaseTitle: '',
     lobbyStatus: '',
+    lobbyStatusLines: [],
     busy: false,
     error: '',
     timeline: { missions: [], proposals: [] },
@@ -439,9 +440,11 @@ Page({
     const { room, game, role, selectedIds } = this.data;
     if (!room) return;
     if (!game) {
+      const lobbyStatus = ui.lobbyStatus(room);
       this.setData({
         displayPlayers: ui.lobbySeats(room.players, room.maxPlayers),
-        lobbyStatus: ui.lobbyStatus(room),
+        lobbyStatus,
+        lobbyStatusLines: lobbyStatus.split(' · '),
         standingPlayers: room.players.filter((player) => !player.seated),
         botPlayers: room.players.filter((player) => player.isBot),
         board: false,

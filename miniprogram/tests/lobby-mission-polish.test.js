@@ -65,11 +65,11 @@ test('special settlement tags use gold and purple pills, not ordinary cyan or bl
 });
 test('lobby close action is inside the single room card, only for host and busy-safe', () => {
   assert.doesNotMatch(roomMarkup + roomCss, /host-controls|host-end/);
-  const card = roomMarkup.split('<view class="card lobby-card">')[1].split('<view class="section-title lobby-label">')[0];
+  const card = roomMarkup.split('<view class="lobby-card">')[1].split('<view class="section-title lobby-label">')[0];
   assert.match(card, /lobby-card-heading/);
   assert.match(card, /wx:if="\{\{room.host\}\}" class="lobby-close-action \{\{busy \? 'disabled' : ''\}\}"[^>]*bindtap="endGame">关闭房间/);
-  for (const field of ['lobbyStatus', 'room.roomCode']) assert.ok(card.includes(field));
-  assert.match(read('pages/room/room.js'), /lobbyStatus: ui.lobbyStatus\(room\)/);
+  for (const field of ['room.roomCode']) assert.ok(card.includes(field));
+  assert.match(read('pages/room/room.js'), /const lobbyStatus = ui.lobbyStatus\(room\)/);
   assert.match(roomMarkup, /disabled="\{\{!room.canStart \|\| busy\}\}"/);
   assert.match(roomCss, /\.lobby-close-action \{[^}]*font-size: 22rpx; color: var\(--evil\)/);
   const js = read('pages/room/room.js').split('  endGame() {')[1].split('  identityRevealed')[0];
@@ -84,15 +84,12 @@ test('lobby share and copy remain in one 2:1 row of equal-height rounded buttons
   assert.match(roomCss, /\.lobby-invite-actions \{ display: grid; grid-template-columns: minmax\(0, 2fr\) minmax\(0, 1fr\); gap: 16rpx/);
   assert.match(roomCss, /\.invite-button, \.copy-code-button \{[^}]*height: 74rpx[^}]*border-radius: 24rpx; white-space: nowrap/);
   assert.match(roomCss, /\.invite-button \{ color: var\(--bg\); background: var\(--gold\)/);
-  assert.match(roomCss, /\.copy-code-button \{[^}]*background: transparent; border-color: var\(--border\)/);
+  assert.match(roomCss, /\.copy-code-button \{[^}]*background: var\(--soft\); border-color: var\(--border\)/);
 });
-test('lobby centre displays seated/standing instructions, never a duplicate room code', () => {
-  const center = roomMarkup.split('<view class="card lobby-center">')[1].split('    </view>\n    <view wx:if="{{standingPlayers.length}}"')[0];
-  assert.doesNotMatch(center, /roomCode|房间号/);
-  for (const phrase of ['room.mySeatNo', '号位', '当前站立', '我的座位', '请选择座位']) assert.ok(center.includes(phrase));
-  assert.doesNotMatch(center, /等待好友加入/);
-  assert.match(roomCss, /\.lobby-label \{\s*margin-top: 30rpx/);
-  assert.match(roomCss, /\.lobby-board \{\s*height: 820rpx;\s*margin-top: 24rpx/);
+test('lobby centre reuses population status without a card or personal-seat instructions', () => {
+  assert.match(roomMarkup, /class="lobby-center" aria-label="\{\{lobbyStatus\}\}"/);
+  assert.match(roomMarkup, /lobbyStatusLines/);
+  assert.doesNotMatch(roomMarkup, /我的座位|当前站立|class="card lobby-center"/);
 });
 test('WAITING share keeps exact six-digit room path; active games fall back to home', () => {
   let page;
