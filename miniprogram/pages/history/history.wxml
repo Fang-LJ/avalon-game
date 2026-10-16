@@ -3,15 +3,14 @@
   <page-head v3="{{true}}" title="历史战绩" subtitle="你的每一局阿瓦隆" />
   </view>
   <view class="v3-card history-overview">
-    <view class="overview-label">对局概览</view>
-    <view class="history-total">{{stats ? stats.totalGames : '—'}} 场对局</view>
-    <view class="history-rate"><view>{{stats ? stats.winRate : 0}}%</view><text>胜率</text></view>
+    <view class="overview-row overview-label"><text>对局概览</text><text>胜率</text></view>
+    <view class="overview-row overview-values"><view class="history-total">{{stats ? stats.totalGames : '—'}} 场有效对局</view><view class="history-rate">{{stats ? stats.winRate : 0}}%</view></view>
     <view class="record-bar"><view class="record-wins" style="width:{{recordWinPercent}}%;"></view><view class="record-losses" style="width:{{recordLossPercent}}%;"></view></view>
     <view class="record-legend"><text class="good">● {{stats ? stats.wins : 0}} 胜</text><text class="evil">{{stats ? stats.losses : 0}} 负 ●</text></view>
   </view>
   <view class="history-filters">
-    <button wx:for="{{filters}}" wx:key="key" class="record-filter filter-{{item.tone}} {{alignment === item.key ? 'selected' : ''}}" data-key="{{item.key}}" bindtap="filter" disabled="{{loading}}" aria-pressed="{{alignment === item.key}}">
-      <image wx:if="{{item.key}}" class="filter-dot" src="/assets/ui-v3/{{item.key === 'GOOD' ? 'ec337' : '913e2'}}.svg" aria-hidden="{{true}}" /><text>{{item.label}}</text>
+    <button wx:for="{{filters}}" wx:key="key" class="record-filter filter-{{item.tone}} {{alignment === item.key ? 'selected' : ''}}" data-key="{{item.key}}" bindtap="filter" aria-pressed="{{alignment === item.key}}">
+      <text>{{item.label}}</text>
     </button>
   </view>
   <view class="v3-section-title history-label">最近对局</view>

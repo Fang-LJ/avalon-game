@@ -1,15 +1,9 @@
 <view class="page ui-v3-page ui-v3-tabs home-page">
   <view class="v3-nav-wrap">
-  <page-head v3="{{true}}" title="阿瓦隆" subtitle="{{profile ? '晚上好，' + profile.nickname : '欢迎来到阿瓦隆'}}">
-    <view slot="right" class="v3-avatar home-avatar">
-      <image class="v3-avatar-base" src="/assets/ui-v3/1c866.svg" aria-hidden="{{true}}" />
-      <image wx:if="{{profile.avatarUrl}}" class="v3-avatar-photo" src="{{profile.avatarUrl}}" mode="aspectFill" />
-      <text wx:else class="v3-avatar-letter">{{profile.initial || 'A'}}</text>
-    </view>
-  </page-head>
+  <page-head v3="{{true}}" title="{{greeting + (profile ? '，' + profile.nickname : '')}}" />
   </view>
   <game-card class="home-hero" tone="gold" v3="{{true}}">
-    <view class="hero-tag">圆桌迷境</view>
+    <view class="hero-tag">圆桌秘境</view>
     <view class="hero-title">今晚，谁在隐藏身份？</view>
     <view class="hero-description">5–10 人在线阿瓦隆 · 房间制 · 自动规则裁定</view>
   </game-card>
@@ -45,4 +39,15 @@
     <view class="chips"><view wx:for="{{mockUsers}}" wx:key="key" class="chip {{currentMockKey === item.key ? 'active' : ''}}" data-key="{{item.key}}" bindtap="selectMockUser">{{item.nickname}}</view></view>
   </view>
   <app-tab-bar active="index" v3="{{true}}" />
+  <view wx:if="{{joinOpen}}" class="join-mask {{joinKeyboardHeight ? 'keyboard-open' : ''}}" style="bottom:{{joinKeyboardHeight}}px;padding-top:{{joinSafeTop}}px;" catchtap="closeJoin" catchtouchmove="keepJoinOpen">
+    <view class="join-dialog" catchtap="keepJoinOpen" aria-role="dialog" aria-modal="{{true}}" aria-label="加入房间">
+      <view class="join-title">加入房间</view>
+      <input class="join-code" type="number" maxlength="6" value="{{joinCode}}" focus="{{joinFocus}}" placeholder="六位数字房间号" placeholder-class="join-placeholder" disabled="{{joining}}" adjust-position="{{false}}" confirm-type="go" bindinput="joinInput" bindconfirm="submitJoin" bindkeyboardheightchange="joinKeyboardChange" aria-label="六位数字房间号" />
+      <view wx:if="{{joinError}}" class="join-error" aria-role="alert">{{joinError}}</view>
+      <view class="join-dialog-actions">
+        <button class="join-cancel" bindtap="closeJoin" disabled="{{joining}}">取消</button>
+        <button class="v3-primary join-submit" bindtap="submitJoin" loading="{{joining}}" disabled="{{!joinValid || joining}}">加入房间</button>
+      </view>
+    </view>
+  </view>
 </view>

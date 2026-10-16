@@ -26,7 +26,6 @@
     <button class="v3-primary" loading="{{saving}}" disabled="{{loading || !canSave || uploading || saving}}" bindtap="save">{{uploading ? '上传中' : '保存资料'}}</button>
     <button wx:if="{{mode === 'first'}}" class="profile-skip" bindtap="skip" disabled="{{loading || uploading || saving}}">跳过，使用默认资料</button>
   </view>
-  <view class="profile-footer-note">头像和昵称以后也可以修改</view>
   <view wx:if="{{avatarSheetOpen}}" class="avatar-sheet-mask" catchtap="closeAvatarSheet">
     <view class="avatar-sheet" catchtap="keepAvatarSheet" aria-role="dialog" aria-modal="{{true}}" aria-label="更换头像">
       <view class="avatar-sheet-title">更换头像</view>

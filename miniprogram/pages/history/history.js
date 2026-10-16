@@ -13,7 +13,6 @@ Page({
     recordWinPercent: 0,
     recordLossPercent: 0,
     filters: [
-      { key: '', tone: 'all', label: '全部' },
       { key: 'GOOD', tone: 'good', label: '正义' },
       { key: 'EVIL', tone: 'evil', label: '邪恶' },
     ],
@@ -22,15 +21,25 @@ Page({
     if (!auth.requireSession()) return;
     this.load(true);
   },
+  onUnload() {
+    // Invalidate callbacks from a page that has already left the stack.
+    this._historyRequest = (this._historyRequest || 0) + 1;
+  },
   async load(reset = false) {
-    if (this.data.loading) return;
-    this.setData({ loading: true, error: '' });
+    if (this.data.loading && !reset) return;
+    const request = this._historyRequest = (this._historyRequest || 0) + 1;
+    const alignment = this.data.alignment;
     const page = reset ? 1 : this.data.page + 1;
+    this.setData({
+      loading: true, error: '',
+      ...(reset ? { items: [], page: 0, total: 0 } : {}),
+    });
     try {
       const [result, stats] = await Promise.all([
-        api.history(page, 10, this.data.alignment),
+        api.history(page, 10, alignment),
         api.stats(),
       ]);
+      if (request !== this._historyRequest) return;
       this.setData({
         stats,
         recordWinPercent: stats.wins + stats.losses > 0 ? stats.wins * 100 / (stats.wins + stats.losses) : 0,
@@ -42,20 +51,19 @@ Page({
         page,
       });
     } catch (_) {
-      this.setData({ error: '战绩加载失败，请重试' });
+      if (request === this._historyRequest)
+        this.setData({ error: '战绩加载失败，请重试' });
     } finally {
-      this.setData({ loading: false });
+      if (request === this._historyRequest) this.setData({ loading: false });
     }
   },
   filter(e) {
-    if (this.data.loading) return;
+    const key = e.currentTarget.dataset.key;
+    if (key !== 'GOOD' && key !== 'EVIL') return;
     this.setData({
-      alignment: e.currentTarget.dataset.key,
-      items: [],
-      page: 0,
-      total: 0,
+      alignment: this.data.alignment === key ? '' : key,
     });
-    this.load(true);
+    return this.load(true);
   },
   more() {
     if (!this.data.loading && this.data.items.length < this.data.total)

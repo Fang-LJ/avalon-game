@@ -1,7 +1,4 @@
-<view class="page ui-v3-page ui-v3-tabs me-page">
-  <view class="v3-nav-wrap">
-  <page-head v3="{{true}}" title="我的" subtitle="账号、战绩与设置" />
-  </view>
+<view class="page ui-v3-page ui-v3-tabs me-page" style="padding-top:{{contentTop}}px;">
   <view wx:if="{{error}}" class="error" bindtap="load">{{error}}</view>
   <view class="v3-card profile-entry" bindtap="editProfile">
     <view class="v3-avatar me-avatar">
@@ -19,7 +16,6 @@
       <view class="my-metric"><view class="metric-value">{{stats ? stats.wins : '—'}}</view><view class="metric-label">胜场</view></view>
       <view class="my-metric"><view class="metric-value gold">{{stats ? stats.winRate : 0}}%</view><view class="metric-label">胜率</view></view>
     </view>
-    <view wx:if="{{stats && stats.roleCounts.length}}" class="common-roles">常用角色：{{commonRoles}}</view>
   </view>
   <view class="menu-group-label">游戏</view>
   <view class="v3-card settings-menu">

@@ -1,16 +1,19 @@
 const api = require('../../services/avalon');
 const auth = require('../../services/auth');
 const ui = require('../../utils/presentation');
+const { readNavigationMetrics } = require('../../utils/guest-navigation');
 Page({
   data: {
     profile: null,
     stats: null,
-    commonRoles: '暂无对局',
+    contentTop: 88,
     error: '',
     mockLogin: false,
   },
   onShow() {
-    if (auth.requireSession()) this.load();
+    if (!auth.requireSession()) return;
+    this.setData({ contentTop: readNavigationMetrics().contentTop });
+    this.load();
   },
   async load() {
     try {
@@ -18,11 +21,6 @@ Page({
       this.setData({
         profile: { ...profile, initial: ui.initial(profile.nickname) },
         stats,
-        commonRoles:
-          stats.roleCounts
-            .slice(0, 3)
-            .map((r) => r.roleName + ' ' + r.games + ' 局')
-            .join(' · ') || '暂无对局',
         error: '',
         mockLogin: auth.isMockLogin(),
       });

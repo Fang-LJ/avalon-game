@@ -1,6 +1,4 @@
 @import "../../styles/ui-v3.wxss";
-.home-avatar { width: 40px; height: 40px; font-size: 16px; line-height: 23px; }
-.home-avatar .v3-avatar-base { width: 40px; height: 40px; }
 .home-page .hero-tag { display: inline-flex; align-items: center; justify-content: center; min-width: 78px; height: 26px; padding: 0 12px; border-radius: 13px; background: var(--gold); color: var(--bg); font-size: 12px; font-weight: 700; line-height: 17px; }
 .home-page .hero-title { margin-top: 13px; color: var(--text); font-size: 25px; font-weight: 700; line-height: 36px; }
 .home-page .hero-description { margin-top: 3px; color: var(--muted); font-size: 13px; line-height: 18px; }
@@ -27,3 +25,19 @@
 .guide-title { font-size: 16px; font-weight: 700; line-height: 23px; }
 .guide-description { margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 17px; }
 .guide-chevron { width: 18px; height: 18px; margin-top: 16px; flex-shrink: 0; }
+.join-mask { position: fixed; z-index: 100; top: 0; right: 0; left: 0; display: flex; align-items: center; justify-content: center; padding: 20px 24px max(20px, env(safe-area-inset-bottom)); background: rgba(0, 0, 0, .65); }
+.join-dialog { width: 100%; max-width: 360px; max-height: 100%; overflow-y: auto; padding: 24px 20px; border: 1px solid var(--border); border-radius: 20px; background: var(--elevated); }
+.join-title { color: var(--gold); font-size: 22px; font-weight: 700; line-height: 32px; }
+.join-code { width: 100%; height: 52px; margin-top: 20px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text); font-size: 20px; line-height: 52px; letter-spacing: 3px; }
+.join-placeholder { color: var(--muted); font-size: 15px; letter-spacing: 0; }
+.join-error { margin-top: 12px; color: var(--evil); font-size: 13px; line-height: 20px; overflow-wrap: anywhere; }
+.join-dialog-actions { display: flex; gap: 12px; margin-top: 24px; }
+.home-page .join-dialog-actions > button { flex: 1; min-width: 0; min-height: 48px; margin: 0; padding: 12px 8px; border-radius: 12px; font-size: 15px; font-weight: 700; line-height: 24px; }
+.join-cancel { border: 1px solid var(--border); background: transparent; color: var(--muted); }
+.join-cancel::after { border: 0; }
+.join-cancel[disabled] { opacity: .5; }
+.join-mask.keyboard-open { padding-bottom: 12px; }
+.keyboard-open .join-dialog { padding: 16px 20px; }
+.keyboard-open .join-code { margin-top: 12px; }
+.keyboard-open .join-dialog-actions { margin-top: 16px; }
+.keyboard-open .join-error { margin-top: 8px; }
