@@ -58,8 +58,11 @@ Page({
     lobbyStatus: '',
     lobbyStatusLines: [],
     lobbyLayout: null,
+    lobbyRoleText: '',
     busy: false,
     botAdding: false,
+    botRemoving: false,
+    copiedRoomCode: '',
     error: '',
     timeline: { missions: [], proposals: [] },
     entries: [],
@@ -446,6 +449,7 @@ Page({
       this.setData({
         displayPlayers: ui.lobbySeats(room.players, room.maxPlayers, true),
         lobbyLayout: ui.lobbyGeometry(room.maxPlayers),
+        lobbyRoleText: ui.rules(room.maxPlayers).evilRoles.replace(/ · /g, ' / '),
         lobbyStatus,
         lobbyStatusLines: lobbyStatus.split(' · '),
         standingPlayers: room.players.filter((player) => !player.seated),
@@ -612,7 +616,7 @@ Page({
     if (!e || sheet && e.detail && e.detail.scope === sheet.scope) this.setData({ roleGuessSheet: null });
   },
   handleLobbySeat(e) {
-    if (this.data.game || this.data.busy || this.data.botAdding) return;
+    if (this.data.game || this.data.busy || this.data.botAdding || this.data.botRemoving) return;
     const detail = e.detail || {};
     if (detail.empty)
       return this.run(() => api.seat(this.data.roomId, Number(detail.seatNo)));
@@ -634,9 +638,20 @@ Page({
         itemList: ['起立'],
         success: (result) => {
           if (result.tapIndex === 0)
-            this.run(() => api.stand(this.data.roomId));
+            this.standUp();
         },
       });
+  },
+  standUp() {
+    const { room, game, busy, botAdding } = this.data;
+    if (!room || game || busy || botAdding || this.data.botRemoving || room.status !== 'WAITING' || room.mySeatNo == null) return;
+    const roomId = room.roomId;
+    return this.run(() => {
+      const current = this.data.room;
+      if (this.active !== false && this.data.roomId === roomId && !this.data.game &&
+          current && current.status === 'WAITING' && current.mySeatNo != null)
+        return api.stand(roomId);
+    });
   },
   togglePlayer(e) {
     const game = this.data.game;
@@ -670,7 +685,7 @@ Page({
     this.decoratePlayers();
   },
   async run(task) {
-    if (this.data.busy || this.data.botAdding) return;
+    if (this.data.busy || this.data.botAdding || this.data.botRemoving) return;
     this.setData({ busy: true });
     try {
       await this.refreshing;
@@ -718,42 +733,48 @@ Page({
       fail: () => { this.earlyAssassinationDialog = false; },
     });
   },
-  async addBot() {
-    const { room, game, busy, botAdding } = this.data;
-    if (this.active === false || !room || !room.host || game || busy || botAdding ||
-        room.status !== 'WAITING' || room.currentPlayers >= room.maxPlayers) return;
+  async runLobbyBotMutation(task, adding) {
+    const { room, game, busy, botAdding, botRemoving } = this.data;
+    if (this.active === false || !room || !room.host || game || busy || botAdding || botRemoving ||
+        room.status !== 'WAITING') return;
     const roomId = room.roomId, epoch = this.stateEpoch || 0;
     const current = () => this.active !== false && this.data.roomId === roomId &&
       (this.stateEpoch || 0) === epoch;
-    this.setData({ botAdding: true });
+    // Bot requests lock other mutations without toggling their visible loading state.
+    this.setData({ botAdding: adding, botRemoving: !adding });
     try {
       await this.refreshing;
       const latest = this.data.room;
-      if (!current() || this.data.game || !latest || !latest.host || latest.status !== 'WAITING' ||
-          latest.currentPlayers >= latest.maxPlayers) return;
-      await api.addBot(roomId);
-      // Do not reuse a poll/socket GET that started before the POST completed.
+      if (!current() || this.data.game || !latest || !latest.host || latest.status !== 'WAITING') return;
+      const request = task(latest, roomId);
+      if (!request) return;
+      await request;
+      // Do not reuse a poll/socket GET that started before the mutation completed.
       if (current()) await this.refreshAfterMutation();
     } catch (_) {
       /* Request helper reports failures; keep the roster authoritative and allow retry. */
     } finally {
-      this.setData({ botAdding: false });
+      this.setData({ botAdding: false, botRemoving: false });
     }
   },
+  addBot() {
+    const { room } = this.data;
+    if (!room || room.currentPlayers >= room.maxPlayers) return;
+    return this.runLobbyBotMutation((current, roomId) => {
+      if (current.currentPlayers < current.maxPlayers) return api.addBot(roomId);
+    }, true);
+  },
   removeBot(playerId) {
-    const { room, game, busy } = this.data;
-    if (!room || !room.host || game || busy ||
-        !room.players.some(p => p.playerId === playerId && p.isBot)) return;
-    return this.run(() => {
-      const current = this.data.room;
-      if (!this.data.game && this.data.roomId === room.roomId && current.host &&
-          current.players.some(p => p.playerId === playerId && p.isBot))
-        return api.removeBot(room.roomId, playerId);
-    });
+    const { room } = this.data;
+    if (!room || !room.players.some(p => p.playerId === playerId && p.isBot)) return;
+    return this.runLobbyBotMutation((current, roomId) => {
+      if (current.players.some(p => p.playerId === playerId && p.isBot))
+        return api.removeBot(roomId, playerId);
+    }, false);
   },
   endGame() {
     const { room, game, busy } = this.data;
-    if (!room || !room.host || busy || this.data.botAdding || (game && game.phase === 'FINISHED')) return;
+    if (!room || !room.host || busy || this.data.botAdding || this.data.botRemoving || (game && game.phase === 'FINISHED')) return;
     const roomId = room.roomId;
     wx.showModal({
       title: game ? '结束当前对局？' : '关闭等待房间？',
@@ -963,7 +984,18 @@ Page({
     });
   },
   copyCode() {
-    wx.setClipboardData({ data: this.data.room.roomCode });
+    const { room, roomId } = this.data;
+    if (!room || !room.roomCode) return;
+    const roomCode = room.roomCode;
+    wx.setClipboardData({
+      data: String(roomCode),
+      success: () => {
+        // Preserve WeChat's copied toast and ignore a callback from an old room.
+        if (this.active !== false && this.data.roomId === roomId && this.data.room &&
+            this.data.room.roomCode === roomCode)
+          this.setData({ copiedRoomCode: roomCode });
+      },
+    });
   },
   confirmLeaveRoom() {
     if (this.data.busy || !this.data.room) return;
@@ -981,7 +1013,7 @@ Page({
     });
   },
   leaveRoom() {
-    if (this.data.busy || this.data.botAdding) return;
+    if (this.data.busy || this.data.botAdding || this.data.botRemoving) return;
     this.setData({ busy: true });
     api
       .leaveRoom(this.data.roomId)

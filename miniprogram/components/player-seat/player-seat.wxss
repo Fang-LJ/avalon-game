@@ -153,3 +153,6 @@
 .compact .seat-caption { font-size: 21rpx; line-height: 30rpx; }
 
 .formal .seat-caption { max-width: 104rpx; }
+
+/* Lobby-only clipping: formal-game captions retain their existing behavior. */
+.lobby-seat .seat-name { text-overflow: ellipsis; }

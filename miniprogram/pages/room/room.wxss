@@ -280,17 +280,41 @@ button.nomination-button[disabled] { background: #D8B25C !important; color: #101
 .room-page.preparation-page { position: fixed; inset: 0; height: 100%; height: 100dvh; min-height: 0; padding-bottom: 0; display: flex; flex-direction: column; overflow: hidden; }
 .preparation-page > page-head, .preparation-page > .game-status-row, .preparation-page > .error { flex-shrink: 0; }
 .preparation-scroll { flex: 1; height: 0; min-height: 0; width: 100%; overscroll-behavior-y: none; }
-.lobby-body { display: flex; flex-direction: column; min-height: 100%; box-sizing: border-box; padding-bottom: 12rpx; }
-.lobby-info { border-top: 1rpx solid #324238; border-bottom: 1rpx solid #324238; padding: 18rpx 0; }
-.lobby-info .lobby-card-heading { flex-wrap: nowrap; }
-.lobby-info .lobby-room-actions { margin: 16rpx 0 0; justify-content: flex-start; gap: 12rpx; }
-.lobby-info .lobby-room-button { flex: 1; min-width: 0; width: auto; padding: 0 4rpx; font-size: 21rpx; height: 60rpx; }
-.lobby-info .lobby-leave-action { background: transparent; color: var(--muted); }
+.lobby-body { display: flex; flex-direction: column; min-height: 100%; box-sizing: border-box; }
+.lobby-info { flex-shrink: 0; border-top: 1rpx solid #324238; padding: 20rpx 0 0; }
+.lobby-room-heading { display: flex; align-items: center; justify-content: space-between; gap: 20rpx; }
+.lobby-room-identity { border-left: 3rpx solid var(--gold); padding-left: 18rpx; }
+.lobby-room-label { color: var(--muted); font-size: 21rpx; line-height: 1.4; }
+.lobby-room-identity .lobby-room-code { font-size: 43rpx; line-height: 1.25; letter-spacing: 2rpx; margin-top: 2rpx; }
+.lobby-copy { display: flex; align-items: center; justify-content: center; gap: 10rpx; flex-shrink: 0; width: 172rpx; height: 58rpx; margin: 0; padding: 0 16rpx; border: 1rpx solid var(--border); border-radius: 16rpx; background: transparent; color: var(--gold); font-size: 22rpx; line-height: 1; transition: background-color .18s ease, transform .12s ease; }
+.lobby-copy.copied { background: var(--soft); }
+.lobby-copy-pressed { transform: scale(.97); }
+.lobby-copy::after { border: 0; }
+.lobby-copy-icon { width: 26rpx; height: 26rpx; flex-shrink: 0; }
+.lobby-copy-check { display: flex; align-items: center; justify-content: center; width: 26rpx; height: 26rpx; flex-shrink: 0; font-size: 28rpx; font-weight: 700; line-height: 1; }
+.lobby-info .lobby-rules { margin: 18rpx 0 0; padding: 14rpx 18rpx; border-radius: 16rpx; background: #192a21; }
+.lobby-rules-heading { display: flex; align-items: center; gap: 10rpx; color: var(--gold); font-size: 22rpx; font-weight: 600; line-height: 1.4; }
+.lobby-rules-heading image { width: 26rpx; height: 26rpx; }
+.lobby-info .lobby-rules > view + view { margin-top: 6rpx; }
+.lobby-rule-composition { color: var(--text); font-size: 22rpx; line-height: 1.5; overflow-wrap: break-word; }
+.lobby-rule-special { color: var(--muted); font-size: 21rpx; line-height: 1.5; }
+.lobby-info .lobby-room-actions { margin: 18rpx 0 0; gap: 12rpx; }
+.lobby-info .lobby-room-button { flex: 1; flex-direction: column; gap: 7rpx; min-width: 0; width: auto; height: 100rpx; padding: 12rpx 4rpx; border-radius: 16rpx; font-size: 22rpx; line-height: 1.2; }
+.lobby-action-icon { display: block; width: 34rpx; height: 34rpx; flex-shrink: 0; }
+.lobby-info .lobby-leave-action { background: transparent; }
 .lobby-info .lobby-close-action { background: transparent; color: #c95d68; border-color: #69383d; }
+.lobby-info .lobby-room-button[disabled] { background: #29392f !important; color: #86958b !important; opacity: 1; }
+.lobby-info .lobby-room-button[disabled] .lobby-action-icon { filter: grayscale(1); opacity: .45; }
 /* Natural orbit height is supplied by lobbyGeometry; free space cannot stretch its axes. */
-.preparation-page .lobby-board, .preparation-page .lobby-board.large-table { flex: 0 0 auto; min-height: 0; width: 100%; margin-top: 22rpx; }
+.preparation-page .lobby-board, .preparation-page .lobby-board.large-table { flex: 0 0 auto; min-height: 0; width: 100%; margin-top: 46rpx; }
 .lobby-info .bot-add[disabled] { background: #29392f !important; color: #86958b !important; opacity: 1; }
-.preparation-page .lobby-rules { margin-top: 20rpx; line-height: 1.6; }
+/* Temporary bot locks retain native disabled behavior without flashing unrelated controls.
+   Actual unavailable states (not seated / non-host / full) still use their gray styling. */
+.lobby-info .lobby-room-button.bot-operation-locked[disabled] { background: var(--soft) !important; color: var(--gold) !important; }
+.lobby-info .lobby-leave-action.bot-operation-locked[disabled], .lobby-info .lobby-close-action.bot-operation-locked[disabled] { background: transparent !important; }
+.lobby-info .lobby-close-action.bot-operation-locked[disabled] { color: #c95d68 !important; }
+.lobby-info .lobby-room-button.bot-operation-locked[disabled] .lobby-action-icon { filter: none; opacity: 1; }
+
 .lobby-footer { flex-shrink: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16rpx; padding: 16rpx 0 calc(16rpx + env(safe-area-inset-bottom)); }
 .lobby-footer.host-footer { grid-template-columns: minmax(0, 65fr) minmax(0, 35fr); }
 .lobby-footer.host-footer.room-full { grid-template-columns: minmax(0, 35fr) minmax(0, 65fr); }
@@ -298,7 +322,7 @@ button.nomination-button[disabled] { background: #D8B25C !important; color: #101
 .lobby-footer button::after { border: 0; }
 .lobby-invite { background: #D8B25C; color: #101713; }
 .lobby-footer button[disabled] { background: #29392f !important; color: #86958b !important; opacity: 1; }
-/* Keep the ready appearance on the final roster update while the add request unlocks.
+/* Preserve the ready appearance during bot mutations; real roster changes still restyle it.
    The native disabled attribute and handler still prevent concurrent start requests. */
 .lobby-footer .lobby-start.bot-add-locked[disabled] { background: var(--accent) !important; color: var(--text) !important; }
 .identity-body { padding: 12rpx 0 calc(20rpx + env(safe-area-inset-bottom)); }

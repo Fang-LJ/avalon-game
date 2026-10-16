@@ -1,5 +1,5 @@
 <view
-  class="seat {{compact ? 'compact' : ''}} {{formal ? 'formal' : ''}} {{dense ? 'dense' : ''}} {{player.empty ? 'empty-seat' : ''}} {{player.disabled ? 'disabled' : ''}}"
+  class="seat {{lobby ? 'lobby-seat' : ''}} {{compact ? 'compact' : ''}} {{formal ? 'formal' : ''}} {{dense ? 'dense' : ''}} {{player.empty ? 'empty-seat' : ''}} {{player.disabled ? 'disabled' : ''}}"
   bindtap="choose"
   bindtouchstart="beginTouch"
 >

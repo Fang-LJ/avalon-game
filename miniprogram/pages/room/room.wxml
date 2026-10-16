@@ -23,14 +23,35 @@
     <scroll-view class="preparation-scroll" scroll-y="{{true}}" enhanced="{{true}}" bounces="{{false}}" show-scrollbar="{{false}}">
     <view class="lobby-body">
     <view class="lobby-info">
-      <view class="lobby-card-heading">
-        <view class="lobby-title">房间 <text class="lobby-room-code gold">{{room.roomCode}}</text></view>
+      <view class="lobby-room-heading">
+        <view class="lobby-room-identity">
+          <view class="lobby-room-label">房间号码</view>
+          <view class="lobby-room-code gold">{{room.roomCode}}</view>
+        </view>
+        <button class="lobby-copy {{copiedRoomCode === room.roomCode ? 'copied' : ''}}" bindtap="copyCode" hover-class="lobby-copy-pressed" hover-stay-time="120" aria-label="{{copiedRoomCode === room.roomCode ? '已复制，再次复制房号' : '复制房号'}}">
+          <text wx:if="{{copiedRoomCode === room.roomCode}}" class="lobby-copy-check" aria-hidden="{{true}}">✓</text>
+          <image wx:else src="/assets/lobby/copy.svg" class="lobby-copy-icon" aria-hidden="{{true}}" />
+          <text>{{copiedRoomCode === room.roomCode ? '已复制' : '复制房号'}}</text>
+        </button>
+      </view>
+      <view class="lobby-rules">
+        <view class="lobby-rules-heading"><image src="/assets/guest/book.svg" aria-hidden="{{true}}" /><text>本局规则</text></view>
+        <view class="lobby-rule-composition">{{room.maxPlayers}}人局 · {{lobbyRoleText}}</view>
+        <view class="lobby-rule-special">第4轮任务需要{{rule.fourth}}张失败票{{rule.lady ? ' · 湖中仙女' : ''}}</view>
       </view>
       <view class="lobby-room-actions">
-        <button class="lobby-room-button bot-add" disabled="{{!room.host || busy || botAdding || room.currentPlayers >= room.maxPlayers || room.status !== 'WAITING'}}" loading="{{botAdding}}" bindtap="addBot">＋机器人</button>
-        <button class="lobby-room-button lobby-copy" bindtap="copyCode">复制</button>
-        <button class="lobby-room-button lobby-leave-action" disabled="{{busy || botAdding}}" bindtap="leaveRoom">退出</button>
-        <button wx:if="{{room.host}}" class="lobby-room-button lobby-close-action" disabled="{{busy || botAdding}}" bindtap="endGame">关闭</button>
+        <button class="lobby-room-button bot-add {{botRemoving && !busy && room.host && room.currentPlayers < room.maxPlayers && room.status === 'WAITING' ? 'bot-operation-locked' : ''}}" disabled="{{!room.host || busy || botAdding || botRemoving || room.currentPlayers >= room.maxPlayers || room.status !== 'WAITING'}}" loading="{{botAdding}}" bindtap="addBot">
+          <image src="/assets/lobby/robot.svg" class="lobby-action-icon" aria-hidden="{{true}}" /><text>机器人</text>
+        </button>
+        <button class="lobby-room-button lobby-stand-action {{(botAdding || botRemoving) && !busy && room.mySeatNo != null && room.status === 'WAITING' ? 'bot-operation-locked' : ''}}" disabled="{{busy || botAdding || botRemoving || room.mySeatNo == null || room.status !== 'WAITING'}}" bindtap="standUp">
+          <image src="/assets/lobby/stand.svg" class="lobby-action-icon" aria-hidden="{{true}}" /><text>起立</text>
+        </button>
+        <button class="lobby-room-button lobby-leave-action {{(botAdding || botRemoving) && !busy ? 'bot-operation-locked' : ''}}" disabled="{{busy || botAdding || botRemoving}}" bindtap="leaveRoom">
+          <image src="/assets/lobby/exit.svg" class="lobby-action-icon" aria-hidden="{{true}}" /><text>退出</text>
+        </button>
+        <button wx:if="{{room.host}}" class="lobby-room-button lobby-close-action {{(botAdding || botRemoving) && !busy ? 'bot-operation-locked' : ''}}" disabled="{{busy || botAdding || botRemoving}}" bindtap="endGame">
+          <image src="/assets/lobby/close.svg" class="lobby-action-icon" aria-hidden="{{true}}" /><text>关闭</text>
+        </button>
       </view>
     </view>
     <view class="lobby-board lobby-size-{{room.maxPlayers}} {{room.maxPlayers >= 9 ? 'large-table' : ''}}" style="height:{{lobbyLayout.height}}rpx;">
@@ -57,15 +78,11 @@
         {{item.nickname}}{{item.me ? '（我）' : ''}}
       </view>
     </view>
-    <view class="lobby-rules">
-      <view class="gold">本局规则</view>
-      <view class="muted small">{{room.maxPlayers}} 人局 · {{rule.evilRoles}} · 第 4 个任务需 {{rule.fourth}} 张失败票{{rule.lady ? ' · 湖中仙女' : ''}}</view>
-    </view>
     </view>
     </scroll-view>
     <view class="lobby-footer {{room.host ? 'host-footer' : ''}} {{room.currentPlayers >= room.maxPlayers ? 'room-full' : ''}}">
       <button class="lobby-invite" disabled="{{busy || room.currentPlayers >= room.maxPlayers || room.status !== 'WAITING'}}" open-type="{{!busy && room.currentPlayers < room.maxPlayers && room.status === 'WAITING' ? 'share' : ''}}">邀请好友</button>
-      <button wx:if="{{room.host}}" class="btn lobby-start {{botAdding && room.canStart && !busy && room.currentPlayers >= room.maxPlayers ? 'bot-add-locked' : ''}}" disabled="{{!room.canStart || busy || botAdding || room.currentPlayers < room.maxPlayers}}" loading="{{busy}}" bindtap="startGame">开始游戏</button>
+      <button wx:if="{{room.host}}" class="btn lobby-start {{(botAdding || botRemoving) && room.canStart && !busy && room.currentPlayers >= room.maxPlayers ? 'bot-add-locked' : ''}}" disabled="{{!room.canStart || busy || botAdding || botRemoving || room.currentPlayers < room.maxPlayers}}" loading="{{busy}}" bindtap="startGame">开始游戏</button>
     </view>
   </block>
   <block wx:elif="{{game.phase === 'ROLE_CONFIRM'}}">

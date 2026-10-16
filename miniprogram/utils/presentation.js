@@ -197,7 +197,7 @@ function seats(players, selected = [], leaderId, maxPlayers = players.length, ph
 // Lobby coordinates use one rpx scale for both axes, independent of free viewport height.
 // Leave room below the bottom avatar for its nickname and possible host badge.
 function lobbyGeometry(maxPlayers) {
-  const radius = maxPlayers <= 6 ? 216 : maxPlayers <= 8 ? 260 : 280;
+  const radius = maxPlayers <= 6 ? 270 : maxPlayers <= 8 ? 260 : 280;
   const avatarSize = maxPlayers >= 9 ? 100 : 112;
   return { radius, centerTop: radius + avatarSize / 2, height: radius * 2 + avatarSize + 90 };
 }
