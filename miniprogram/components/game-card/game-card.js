@@ -1,4 +1,4 @@
 Component({
   options: { styleIsolation: 'apply-shared' },
-  properties: { tone: String },
+  properties: { tone: String, v3: Boolean },
 });

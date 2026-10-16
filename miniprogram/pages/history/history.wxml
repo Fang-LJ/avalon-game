@@ -1,47 +1,29 @@
-<view class="page tabs">
-  <page-head title="历史战绩" subtitle="你的每一局阿瓦隆" />
-  <view class="card">
-    <view class="history-total gold">
-      {{stats ? stats.totalGames : '—'}} 场对局
-    </view>
-    <view class="muted">
-      {{stats ? stats.wins : 0}} 胜 · {{stats ? stats.losses : 0}} 负 · 胜率
-      {{stats ? stats.winRate : 0}}%
-    </view>
-    <view class="chips">
-      <view
-        wx:for="{{filters}}"
-        wx:key="key"
-        class="chip {{alignment === item.key ? 'active' : ''}}"
-        data-key="{{item.key}}"
-        bindtap="filter"
-      >
-        {{item.label}}
-      </view>
-    </view>
+<view class="page ui-v3-page ui-v3-tabs history-page">
+  <view class="v3-nav-wrap">
+  <page-head v3="{{true}}" title="历史战绩" subtitle="你的每一局阿瓦隆" />
   </view>
-  <view class="section-title history-label">最近对局</view>
-  <view
-    wx:for="{{items}}"
-    wx:key="gameId"
-    class="card history-game"
-    data-id="{{item.gameId}}"
-    bindtap="replay"
-  >
-    <view class="history-title">
-      {{item.playerCount}} 人局 · {{item.roleName}}
-    </view>
-    <view class="{{!item.winner ? 'gold' : item.winner === 'GOOD' ? 'good' : 'evil'}}">
-      {{item.resultText}} · {{!item.winner ? '不计胜负' : item.won ? '胜' : '负'}}
-    </view>
-    <view class="muted small">{{item.timeText}} · 查看复盘 ›</view>
+  <view class="v3-card history-overview">
+    <view class="overview-label">对局概览</view>
+    <view class="history-total">{{stats ? stats.totalGames : '—'}} 场对局</view>
+    <view class="history-rate"><view>{{stats ? stats.winRate : 0}}%</view><text>胜率</text></view>
+    <view class="record-bar"><view class="record-wins" style="width:{{recordWinPercent}}%;"></view><view class="record-losses" style="width:{{recordLossPercent}}%;"></view></view>
+    <view class="record-legend"><text class="good">● {{stats ? stats.wins : 0}} 胜</text><text class="evil">{{stats ? stats.losses : 0}} 负 ●</text></view>
+  </view>
+  <view class="history-filters">
+    <button wx:for="{{filters}}" wx:key="key" class="record-filter filter-{{item.tone}} {{alignment === item.key ? 'selected' : ''}}" data-key="{{item.key}}" bindtap="filter" disabled="{{loading}}" aria-pressed="{{alignment === item.key}}">
+      <image wx:if="{{item.key}}" class="filter-dot" src="/assets/ui-v3/{{item.key === 'GOOD' ? 'ec337' : '913e2'}}.svg" aria-hidden="{{true}}" /><text>{{item.label}}</text>
+    </button>
+  </view>
+  <view class="v3-section-title history-label">最近对局</view>
+  <view wx:for="{{items}}" wx:key="gameId" class="v3-card history-game" data-id="{{item.gameId}}" bindtap="replay">
+    <view class="history-title">{{item.roleName}} · {{item.playerCount}}人局</view>
+    <view class="history-result {{!item.winner ? 'gold' : item.winner === 'GOOD' ? 'good' : 'evil'}}">{{item.resultText}} · {{!item.winner ? '不计胜负' : item.won ? '胜' : '负'}}</view>
+    <view class="history-meta"><text>{{item.timeText}}</text><text class="history-replay">查看复盘 →</text></view>
   </view>
   <view wx:if="{{error}}" class="error" bindtap="retry">{{error}}</view>
   <view wx:elif="{{loading}}" class="empty">正在加载…</view>
   <view wx:elif="{{!items.length}}" class="empty">暂无符合条件的对局</view>
-  <view wx:elif="{{items.length < total}}" class="link center" bindtap="more">
-    加载更多
-  </view>
+  <view wx:elif="{{items.length < total}}" class="link center" bindtap="more">加载更多</view>
   <view wx:else class="footer-note">已显示全部战绩</view>
-  <app-tab-bar active="history" />
+  <app-tab-bar active="history" v3="{{true}}" />
 </view>

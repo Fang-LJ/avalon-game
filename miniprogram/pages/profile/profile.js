@@ -15,6 +15,8 @@ Page({
     initial: 'A',
     canSave: false,
     error: '',
+    avatarSheetOpen: false,
+    nicknameFocused: false,
   },
   onLoad(options) {
     this.setData({ mode: options && options.mode === 'edit' ? 'edit' : 'first' });
@@ -42,12 +44,31 @@ Page({
     this.setData({ nickname, initial: nickname ? ui.initial(nickname) : 'A' });
     this.syncCanSave();
   },
+  openAvatarSheet() {
+    if (this.data.loading || this.data.uploading || this.data.saving) return;
+    this.setData({ avatarSheetOpen: true, nicknameFocused: false });
+  },
+  closeAvatarSheet() { this.setData({ avatarSheetOpen: false }); },
+  keepAvatarSheet() {},
+  focusNickname() {
+    if (this.data.loading || this.data.uploading || this.data.saving) return;
+    // Focus the native nickname field; WeChat offers suggestions chosen by the user.
+    this.setData({ nicknameFocused: false });
+    wx.nextTick(() => this.setData({ nicknameFocused: true }));
+  },
+  nicknameBlur(event) {
+    this.setData({ nicknameFocused: false });
+    this.nicknameInput(event);
+  },
   handleChooseAvatar(event) {
     const filePath = event.detail && event.detail.avatarUrl;
     if (!filePath) return this.showUploadError('未获取到微信头像');
+    this.closeAvatarSheet();
     return this.upload(filePath);
   },
   async chooseFromAlbum() {
+    if (this.data.uploading || this.data.saving) return;
+    this.closeAvatarSheet();
     try {
       await this.upload(await files.chooseImage());
     } catch (error) {

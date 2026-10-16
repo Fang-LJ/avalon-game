@@ -1,36 +1,29 @@
-.home-avatar {
-  width: 85rpx;
-  height: 85rpx;
-  font-size: 31rpx;
-  margin-right: 0;
-}
-.hero-title {
-  font-size: 42rpx;
-  font-weight: 700;
-  margin-bottom: 17rpx;
-}
-.home-actions {
-  margin-top: 119rpx;
-}
-.recent {
-  margin-top: 72rpx;
-}
-.recent-title {
-  font-size: 27rpx;
-  font-weight: 700;
-}
-.rules-entry {
-  margin-top: 52rpx;
-}
-.local-panel {
-  margin-top: 35rpx;
-}
-
-.home-avatar {
-  position: absolute;
-  top: 164rpx;
-  right: 38rpx;
-  width: 64rpx;
-  height: 64rpx;
-  font-size: 27rpx;
-}
+@import "../../styles/ui-v3.wxss";
+.home-avatar { width: 40px; height: 40px; font-size: 16px; line-height: 23px; }
+.home-avatar .v3-avatar-base { width: 40px; height: 40px; }
+.home-page .hero-tag { display: inline-flex; align-items: center; justify-content: center; min-width: 78px; height: 26px; padding: 0 12px; border-radius: 13px; background: var(--gold); color: var(--bg); font-size: 12px; font-weight: 700; line-height: 17px; }
+.home-page .hero-title { margin-top: 13px; color: var(--text); font-size: 25px; font-weight: 700; line-height: 36px; }
+.home-page .hero-description { margin-top: 3px; color: var(--muted); font-size: 13px; line-height: 18px; }
+.home-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 23.077rpx; margin-top: 46.154rpx; }
+.home-action { display: flex; align-items: flex-start; gap: 23.077rpx; min-width: 0; min-height: 78px; margin: 0; padding: 15px 32.692rpx; border: 1.3px solid var(--gold); border-radius: 36.538rpx; background: var(--elevated); color: var(--text); text-align: left; }
+.home-action::after, .return-room::after { border: 0; }
+.join-action { border-color: var(--accent); }
+.action-icon { width: 24px; height: 24px; flex-shrink: 0; margin-top: 1px; }
+.action-copy { min-width: 0; }
+.action-title { font-size: 16px; font-weight: 700; line-height: 23px; white-space: nowrap; }
+.action-caption { margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 16px; }
+.return-room { width: 100%; margin: 16px 0 0; padding: 12px 16px; color: var(--gold); font-size: 14px; line-height: 22px; }
+.recent { margin-top: 76.923rpx; }
+.recent > .v3-card { margin-top: 8px; }
+.recent-game { min-height: 126px; padding: 14px 16px 16px; }
+.recent-role { display: inline-flex; align-items: center; justify-content: center; min-width: 98px; height: 26px; padding: 0 12px; border-radius: 13px; background: var(--gold); color: var(--bg); font-size: 12px; font-weight: 700; line-height: 17px; }
+.recent-result { margin-top: 14px; font-size: 18px; font-weight: 700; line-height: 26px; }
+.recent-meta { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-top: 5px; font-size: 12px; line-height: 17px; }
+.recent-time { flex: 1; min-width: 0; color: var(--muted); overflow-wrap: anywhere; }
+.recent-replay { flex-shrink: 0; color: var(--gold); font-weight: 700; }
+.rules-entry { display: flex; gap: 23.077rpx; min-height: 84px; margin-top: 57.692rpx; padding: 14px 16px; }
+.guide-icon { width: 24px; height: 24px; margin-top: 10px; flex-shrink: 0; }
+.guide-copy { flex: 1; min-width: 0; }
+.guide-title { font-size: 16px; font-weight: 700; line-height: 23px; }
+.guide-description { margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 17px; }
+.guide-chevron { width: 18px; height: 18px; margin-top: 16px; flex-shrink: 0; }

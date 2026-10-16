@@ -1,46 +1,35 @@
-<view class="page login-page">
+<view class="page ui-v3-page login-page">
   <view class="brand" style="padding-top: {{brandTop}}px;">
     <view class="brand-mark">
-      <image src="/assets/avalon-mark.svg" />
+      <image src="/assets/ui-v3/ac574.svg" aria-hidden="{{true}}" />
       <text>A</text>
     </view>
     <view class="brand-name">阿瓦隆</view>
-    <view class="gold small">AVALON</view>
-    <view class="tagline muted">在谎言与忠诚之间，找到真正的同伴。</view>
+    <view class="brand-english">AVALON</view>
   </view>
   <view class="guest-features">
     <button wx:for="{{guestFeatures}}" wx:key="key" class="guest-feature" data-key="{{item.key}}" bindtap="openGuestFeature">
-      <image class="feature-icon" src="/assets/guest/{{item.icon}}.svg" mode="aspectFit" />
+      <image class="feature-icon" src="/assets/ui-v3/{{item.icon}}.svg" mode="aspectFit" aria-hidden="{{true}}" />
       <text>{{item.label}}</text>
     </button>
   </view>
   <view class="login-actions">
-    <button
-      class="btn login-button"
-      bindtap="login"
-      loading="{{busy || checking}}"
-      disabled="{{!agreed || busy || checking}}"
-    >
-      微信授权登录
-    </button>
+    <button class="v3-primary login-button" bindtap="login" loading="{{busy || checking}}" disabled="{{!agreed || busy || checking}}">微信授权登录</button>
     <view class="error center" wx:if="{{error}}">{{error}}</view>
     <view class="agreement-area">
-      <button class="agreement-checkbox {{agreed ? 'checked' : ''}}" aria-role="checkbox" aria-checked="{{agreed}}" aria-label="同意用户服务协议和隐私政策" bindtap="toggleAgreement"><view class="agreement-circle"><text wx:if="{{agreed}}">✓</text></view></button>
-      <view class="agreement-copy">我已阅读并同意<text class="legal-link" data-type="agreement" catchtap="openLegal">《用户服务协议》</text>和<text class="legal-link" data-type="privacy" catchtap="openLegal">《隐私政策》</text></view>
+      <button class="agreement-checkbox {{agreed ? 'checked' : ''}}" aria-role="checkbox" aria-checked="{{agreed}}" aria-label="同意用户服务协议和隐私政策" bindtap="toggleAgreement">
+        <view class="agreement-circle">
+          <image wx:if="{{agreed}}" src="/assets/ui-v3/faae0.svg" class="consent-checked" aria-hidden="{{true}}" />
+          <text wx:if="{{agreed}}">✓</text>
+        </view>
+      </button>
+      <view class="agreement-copy">我已阅读并同意 <text class="legal-link" data-type="agreement" catchtap="openLegal">《用户服务协议》</text> 和 <text class="legal-link" data-type="privacy" catchtap="openLegal">《隐私政策》</text></view>
     </view>
   </view>
-  <view wx:if="{{mockLogin}}" class="card mock-users">
+  <view wx:if="{{mockLogin}}" class="mock-users">
     <view class="gold">仅本地开发 · 模拟用户</view>
     <view class="chips">
-      <view
-        wx:for="{{mockUsers}}"
-        wx:key="key"
-        class="chip"
-        data-key="{{item.key}}"
-        bindtap="selectMockUser"
-      >
-        {{item.nickname}}
-      </view>
+      <view wx:for="{{mockUsers}}" wx:key="key" class="chip" data-key="{{item.key}}" bindtap="selectMockUser">{{item.nickname}}</view>
     </view>
   </view>
 </view>

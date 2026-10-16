@@ -109,10 +109,10 @@ test('chooseAvatar uploads the temp path and updates the permanent preview', asy
   assert.equal(page.data.canSave, true);
 });
 
-test('nickname is capped, entered manually, and custom avatar is optional', () => {
+test('nickname field supports WeChat suggestions and manual editing while avatar stays optional', () => {
   const markup = fs.readFileSync(path.join(__dirname, '../pages/profile/profile.wxml'), 'utf8');
   assert.match(markup, /open-type="chooseAvatar"/);
-  assert.match(markup, /type="text"/);
+  assert.match(markup, /type="nickname"/);
   assert.match(markup, /maxlength="32"/);
 
   const page = pageAt(
@@ -185,4 +185,28 @@ test('me page opens profile edit and seats retain avatar fallback support', () =
   assert.match(meMarkup, /编辑头像与昵称/);
   assert.match(seat, /wx:if="\{\{player\.avatarUrl\}\}"/);
   assert.match(seat, /<text wx:else>\{\{player\.initial\}\}<\/text>/);
+});
+
+test('avatar sources open only after user interaction and freeze during upload or save', () => {
+  const page = pageAt('pages/profile/profile.js', {}, {});
+  page.setData({ loading: false }); page.openAvatarSheet();
+  assert.equal(page.data.avatarSheetOpen, true);
+  page.closeAvatarSheet(); page.setData({ uploading: true }); page.openAvatarSheet();
+  assert.equal(page.data.avatarSheetOpen, false);
+  page.setData({ uploading: false, saving: true }); page.openAvatarSheet();
+  assert.equal(page.data.avatarSheetOpen, false);
+});
+test('WeChat nickname shortcut only focuses the editable field, blur preserves manual input and validation', () => {
+  const page = pageAt('pages/profile/profile.js', {}, { nextTick: callback => callback() });
+  page.setData({ loading: false }); page.focusNickname();
+  assert.equal(page.data.nicknameFocused, true);
+  page.nicknameBlur({ detail: { value: '手动昵称' } });
+  assert.equal(page.data.nickname, '手动昵称'); assert.equal(page.data.nicknameFocused, false); assert.equal(page.data.canSave, true);
+  page.nicknameBlur({ detail: { value: '   ' } }); assert.equal(page.data.canSave, false);
+});
+test('refusing album privacy keeps existing avatar and allows reopening source sheet', async () => {
+  const page = pageAt('pages/profile/profile.js', { '../../services/file': { chooseImage: async () => { throw Error('保留默认头像'); } } }, { showToast() {} });
+  page.setData({ loading: false, avatarUrl: 'existing-avatar' }); page.openAvatarSheet(); await page.chooseFromAlbum();
+  assert.equal(page.data.avatarUrl, 'existing-avatar'); assert.equal(page.data.uploading, false); assert.equal(page.data.avatarSheetOpen, false);
+  page.openAvatarSheet(); assert.equal(page.data.avatarSheetOpen, true);
 });

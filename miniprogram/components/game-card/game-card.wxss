@@ -13,3 +13,5 @@
   border-color: var(--evil);
   color: var(--text);
 }
+
+.v3-game-card { min-height: 130px; padding: 14px 16px 16px; border-radius: 42.308rpx; background: var(--soft); }

@@ -1,1 +1,4 @@
-{ "navigationStyle": "custom" }
+{
+  "navigationStyle": "custom",
+  "backgroundColor": "#0d1711"
+}

@@ -10,10 +10,12 @@ Page({
     alignment: '',
     loading: false,
     error: '',
+    recordWinPercent: 0,
+    recordLossPercent: 0,
     filters: [
-      { key: '', label: '全部' },
-      { key: 'GOOD', label: '正义' },
-      { key: 'EVIL', label: '邪恶' },
+      { key: '', tone: 'all', label: '全部' },
+      { key: 'GOOD', tone: 'good', label: '正义' },
+      { key: 'EVIL', tone: 'evil', label: '邪恶' },
     ],
   },
   onShow() {
@@ -31,6 +33,8 @@ Page({
       ]);
       this.setData({
         stats,
+        recordWinPercent: stats.wins + stats.losses > 0 ? stats.wins * 100 / (stats.wins + stats.losses) : 0,
+        recordLossPercent: stats.wins + stats.losses > 0 ? stats.losses * 100 / (stats.wins + stats.losses) : 0,
         items: (reset ? [] : this.data.items).concat(
           result.items.map(ui.historyItem),
         ),

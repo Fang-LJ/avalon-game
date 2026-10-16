@@ -1,0 +1,35 @@
+/* Figma V3: 390px reference, 750rpx canvas. Typography/icons stay in CSS px.
+   Scoped tokens keep the shipped game and guest pages visually unchanged. */
+.ui-v3-page {
+  --bg: #0d1711;
+  --elevated: #142119;
+  --soft: #19281f;
+  --text: #f1f3ee;
+  --muted: #aab2ac;
+  --good: #63c7a7;
+  --evil: #d76776;
+  --gold: #d8b75c;
+  --border: #304237;
+  --accent: #5e826f;
+  min-height: 100vh;
+  padding: 0 38.462rpx max(24px, env(safe-area-inset-bottom));
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.ui-v3-page > .v3-nav-wrap { position: sticky; top: 0; z-index: 30; flex-shrink: 0; background: var(--bg); }
+.ui-v3-page.ui-v3-tabs { padding-bottom: calc(87px + max(15px, env(safe-area-inset-bottom))); }
+.ui-v3-page .v3-card { background: var(--elevated); border: 1px solid var(--border); border-radius: 38.462rpx; }
+.ui-v3-page .v3-section-title { font-size: 18px; font-weight: 700; line-height: 26px; }
+.ui-v3-page .v3-primary { width: 100%; min-height: 56px; margin: 0; padding: 14px 16px; border: 0; border-radius: 32.692rpx; background: var(--accent); color: var(--text); font-size: 17px; font-weight: 700; line-height: 26px; }
+.ui-v3-page .v3-primary::after { border: 0; }
+.ui-v3-page .v3-primary[disabled] { background: #29392f !important; color: #86958b !important; opacity: 1; }
+.ui-v3-page .v3-state { padding: 24px 16px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+.ui-v3-page .error { font-size: 13px; padding: 12px 0; }
+.ui-v3-page .footer-note, .ui-v3-page .empty { color: var(--muted); font-size: 12px; }
+.ui-v3-page .v3-avatar { position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 700; }
+.ui-v3-page .v3-avatar-base { position: absolute; left: 0; top: 0; }
+.ui-v3-page .v3-avatar-letter { position: relative; z-index: 1; }
+.ui-v3-page .v3-avatar-photo { position: absolute; left: 2px; top: 2px; width: calc(100% - 4px); height: calc(100% - 4px); border-radius: 50%; }
+.ui-v3-page .local-panel, .ui-v3-page .mock-users { margin-top: 24px; padding: 16px; background: var(--elevated); border: 1px solid var(--border); border-radius: 16px; }

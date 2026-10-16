@@ -1,1 +1,1 @@
-<view class="card {{tone}}"><slot></slot></view>
+<view class="card {{tone}} {{v3 ? 'v3-game-card' : ''}}"><slot></slot></view>

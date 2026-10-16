@@ -1,9 +1,10 @@
-<view class="page-head {{compact ? 'compact-head' : ''}} {{contained ? 'contained-head' : ''}}" style="padding-top: {{top}}px;">
-  <view class="heading-row">
-    <view class="title" bindtap="{{back ? 'goBack' : ''}}">
-      {{back ? '‹ ' : ''}}{{title}}
+<view class="page-head {{compact ? 'compact-head' : ''}} {{contained ? 'contained-head' : ''}} {{v3 ? 'v3-head' : ''}}" style="padding-top: {{top}}px;">
+  <view class="heading-row" style="{{v3 ? 'padding-right:' + v3Right + 'px;' : ''}}">
+    <view class="title {{v3 && back ? 'v3-back-title' : ''}}" bindtap="{{back ? 'goBack' : ''}}">
+      <block wx:if="{{v3}}"><image wx:if="{{back}}" class="v3-back-icon" src="/assets/ui-v3/1d450.svg" aria-hidden="{{true}}" /><text>{{title}}</text></block>
+      <block wx:else>{{back ? '‹ ' : ''}}{{title}}</block>
     </view>
     <slot name="right"></slot>
   </view>
-  <view class="subtitle">{{subtitle}}</view>
+  <view wx:if="{{!v3 || subtitle}}" class="subtitle">{{subtitle}}</view>
 </view>

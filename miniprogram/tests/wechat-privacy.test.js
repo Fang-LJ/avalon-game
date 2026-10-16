@@ -27,10 +27,10 @@ test('platform privacy refusal cannot open album and does not synthesize authori
 test('unsupported privacy API keeps default-avatar fallback and cannot silently open album', async () => {
   const f = fixture(false, false); await assert.rejects(f.file.chooseImage(), /更新微信/); assert.deepEqual(f.calls, []);
 });
-test('avatar selection remains a user-triggered native button, nickname uses manual input, no startup privacy prompt', () => {
+test('avatar selection and nickname suggestions remain user-triggered with no startup privacy prompt', () => {
   const profile = fs.readFileSync(path.join(__dirname, '../pages/profile/profile.wxml'), 'utf8');
-  assert.match(profile, /open-type="chooseAvatar"/); assert.match(profile, /type="text"/);
-  assert.doesNotMatch(profile, /type="nickname"|getPhoneNumber|getUserProfile/);
+  assert.match(profile, /open-type="chooseAvatar"/); assert.match(profile, /type="nickname"/);
+  assert.doesNotMatch(profile, /getPhoneNumber|getUserProfile/);
   const app = fs.readFileSync(path.join(__dirname, '../app.js'), 'utf8'); assert.doesNotMatch(app, /requirePrivacyAuthorize|onNeedPrivacyAuthorization|authorize/);
   const platform = fs.readFileSync(path.join(__dirname, '../utils/wechat-privacy.js'), 'utf8');
   assert.doesNotMatch(platform, /legal-consent|event:\s*['"]agree|setStorageSync/);

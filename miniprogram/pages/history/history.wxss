@@ -1,15 +1,26 @@
-.history-total {
-  font-size: 38rpx;
-  font-weight: 700;
-}
-.history-label {
-  margin-top: 45rpx;
-  margin-bottom: 28rpx;
-}
-.history-game {
-  margin-bottom: 48rpx;
-}
-.history-title {
-  font-size: 27rpx;
-  font-weight: 700;
-}
+@import "../../styles/ui-v3.wxss";
+.history-page .history-overview { position: relative; min-height: 122px; padding: 13px 16px 10px; border-radius: 42.308rpx; background: var(--soft); }
+.overview-label { color: var(--muted); font-size: 13px; font-weight: 500; line-height: 18px; }
+.history-total { margin-top: 7px; padding-right: 85px; font-size: 24px; font-weight: 700; line-height: 34px; }
+.history-rate { position: absolute; top: 34px; right: 20px; color: var(--gold); font-size: 26px; font-weight: 700; line-height: 37px; text-align: right; }
+.history-rate text { display: block; margin-top: -5px; color: var(--muted); font-size: 11px; font-weight: 400; line-height: 16px; }
+.record-bar { display: flex; height: 8px; margin-top: 8px; border-radius: 4px; overflow: hidden; background: var(--border); }
+.record-wins { background: var(--good); }
+.record-losses { background: var(--evil); }
+.record-legend { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; font-size: 12px; font-weight: 500; line-height: 17px; }
+.history-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30.769rpx; margin-top: 42.308rpx; }
+.record-filter { display: flex; align-items: center; justify-content: center; gap: 10px; min-width: 0; height: 44px; margin: 0; padding: 0 6px; border: 1px solid var(--gold); border-radius: 28.846rpx; background: var(--elevated); color: var(--gold); font-size: 13px; font-weight: 700; line-height: 18px; }
+.record-filter::after { border: 0; }
+.filter-all.selected { background: var(--gold); color: var(--bg); }
+.filter-good { border-color: var(--good); color: var(--good); }
+.filter-evil { border-color: var(--evil); color: var(--evil); }
+.filter-good.selected, .filter-evil.selected { border-width: 2px; background: var(--soft); }
+.record-filter[disabled] { opacity: .7; }
+.filter-dot { width: 10px; height: 10px; flex-shrink: 0; }
+.history-label { margin: 61.538rpx 0 8px; }
+.history-game { min-height: 100px; margin-bottom: 30.769rpx; padding: 12px 16px; }
+.history-title { font-size: 17px; font-weight: 700; line-height: 24px; }
+.history-result { margin-top: 7px; font-size: 14px; font-weight: 700; line-height: 20px; }
+.history-meta { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-top: 7px; color: var(--muted); font-size: 12px; line-height: 17px; }
+.history-meta > text:first-child { min-width: 0; overflow-wrap: anywhere; }
+.history-replay { flex-shrink: 0; font-weight: 500; }

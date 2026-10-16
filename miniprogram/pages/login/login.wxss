@@ -1,65 +1,23 @@
-.login-page {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom));
-}
-.brand {
-  flex-shrink: 0;
-  text-align: center;
-  padding-top: 90px;
-}
-.brand-mark {
-  width: 177rpx;
-  height: 177rpx;
-  position: relative;
-  margin: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 73rpx;
-  font-weight: 700;
-  color: var(--gold);
-}
-.brand-mark image {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-}
-.brand-mark text {
-  z-index: 1;
-}
-.brand-name {
-  margin-top: 30rpx;
-  font-size: 58rpx;
-  font-weight: 700;
-}
-.tagline {
-  margin-top: 28rpx;
-  font-size: 27rpx;
-}
-.login-actions {
-  flex-shrink: 0;
-  margin-top: auto;
-  padding: 40px 15rpx 0;
-}
-.mock-users {
-  margin: 25rpx 0;
-}
-.mock-users .chips {
-  margin-top: 20rpx;
-}
-.guest-features { flex-shrink: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20rpx; margin-top: 42rpx; padding: 0 15rpx; }
-.guest-feature { margin: 0; padding: 26rpx 16rpx; min-height: 158rpx; background: var(--elevated); border: 1rpx solid var(--border); border-radius: 24rpx; color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14rpx; font-size: 27rpx; line-height: 1.4; }
+@import "../../styles/ui-v3.wxss";
+.login-page { display: flex; flex-direction: column; padding-bottom: max(89px, calc(55px + env(safe-area-inset-bottom))); }
+.brand { flex-shrink: 0; text-align: center; }
+.brand-mark { position: relative; display: flex; align-items: center; justify-content: center; width: 74px; height: 74px; margin: auto; color: var(--gold); font-size: 30px; font-weight: 700; line-height: 44px; }
+.brand-mark image { position: absolute; left: 0; top: 0; width: 74px; height: 74px; }
+.brand-mark text { position: relative; }
+.brand-name { margin-top: 20px; font-size: 32px; line-height: 46px; font-weight: 700; }
+.brand-english { color: var(--gold); font-size: 12px; line-height: 17px; font-weight: 500; }
+.guest-features { flex-shrink: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 25rpx 23.077rpx; margin-top: 142.308rpx; }
+.guest-feature { display: flex; align-items: center; gap: 21.154rpx; min-width: 0; min-height: 62px; margin: 0; padding: 15px 30.769rpx; border: 1px solid var(--border); border-radius: 30.769rpx; background: var(--elevated); color: var(--text); font-size: 14px; font-weight: 500; line-height: 20px; text-align: left; }
 .guest-feature::after { border: 0; }
-.feature-icon { width: 48rpx; height: 48rpx; }
-
-.agreement-area { font-size: 23rpx; display: flex; align-items: center; gap: 6px; margin-top: 14px; }
-.agreement-checkbox { flex-shrink: 0; width: 44px; height: 44px; margin: 0; padding: 0; display: flex; align-items: center; justify-content: flex-end; border: 0; border-radius: 50%; background: transparent; font-size: inherit; line-height: 1; }
+.feature-icon { width: 22px; height: 22px; flex-shrink: 0; }
+.login-actions { flex-shrink: 0; margin-top: auto; padding-top: 40px; }
+.agreement-area { display: flex; align-items: center; margin-top: 20px; font-size: 12px; line-height: 17px; }
+.agreement-checkbox { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 36px; height: 44px; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; line-height: 1; }
 .agreement-checkbox::after { border: 0; }
-.agreement-circle { width: 1.2em; height: 1.2em; border: 1px solid #819587; border-radius: 50%; background: transparent; display: flex; align-items: center; justify-content: center; color: var(--bg); font-size: inherit; font-weight: 700; line-height: 1; }
-.agreement-circle text { font-size: 0.8em; }
-.agreement-checkbox.checked .agreement-circle { background: var(--gold); border-color: var(--gold); }
-.agreement-copy { flex: 1; min-width: 0; font-size: inherit; line-height: 1.8; color: var(--muted); overflow-wrap: anywhere; }
-.legal-link { color: var(--gold); }
-button.login-button[disabled] { background: #29372e !important; color: #87978b !important; opacity: 1; }
+.agreement-circle { position: relative; display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 1px solid #819587; border-radius: 50%; color: var(--bg); font-size: 12px; font-weight: 700; }
+.agreement-checkbox.checked .agreement-circle { border: 0; }
+.consent-checked { position: absolute; width: 18px; height: 18px; left: 0; top: 0; }
+.agreement-circle text { position: relative; }
+.agreement-copy { flex: 1; min-width: 0; color: var(--muted); overflow-wrap: anywhere; }
+.legal-link { color: var(--gold); font-weight: 500; }
+.mock-users .chips { margin-top: 12px; }

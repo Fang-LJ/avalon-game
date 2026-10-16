@@ -1,44 +1,36 @@
-<view class="page tabs me-page">
-  <page-head title="我的" subtitle="账号、战绩与设置" />
+<view class="page ui-v3-page ui-v3-tabs me-page">
+  <view class="v3-nav-wrap">
+  <page-head v3="{{true}}" title="我的" subtitle="账号、战绩与设置" />
+  </view>
   <view wx:if="{{error}}" class="error" bindtap="load">{{error}}</view>
-  <view class="card">
-    <view class="row">
-      <view class="avatar">
-        <image
-          wx:if="{{profile.avatarUrl}}"
-          src="{{profile.avatarUrl}}"
-          mode="aspectFill"
-        />
-        <text wx:else>{{profile.initial || 'A'}}</text>
-      </view>
-      <view>
-        <view class="profile-name">{{profile.nickname || '正在加载…'}}</view>
-        <view class="good small">
-          {{mockLogin ? '本地测试账号' : '微信账号已连接'}}
-        </view>
-      </view>
+  <view class="v3-card profile-entry" bindtap="editProfile">
+    <view class="v3-avatar me-avatar">
+      <image class="v3-avatar-base" src="/assets/ui-v3/ee5b8.svg" aria-hidden="{{true}}" />
+      <image wx:if="{{profile.avatarUrl}}" class="v3-avatar-photo" src="{{profile.avatarUrl}}" mode="aspectFill" />
+      <text wx:else class="v3-avatar-letter">{{profile.initial || 'A'}}</text>
     </view>
-    <view wx:if="{{profile}}" class="link small" bindtap="editProfile">
-      编辑头像与昵称 ›
+    <view class="profile-copy"><view class="profile-name">{{profile.nickname || '正在加载…'}}</view><view class="profile-connection">{{mockLogin ? '本地测试账号' : '微信账号已连接'}}</view></view>
+    <image class="edit-profile-icon" src="/assets/ui-v3/62e26.svg" aria-label="编辑头像与昵称" />
+  </view>
+  <view class="v3-card my-data">
+    <view class="my-data-title">我的战绩</view>
+    <view class="my-metrics">
+      <view class="my-metric"><view class="metric-value">{{stats ? stats.totalGames : '—'}}</view><view class="metric-label">总对局</view></view>
+      <view class="my-metric"><view class="metric-value">{{stats ? stats.wins : '—'}}</view><view class="metric-label">胜场</view></view>
+      <view class="my-metric"><view class="metric-value gold">{{stats ? stats.winRate : 0}}%</view><view class="metric-label">胜率</view></view>
     </view>
+    <view wx:if="{{stats && stats.roleCounts.length}}" class="common-roles">常用角色：{{commonRoles}}</view>
   </view>
-  <view class="card my-data">
-    <view>我的数据</view>
-    <view class="muted">
-      总对局 {{stats ? stats.totalGames : 0}} · 胜率 {{stats ? stats.winRate :
-      0}}%
-    </view>
-    <view class="muted small">常用角色：{{commonRoles}}</view>
+  <view class="menu-group-label">游戏</view>
+  <view class="v3-card settings-menu">
+    <view class="settings-row" bindtap="history"><text>历史战绩</text><image src="/assets/ui-v3/4a70d.svg" aria-hidden="{{true}}" /></view>
+    <view class="settings-row" bindtap="rules"><text>规则与角色说明</text><image src="/assets/ui-v3/4a70d.svg" aria-hidden="{{true}}" /></view>
   </view>
-  <view class="card settings-menu">
-    <view bindtap="history">历史战绩 ›</view>
-    <view bindtap="rules">规则与角色说明 ›</view>
-    <view bindtap="agreement">用户服务协议 ›</view>
-    <view bindtap="privacy">隐私政策 ›</view>
-    <view bindtap="about">关于阿瓦隆 ›</view>
+  <view class="menu-group-label">更多</view>
+  <view class="v3-card settings-menu">
+    <view class="settings-row" bindtap="agreement"><text>用户服务协议</text><image src="/assets/ui-v3/4a70d.svg" aria-hidden="{{true}}" /></view>
+    <view class="settings-row" bindtap="privacy"><text>隐私政策</text><image src="/assets/ui-v3/4a70d.svg" aria-hidden="{{true}}" /></view>
   </view>
-  <view class="logout actions">
-    <button class="btn" bindtap="logout">退出登录</button>
-  </view>
-  <app-tab-bar active="me" />
+  <button class="logout-button" bindtap="logout">退出登录</button>
+  <app-tab-bar active="me" v3="{{true}}" />
 </view>

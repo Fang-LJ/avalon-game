@@ -1,18 +1,24 @@
-.profile-name {
-  font-size: 33rpx;
-  font-weight: bold;
-  margin-bottom: 8rpx;
-}
-.my-data {
-  margin-top: 100rpx;
-}
-.settings-menu {
-  margin-top: 80rpx;
-}
-.settings-menu > view {
-  padding: 8rpx 0;
-}
-.logout {
-  margin-top: 145rpx;
-  opacity: 0.75;
-}
+@import "../../styles/ui-v3.wxss";
+.me-page .profile-entry { position: relative; display: flex; align-items: center; gap: 19px; min-height: 116px; padding: 19px 50px 19px 16px; border-radius: 40.385rpx; background: var(--soft); }
+.me-avatar { width: 72px; height: 72px; font-size: 25px; line-height: 36px; }
+.me-avatar .v3-avatar-base { width: 72px; height: 72px; }
+.profile-copy { flex: 1; min-width: 0; align-self: flex-start; padding-top: 3px; }
+.profile-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 22px; font-weight: 700; line-height: 32px; }
+.profile-connection { margin-top: 9px; color: var(--muted); font-size: 13px; line-height: 19px; }
+.edit-profile-icon { position: absolute; top: 31px; right: 17px; width: 19px; height: 19px; }
+.my-data { min-height: 119px; margin-top: 48.077rpx; padding: 13px 16px 14px; }
+.my-data-title { font-size: 15px; font-weight: 500; line-height: 22px; }
+.my-metrics { display: flex; margin-top: 13px; }
+.my-metric { position: relative; flex: 1; min-width: 0; text-align: center; }
+.my-metric + .my-metric::before { position: absolute; content: ''; top: 2px; left: 0; width: 1px; height: 45px; background: var(--border); }
+.metric-value { font-size: 24px; font-weight: 700; line-height: 35px; }
+.metric-label { margin-top: 2px; color: var(--muted); font-size: 12px; line-height: 17px; }
+.menu-group-label { margin: 42.308rpx 2px 7px; color: var(--muted); font-size: 13px; font-weight: 500; line-height: 19px; }
+.me-page .settings-menu { padding: 0 16px; border-radius: 36.538rpx; }
+.settings-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 47px; padding: 12px 0; color: var(--text); font-size: 14px; font-weight: 500; line-height: 20px; }
+.settings-row + .settings-row { border-top: 1px solid var(--border); }
+.settings-row image { width: 17px; height: 17px; flex-shrink: 0; }
+.logout-button { width: 100%; min-height: 54px; margin: 38.462rpx 0 0; padding: 15px 16px; border: 0; border-radius: 30.769rpx; background: #a94050; color: #ffffff; font-size: 16px; font-weight: 700; line-height: 24px; }
+.logout-button::after { border: 0; }
+
+.common-roles { margin-top: 12px; color: var(--muted); font-size: 12px; line-height: 17px; overflow-wrap: anywhere; }

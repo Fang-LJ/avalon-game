@@ -1,0 +1,316 @@
+{
+  "fileKey": "Vy1WdzYMtNgF3hcpt1t81Q",
+  "sourcePage": "阿瓦隆 UI V3 · 主页面优化",
+  "assets": [
+    {
+      "nodeId": "406:6",
+      "screen": "login",
+      "slot": "imgBrandEmblem",
+      "path": "miniprogram/assets/ui-v3/ac574.svg",
+      "width": 74.0,
+      "height": 74.0,
+      "bytes": 277,
+      "sha256": "04a93a0abc1a86e4d44a0d72945c82d748b2b177bb8a50554a993040184899d0"
+    },
+    {
+      "nodeId": "406:6",
+      "screen": "login",
+      "slot": "imgIcon",
+      "path": "miniprogram/assets/ui-v3/32b52.svg",
+      "width": 22.0,
+      "height": 22.0,
+      "bytes": 516,
+      "sha256": "b7ffa8c0f2c7f22b6148cf46954d257276f4b5118fbfabb75a052044b3b8a740"
+    },
+    {
+      "nodeId": "406:6",
+      "screen": "login",
+      "slot": "imgIcon1",
+      "path": "miniprogram/assets/ui-v3/a8b8f.svg",
+      "width": 22.0,
+      "height": 22.0,
+      "bytes": 1121,
+      "sha256": "35be679c02acbcbabf80a7dafe206b2febe06a48aa2b925aa2f4a5808126f9bb"
+    },
+    {
+      "nodeId": "406:6",
+      "screen": "login",
+      "slot": "imgIcon2",
+      "path": "miniprogram/assets/ui-v3/89d50.svg",
+      "width": 22.0,
+      "height": 22.0,
+      "bytes": 719,
+      "sha256": "c37788836990f6f8d51b05e506ddf59bbbee09dbca4b45cec15ef3100905c92f"
+    },
+    {
+      "nodeId": "406:6",
+      "screen": "login",
+      "slot": "imgIcon3",
+      "path": "miniprogram/assets/ui-v3/4ca01.svg",
+      "width": 22.0,
+      "height": 22.0,
+      "bytes": 776,
+      "sha256": "751da4c78e93b41fb8410df5f389cc4b4c164376735b2cf12dfd4223cdd83b38"
+    },
+    {
+      "nodeId": "406:6",
+      "screen": "login",
+      "slot": "imgConsentChecked",
+      "path": "miniprogram/assets/ui-v3/faae0.svg",
+      "width": 18.0,
+      "height": 18.0,
+      "bytes": 241,
+      "sha256": "f464d4f7f978ce68eed5c8fbf29a652efb4b2f1f8d7a458658fac9984a791091"
+    },
+    {
+      "nodeId": "406:57",
+      "screen": "home",
+      "slot": "imgAvatar",
+      "path": "miniprogram/assets/ui-v3/1c866.svg",
+      "width": 40.0,
+      "height": 40.0,
+      "bytes": 272,
+      "sha256": "805a069e5a64ff69a048ba600b7c8b5a29c1184c2704f586f9a88b750ae766a5"
+    },
+    {
+      "nodeId": "406:57",
+      "screen": "home",
+      "slot": "imgCreateIcon",
+      "path": "miniprogram/assets/ui-v3/41b9d.svg",
+      "width": 24.0,
+      "height": 24.0,
+      "bytes": 572,
+      "sha256": "0863c0cf3b8e982ad02b7661e8b7992a2cd595b733eec56009f19f85ade66e74"
+    },
+    {
+      "nodeId": "406:57",
+      "screen": "home",
+      "slot": "imgJoinIcon",
+      "path": "miniprogram/assets/ui-v3/f443d.svg",
+      "width": 24.0,
+      "height": 24.0,
+      "bytes": 454,
+      "sha256": "8e4b84b4dcdc4243abaa4f0934c7143bb9b077f444c48d267d8afd0cb6b70336"
+    },
+    {
+      "nodeId": "406:57",
+      "screen": "home",
+      "slot": "imgGuideIcon",
+      "path": "miniprogram/assets/ui-v3/bc7a6.svg",
+      "width": 24.0,
+      "height": 24.0,
+      "bytes": 414,
+      "sha256": "98183ed1e9e8599c7a5413d709b2d14e6a0103488e07b3b190ba79dbe4585b26"
+    },
+    {
+      "nodeId": "406:57",
+      "screen": "home",
+      "slot": "imgGuideChevron",
+      "path": "miniprogram/assets/ui-v3/0b343.svg",
+      "width": 18.0,
+      "height": 18.0,
+      "bytes": 338,
+      "sha256": "faaf248ab280e21306eefc03c7c7f27f980af79c9b7db0baedfb56336da14f33"
+    },
+    {
+      "nodeId": "406:57",
+      "screen": "home",
+      "slot": "imgIcon",
+      "path": "miniprogram/assets/ui-v3/870a7.svg",
+      "width": 20.0,
+      "height": 20.0,
+      "bytes": 404,
+      "sha256": "8583d7fb6896b35ecc7908a2d296ea3bb30ff45af8b23acb04dc7a4ec8b38837"
+    },
+    {
+      "nodeId": "406:57",
+      "screen": "home",
+      "slot": "imgIcon1",
+      "path": "miniprogram/assets/ui-v3/54e46.svg",
+      "width": 20.0,
+      "height": 20.0,
+      "bytes": 617,
+      "sha256": "a071e39b6689a74803053b5a3f117749128899c338427ce9cea3c93558daeb87"
+    },
+    {
+      "nodeId": "406:57",
+      "screen": "home",
+      "slot": "imgIcon2",
+      "path": "miniprogram/assets/ui-v3/85f68.svg",
+      "width": 20.0,
+      "height": 20.0,
+      "bytes": 644,
+      "sha256": "eb1d332cfbbc9f3e50fbc58f0c84dfd04c9f45548947307210204eaa67323f1d"
+    },
+    {
+      "nodeId": "406:110",
+      "screen": "history",
+      "slot": "imgGoodDot",
+      "path": "miniprogram/assets/ui-v3/ec337.svg",
+      "width": 10.0,
+      "height": 10.0,
+      "bytes": 232,
+      "sha256": "19c3182cb361331316800f0581f602020fd522d439639bb994ff7eb1869dd851"
+    },
+    {
+      "nodeId": "406:110",
+      "screen": "history",
+      "slot": "imgEvilDot",
+      "path": "miniprogram/assets/ui-v3/913e2.svg",
+      "width": 10.0,
+      "height": 10.0,
+      "bytes": 232,
+      "sha256": "6581a1deec1a0430f9f0b6e96815d112c3be0098f91d6ddb017ca6aeb5dac06d"
+    },
+    {
+      "nodeId": "406:110",
+      "screen": "history",
+      "slot": "imgIcon",
+      "path": "miniprogram/assets/ui-v3/adbbe.svg",
+      "width": 20.0,
+      "height": 20.0,
+      "bytes": 404,
+      "sha256": "3685d225b3e60a4ee43fe84ecb6867eb7c9f8508eba7a71784208db3d276b448"
+    },
+    {
+      "nodeId": "406:110",
+      "screen": "history",
+      "slot": "imgIcon1",
+      "path": "miniprogram/assets/ui-v3/b3b34.svg",
+      "width": 20.0,
+      "height": 20.0,
+      "bytes": 617,
+      "sha256": "21087c3c83cae98bfa615300803e08c5056998c73785c8cf39f24c421fb032f2"
+    },
+    {
+      "nodeId": "406:110",
+      "screen": "history",
+      "slot": "imgIcon2",
+      "path": "miniprogram/assets/ui-v3/85f68.svg",
+      "width": 20.0,
+      "height": 20.0,
+      "bytes": 644,
+      "sha256": "eb1d332cfbbc9f3e50fbc58f0c84dfd04c9f45548947307210204eaa67323f1d"
+    },
+    {
+      "nodeId": "406:162",
+      "screen": "profile",
+      "slot": "img",
+      "path": "miniprogram/assets/ui-v3/1d450.svg",
+      "width": 21.0,
+      "height": 21.0,
+      "bytes": 369,
+      "sha256": "f93752b534c227f042060a496053dd027114d21c2b29e77ace35367b9691504e"
+    },
+    {
+      "nodeId": "406:162",
+      "screen": "profile",
+      "slot": "img1",
+      "path": "miniprogram/assets/ui-v3/ce155.svg",
+      "width": 112.0,
+      "height": 112.0,
+      "bytes": 453,
+      "sha256": "31b682397d12041227af14d56fe81dc1a94143d4fe43359cae161c20051bf2b5"
+    },
+    {
+      "nodeId": "406:162",
+      "screen": "profile",
+      "slot": "img2",
+      "path": "miniprogram/assets/ui-v3/c8350.svg",
+      "width": 35.0,
+      "height": 35.0,
+      "bytes": 377,
+      "sha256": "2cf6ec71b65f15af9ee1a0eb3fe1b4c0b4faa597ca60fe1549a30a221adb78e5"
+    },
+    {
+      "nodeId": "406:162",
+      "screen": "profile",
+      "slot": "img3",
+      "path": "miniprogram/assets/ui-v3/24793.svg",
+      "width": 19.0,
+      "height": 19.0,
+      "bytes": 807,
+      "sha256": "a63bcf17e3f04be6164f788ec6a5bf48caba46e26efab2b7343f16aa708128c7"
+    },
+    {
+      "nodeId": "406:200",
+      "screen": "me",
+      "slot": "imgUserAvatar",
+      "path": "miniprogram/assets/ui-v3/ee5b8.svg",
+      "width": 72.0,
+      "height": 72.0,
+      "bytes": 277,
+      "sha256": "053d87a15503ef24b8dc8bad8fccf8378ffa54f8f4ab62fcdc47aa302567bb35"
+    },
+    {
+      "nodeId": "406:200",
+      "screen": "me",
+      "slot": "imgEditProfile",
+      "path": "miniprogram/assets/ui-v3/62e26.svg",
+      "width": 19.0,
+      "height": 19.0,
+      "bytes": 539,
+      "sha256": "495cf1375396205f1db8480f874419e9e8fbec34f4b7aa73b0b7b65537717257"
+    },
+    {
+      "nodeId": "406:200",
+      "screen": "me",
+      "slot": "imgForward",
+      "path": "miniprogram/assets/ui-v3/4a70d.svg",
+      "width": 17.0,
+      "height": 17.0,
+      "bytes": 422,
+      "sha256": "70ab76cb0beb07356d529ea7978c024570f44c41f2a406f9541f7dbab0bfee19"
+    },
+    {
+      "nodeId": "406:200",
+      "screen": "me",
+      "slot": "imgTab",
+      "path": "miniprogram/assets/ui-v3/b731c.svg",
+      "width": 20.0,
+      "height": 20.0,
+      "bytes": 426,
+      "sha256": "949579afb54ce7c3b0b19b583c18835f044a1d89cc610ae60ee38369840df184"
+    },
+    {
+      "nodeId": "406:200",
+      "screen": "me",
+      "slot": "imgTab1",
+      "path": "miniprogram/assets/ui-v3/0dad3.svg",
+      "width": 20.0,
+      "height": 20.0,
+      "bytes": 687,
+      "sha256": "526c4cae4d9f2f50d7dc8b7fefc28af8c7684c4610024bf3f7894da6a0c1b7aa"
+    },
+    {
+      "nodeId": "406:200",
+      "screen": "me",
+      "slot": "imgTab2",
+      "path": "miniprogram/assets/ui-v3/fe44b.svg",
+      "width": 20.0,
+      "height": 20.0,
+      "bytes": 714,
+      "sha256": "c2bea4752a5082cac2cef8c35c02b2acefbfaa637473a92aede4d015cb62336b"
+    },
+    {
+      "nodeId": "411:54",
+      "screen": "avatar-sheet",
+      "slot": "imgWeChatIcon",
+      "path": "miniprogram/assets/ui-v3/a6ae1.svg",
+      "width": 22.0,
+      "height": 22.0,
+      "bytes": 896,
+      "sha256": "7b1b1fababc0e129d4b37a9366780fce72dac582377b605b812bbde4874c9136"
+    },
+    {
+      "nodeId": "411:54",
+      "screen": "avatar-sheet",
+      "slot": "imgAlbumIcon",
+      "path": "miniprogram/assets/ui-v3/b96bc.svg",
+      "width": 22.0,
+      "height": 22.0,
+      "bytes": 1021,
+      "sha256": "258d2df7b37e1f7e035245b9af872a10cc6fa18784af4e127aff50dbb9727fdd"
+    }
+  ]
+}

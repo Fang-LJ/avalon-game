@@ -13,10 +13,10 @@ Page({
     currentMockKey: '1',
     brandTop: 90,
     guestFeatures: [
-      { key: 'rules', label: '游戏规则', icon: 'book' },
-      { key: 'roles', label: '角色介绍', icon: 'people' },
-      { key: 'configuration', label: '人数配置', icon: 'calculator' },
-      { key: 'demo', label: '体验玩法', icon: 'gamepad' },
+      { key: 'rules', label: '游戏规则', icon: '32b52' },
+      { key: 'roles', label: '角色介绍', icon: 'a8b8f' },
+      { key: 'configuration', label: '人数配置', icon: '89d50' },
+      { key: 'demo', label: '体验玩法', icon: '4ca01' },
     ],
   },
   onLoad() {
@@ -31,7 +31,8 @@ Page({
   updateLayout() {
     const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync ? wx.getSystemInfoSync() : {};
     const capsule = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : {};
-    this.setData({ brandTop: Math.max(90, navigationMetrics(info, capsule || {}).contentTop + 20) });
+    const designTop = Math.min(132, Math.max(96, (info.windowHeight || 844) * 132 / 844));
+    this.setData({ brandTop: Math.max(designTop, navigationMetrics(info, capsule || {}).contentTop + 24) });
   },
   onShow() {
     this.visible = true;

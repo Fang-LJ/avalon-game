@@ -1,52 +1,30 @@
-.profile-page {
-  padding-top: 0;
-}
-.profile-card {
-  padding: 48rpx 34rpx 38rpx;
-}
-.avatar-button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  padding: 0;
-  margin: 0;
-  color: var(--text);
-  background: transparent;
-  line-height: 1.5;
-}
-.avatar-button::after {
-  border: 0;
-}
-.profile-avatar {
-  width: 164rpx;
-  height: 164rpx;
-  margin-bottom: 18rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid var(--gold);
-  border-radius: 50%;
-  overflow: hidden;
-  color: var(--gold);
-  background: var(--soft);
-  font-size: 52rpx;
-  font-weight: 700;
-}
-.profile-avatar image {
-  width: 100%;
-  height: 100%;
-}
-.album-link {
-  margin-top: 6rpx;
-  text-align: center;
-}
-.profile-field {
-  margin-top: 38rpx;
-}
-.input-placeholder {
-  color: var(--muted);
-}
-.profile-actions {
-  margin-top: 54rpx;
-}
+@import "../../styles/ui-v3.wxss";
+.profile-page { display: flex; flex-direction: column; padding-bottom: max(72px, calc(38px + env(safe-area-inset-bottom))); }
+.profile-content { flex-shrink: 0; }
+.profile-avatar-section { margin-top: 103.846rpx; padding-bottom: 67.308rpx; border-bottom: 1px solid var(--border); }
+.avatar-button { display: flex; flex-direction: column; align-items: center; width: 100%; margin: 0; padding: 0; border: 0; background: transparent; color: var(--text); line-height: 1; }
+.avatar-button::after { border: 0; }
+.profile-avatar { width: 112px; height: 112px; font-size: 36px; line-height: 52px; }
+.profile-avatar .v3-avatar-base { width: 112px; height: 112px; }
+.avatar-edit-badge { position: absolute; z-index: 2; right: -6px; bottom: -3px; width: 35px; height: 35px; }
+.avatar-edit-bg { position: absolute; left: 0; top: 0; width: 35px; height: 35px; }
+.avatar-edit-camera { position: absolute; left: 8px; top: 7px; width: 19px; height: 19px; }
+.avatar-hint { margin-top: 20px; color: var(--muted); font-size: 13px; font-weight: 500; line-height: 19px; }
+.profile-field { margin-top: 46.154rpx; }
+.nickname-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; font-size: 15px; font-weight: 500; line-height: 22px; }
+.wechat-nickname { display: block; flex-shrink: 0; margin: -8px 0 -8px 0; padding: 8px 0 8px 12px; border: 0; background: transparent; color: var(--gold); font-size: 13px; font-weight: 500; line-height: 22px; }
+.wechat-nickname::after { border: 0; }
+.nickname-input { width: 100%; height: 60px; margin-top: 17px; padding: 0 16px; border: 1px solid var(--border); border-radius: 28.846rpx; background: var(--elevated); color: var(--text); font-size: 18px; font-weight: 500; line-height: 60px; }
+.input-placeholder { color: var(--muted); }
+.nickname-hint { margin: 12px 2px 0; color: var(--muted); font-size: 12px; line-height: 17px; }
+.profile-actions { flex-shrink: 0; margin-top: 103.846rpx; }
+.profile-skip { width: 100%; min-height: 44px; margin: 12px 0 0; padding: 12px 0; border: 0; background: transparent; color: var(--muted); font-size: 13px; font-weight: 500; line-height: 19px; }
+.profile-skip::after { border: 0; }
+.profile-footer-note { margin-top: auto; padding-top: 64px; color: var(--muted); font-size: 12px; line-height: 17px; text-align: center; }
+.avatar-sheet-mask { position: fixed; z-index: 100; inset: 0; display: flex; align-items: flex-end; background: rgba(0, 0, 0, .6); }
+.avatar-sheet { width: 100%; padding: 18px 38.462rpx max(27px, env(safe-area-inset-bottom)); border: 1px solid var(--border); border-radius: 22px 22px 0 0; background: var(--bg); }
+.avatar-sheet-title { margin-bottom: 18px; font-size: 18px; font-weight: 700; line-height: 26px; }
+.avatar-source { display: flex; align-items: center; gap: 16px; width: 100%; min-height: 55px; margin: 0; padding: 14px 15px; border: 1px solid var(--border); border-radius: 14px; background: var(--elevated); color: var(--text); font-size: 15px; font-weight: 500; line-height: 22px; text-align: left; }
+.avatar-source + .avatar-source { margin-top: 14px; }
+.avatar-source::after { border: 0; }
+.avatar-source image { width: 22px; height: 22px; flex-shrink: 0; }
