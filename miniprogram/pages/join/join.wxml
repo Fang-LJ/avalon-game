@@ -1,35 +1,26 @@
-<view class="page join-page">
-  <page-head
-    title="加入房间"
-    subtitle="{{fromInvite ? '好友邀请你加入房间' : '输入好友分享的 6 位房间号'}}"
-    back="{{true}}"
-  />
-  <view class="join-input">
-    <view class="input-label">房间号</view>
-    <input
-      class="input"
-      value="{{roomCode}}"
-      type="number"
-      maxlength="6"
-      disabled="{{loading}}"
-      focus="{{inputFocus}}"
-      placeholder="请输入 6 位房间号"
-      placeholder-class="muted"
-      bindinput="codeInput"
-    />
-    <view class="muted small input-hint">仅支持加入等待中的房间</view>
-    <view wx:if="{{fromInvite}}" class="link small other-code" bindtap="editCode">输入其他房间号</view>
+<view class="page ui-v3-page invite-page">
+ <view class="v3-nav-wrap"><page-head v3="{{true}}" back="{{true}}" title="好友邀请" subtitle="你收到了一张圆桌入席邀请" /></view>
+ <view wx:if="{{previewLoading}}" class="v3-card v3-state">正在读取邀请…</view>
+ <view wx:elif="{{state}}" class="invite-exception">
+  <view class="exception-heading"><image src="/assets/ui-v3-round2/{{state.mark}}.svg" aria-hidden="{{true}}" /><text>{{state.title}}</text></view>
+  <view class="exception-description">{{state.description}}</view>
+  <button wx:if="{{state.kind === 'network'}}" class="retry-invite" bindtap="loadPreview">重新读取邀请</button>
+  <button class="return-home" bindtap="decline">返回首页 →</button>
+ </view>
+ <block wx:elif="{{preview}}">
+  <view class="invite-details">
+   <view class="invite-status"><image src="/assets/ui-v3-round2/abb84.svg" aria-hidden="{{true}}" /><text>{{returning ? '已在房间' : '等待开局'}}</text></view>
+   <view class="invite-title">圆桌秘境 · {{preview.maxPlayers}} 人局</view>
+   <view class="invite-description">好友邀你一起加入阿瓦隆</view>
+   <view class="invite-code"><text>房间号</text><text>{{roomCode}}</text></view>
+   <view class="invite-seats-heading"><text>当前席位</text><text>{{preview.currentPlayers}} / {{preview.maxPlayers}} 人</text></view>
+   <view class="invite-seats"><view wx:for="{{preview.seats}}" wx:key="seatNo" class="invite-seat"><view class="seat-circle {{item.occupied ? 'occupied' : ''}}"><image src="/assets/ui-v3-round2/{{item.occupied ? '16283' : '013b8'}}.svg" aria-hidden="{{true}}" /><text>{{item.occupied ? '✓' : '+'}}</text></view><view class="seat-number">{{item.seatNo}}号</view></view></view>
+   <view class="invite-seated">已入座 {{preview.seatedPlayers}} 人{{preview.currentPlayers < preview.maxPlayers ? '，还差 ' + (preview.maxPlayers - preview.currentPlayers) + ' 人' : '，房间已满员'}}</view>
+   <view class="invite-note"><image src="/assets/ui-v3-round2/78be2.svg" aria-hidden="{{true}}" /><view><view>{{returning ? '返回对局' : '等待加入'}}</view><view>{{returning ? '你已在这个房间，可以继续对局' : '房主尚未开始，加入后自动落座'}}</view></view></view>
   </view>
-  <view wx:if="{{error}}" class="error small">{{error}}</view>
-  <view class="join-actions actions">
-    <button
-      class="btn"
-      disabled="{{!valid || loading}}"
-      loading="{{loading}}"
-      bindtap="submit"
-    >
-      加入房间
-    </button>
-  </view>
-  <view class="muted small join-hint center">也可以让房主直接通过微信分享邀请给你。</view>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <button class="invite-confirm" bindtap="submit" loading="{{loading}}" disabled="{{!canJoin || loading}}">{{returning ? '返回房间' : '加入并落座'}}</button>
+  <button class="invite-decline" bindtap="decline" disabled="{{loading}}">暂不加入</button>
+  <view class="invite-footer">进入后将自动安排空座位 · 开局前可退出</view>
+ </block>
 </view>

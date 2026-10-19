@@ -1,0 +1,223 @@
+{
+  "figmaFile": "Vy1WdzYMtNgF3hcpt1t81Q",
+  "assets": [
+    {
+      "node": "406:57",
+      "slot": "imgOrnamentCenter",
+      "path": "miniprogram/assets/ui-v3-round2/5175b.svg",
+      "bytes": 241,
+      "dimensions": [
+        "7",
+        "7"
+      ],
+      "sha256": "c252ad82dd9ed8adbe7a760c21f5b672cfa4f2478143209472cc6f67f73f8b2c"
+    },
+    {
+      "node": "406:57",
+      "slot": "imgIcon",
+      "path": "miniprogram/assets/ui-v3-round2/08cc9.svg",
+      "bytes": 676,
+      "dimensions": [
+        "29",
+        "29"
+      ],
+      "sha256": "8807e8dd49a823d1b217fc4cd9407438f26888908396b69de4ce262866b63dbc"
+    },
+    {
+      "node": "406:57",
+      "slot": "imgIcon1",
+      "path": "miniprogram/assets/ui-v3-round2/07ff8.svg",
+      "bytes": 514,
+      "dimensions": [
+        "29",
+        "29"
+      ],
+      "sha256": "19fd9eacb78710b6c28f543aebc3710c9825cd4c7a3401ee1f17645ba8972065"
+    },
+    {
+      "node": "406:57",
+      "slot": "imgBookIcon",
+      "path": "miniprogram/assets/ui-v3-round2/5b292.svg",
+      "bytes": 494,
+      "dimensions": [
+        "28",
+        "28"
+      ],
+      "sha256": "1c74b2164806ac6f475b06e8d5edcc5f2108958d292dd7dfcd4452032aafed3e"
+    },
+    {
+      "node": "406:57",
+      "slot": "imgChevron",
+      "path": "miniprogram/assets/ui-v3-round2/697fe.svg",
+      "bytes": 346,
+      "dimensions": [
+        "20",
+        "20"
+      ],
+      "sha256": "1d8540b262b41c5562ddf463067a744eac57ba9c76a3fde4643af153a0d5ef7c"
+    },
+    {
+      "node": "406:57",
+      "slot": "imgIcon2",
+      "path": "miniprogram/assets/ui-v3-round2/469dc.svg",
+      "bytes": 429,
+      "dimensions": [
+        "22",
+        "22"
+      ],
+      "sha256": "91cecea897a34fc4e1853581407b34bd3da62981252f8af851a5c0b355ad2c0a"
+    },
+    {
+      "node": "406:57",
+      "slot": "imgIcon3",
+      "path": "miniprogram/assets/ui-v3-round2/704a9.svg",
+      "bytes": 710,
+      "dimensions": [
+        "22",
+        "22"
+      ],
+      "sha256": "21a091dfc7da34e62d32c0d237f5068bce6d8c1f93d0795e4aec8e0cb2acb726"
+    },
+    {
+      "node": "406:57",
+      "slot": "imgIcon4",
+      "path": "miniprogram/assets/ui-v3-round2/3bb5b.svg",
+      "bytes": 732,
+      "dimensions": [
+        "22",
+        "22"
+      ],
+      "sha256": "3725d656b34aa22d0eff90d75483f0d7c94dac3e8fd107f5faa888819de0325b"
+    },
+    {
+      "node": "406:110",
+      "slot": "imgIcon",
+      "path": "miniprogram/assets/ui-v3-round2/d397d.svg",
+      "bytes": 429,
+      "dimensions": [
+        "22",
+        "22"
+      ],
+      "sha256": "6622e6741328920aeb81838d3d7b5b3bed5821d51cf235b126e08e2e5e044584"
+    },
+    {
+      "node": "406:110",
+      "slot": "imgIcon1",
+      "path": "miniprogram/assets/ui-v3-round2/37192.svg",
+      "bytes": 710,
+      "dimensions": [
+        "22",
+        "22"
+      ],
+      "sha256": "13fe9b54b7e1a295f6852c9086a1046181909929b153b0e4178bc3897eac75be"
+    },
+    {
+      "node": "406:110",
+      "slot": "imgIcon2",
+      "path": "miniprogram/assets/ui-v3-round2/3bb5b.svg",
+      "bytes": 732,
+      "dimensions": [
+        "22",
+        "22"
+      ],
+      "sha256": "3725d656b34aa22d0eff90d75483f0d7c94dac3e8fd107f5faa888819de0325b"
+    },
+    {
+      "node": "427:4",
+      "slot": "imgStatusDot",
+      "path": "miniprogram/assets/ui-v3-round2/abb84.svg",
+      "bytes": 236,
+      "dimensions": [
+        "7",
+        "7"
+      ],
+      "sha256": "bb13f01e6ece6c5e593cb022017d612ee6b0e94319fceaa53595da6e0bcfc6c8"
+    },
+    {
+      "node": "427:4",
+      "slot": "imgSeat1",
+      "path": "miniprogram/assets/ui-v3-round2/16283.svg",
+      "bytes": 384,
+      "dimensions": [
+        "32",
+        "32"
+      ],
+      "sha256": "958540d81974824f0b583be212434e54e17e09b8299e70b08e5478fc1cead595"
+    },
+    {
+      "node": "427:4",
+      "slot": "imgSeat2",
+      "path": "miniprogram/assets/ui-v3-round2/013b8.svg",
+      "bytes": 388,
+      "dimensions": [
+        "32",
+        "32"
+      ],
+      "sha256": "9c9b3bcb13566da6c5cb4a24f55039edf9f84994dd1db5bd027a181006789ecb"
+    },
+    {
+      "node": "427:4",
+      "slot": "imgWaitingIcon",
+      "path": "miniprogram/assets/ui-v3-round2/78be2.svg",
+      "bytes": 633,
+      "dimensions": [
+        "22",
+        "22"
+      ],
+      "sha256": "6b66166c370814c474b772890669057e6e80e175083b61f493d8fb8e9dc71aba"
+    },
+    {
+      "node": "427:95",
+      "slot": "imgStatusMark",
+      "path": "miniprogram/assets/ui-v3-round2/7f978.svg",
+      "bytes": 237,
+      "dimensions": [
+        "9",
+        "9"
+      ],
+      "sha256": "19eb32f059b91a1334b25366ab48582356203993361af38837eed10008034536"
+    },
+    {
+      "node": "427:95",
+      "slot": "imgStatusMark1",
+      "path": "miniprogram/assets/ui-v3-round2/52726.svg",
+      "bytes": 237,
+      "dimensions": [
+        "9",
+        "9"
+      ],
+      "sha256": "0a19de583fef00cafabb830d359c26ff442e8cc29199b26149e11e7d5bf62962"
+    },
+    {
+      "node": "427:95",
+      "slot": "imgStatusMark2",
+      "path": "miniprogram/assets/ui-v3-round2/aa638.svg",
+      "bytes": 237,
+      "dimensions": [
+        "9",
+        "9"
+      ],
+      "sha256": "e0950beb3d26863ac8c1ac2450be7e39be301b11302246fe712b23ed36591560"
+    },
+    {
+      "path": "miniprogram/assets/ui-v3-round2/home-castle.jpg",
+      "node": "user-reference",
+      "dimensions": [
+        800,
+        1200
+      ],
+      "bytes": 132415,
+      "sha256": "369971e3046c0aec5bc32f75d0c889fe735e41ec7a595b077073b386a921d1a4"
+    },
+    {
+      "path": "miniprogram/assets/ui-v3-round2/share-cover.png",
+      "node": "427:54",
+      "dimensions": [
+        800,
+        640
+      ],
+      "bytes": 66038,
+      "sha256": "b13557bbaea37a5a96c7b22e372430a6f16c97ef886b8d283d979357c06f5f65"
+    }
+  ]
+}

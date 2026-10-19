@@ -3,8 +3,8 @@ Component({
   properties: { active: String, v3: Boolean },
   data: {
     v3Icons: {
-      index: { index: '870a7', history: '54e46', me: '85f68' },
-      history: { index: 'adbbe', history: 'b3b34', me: '85f68' },
+      index: { index: '469dc', history: '704a9', me: '3bb5b' },
+      history: { index: 'd397d', history: '37192', me: '3bb5b' },
       me: { index: 'b731c', history: '0dad3', me: 'fe44b' },
     },
     tabs: [

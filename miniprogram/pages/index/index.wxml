@@ -1,38 +1,42 @@
 <view class="page ui-v3-page ui-v3-tabs home-page">
-  <view class="v3-nav-wrap">
-  <page-head v3="{{true}}" title="{{greeting + (profile ? '，' + profile.nickname : '')}}" />
+  <image class="home-scenery" src="/assets/ui-v3-round2/home-castle.jpg" mode="aspectFill" aria-hidden="{{true}}" />
+  <view class="home-scenery-fade" aria-hidden="{{true}}"></view>
+  <view class="home-greeting" style="padding-top:{{headerTop}}px;">
+    <view class="greeting-title">{{greeting}}</view>
+    <view class="greeting-name">{{profile.nickname || ''}}</view>
   </view>
-  <game-card class="home-hero" tone="gold" v3="{{true}}">
-    <view class="hero-tag">圆桌秘境</view>
+  <view class="home-hero">
+    <view class="hero-tag">✦ 圆桌秘境</view>
     <view class="hero-title">今晚，谁在隐藏身份？</view>
+    <view class="hero-ornament"><image src="/assets/ui-v3-round2/5175b.svg" aria-hidden="{{true}}" /></view>
     <view class="hero-description">5–10 人在线阿瓦隆 · 房间制 · 自动规则裁定</view>
-  </game-card>
+  </view>
   <view class="home-actions">
     <button class="home-action create-action" bindtap="create">
-      <image class="action-icon" src="/assets/ui-v3/41b9d.svg" aria-hidden="{{true}}" />
+      <image class="action-icon" src="/assets/ui-v3-round2/08cc9.svg" aria-hidden="{{true}}" />
       <view class="action-copy"><view class="action-title">创建房间</view><view class="action-caption">发起一局</view></view>
     </button>
     <button class="home-action join-action" bindtap="join">
-      <image class="action-icon" src="/assets/ui-v3/f443d.svg" aria-hidden="{{true}}" />
+      <image class="action-icon" src="/assets/ui-v3-round2/07ff8.svg" aria-hidden="{{true}}" />
       <view class="action-copy"><view class="action-title">加入房间</view><view class="action-caption">输入房间号</view></view>
     </button>
   </view>
   <button wx:if="{{currentRoom}}" class="return-room v3-card" bindtap="returnRoom">返回房间 {{currentRoom.roomCode}}</button>
   <view class="recent">
-    <view class="v3-section-title">最近对局</view>
+    <view class="recent-heading"><view class="v3-section-title">最近对局</view><button class="all-history" bindtap="history">全部战绩 →</button></view>
     <view wx:if="{{error}}" class="error" bindtap="load">{{error}}</view>
     <view wx:elif="{{loading}}" class="v3-card v3-state">正在加载…</view>
-    <view wx:elif="{{recent}}" class="v3-card recent-game" bindtap="replay">
-      <view class="recent-role">{{recent.roleName}} · {{recent.playerCount}}人局</view>
-      <view class="recent-result {{recent.winner === 'GOOD' ? 'good' : recent.winner === 'EVIL' ? 'evil' : ''}}">{{recent.resultText}} · {{!recent.winner ? '不计胜负' : recent.won ? '胜' : '负'}}</view>
-      <view class="recent-meta"><text class="recent-time">{{recent.timeText}} · 房间 {{recent.roomCode}}</text><text class="recent-replay">查看复盘 →</text></view>
+    <view wx:elif="{{recent}}" class="outcome-card outcome-{{recent.outcome}}" bindtap="replay">
+      <view class="outcome-title"><text class="outcome-role {{recent.roleTone}}">{{recent.roleName}}</text><text class="outcome-size">· {{recent.playerCount}}人局</text></view>
+      <view class="outcome-result">{{recent.outcomeText}}</view>
+      <view class="outcome-meta"><text class="outcome-time">{{recent.timeText}} · 房间 {{recent.roomCode}}</text><text class="outcome-replay">查看复盘 →</text></view>
     </view>
     <view wx:else class="v3-card v3-state">还没有完成的对局，邀请好友开始第一局吧。</view>
   </view>
   <view class="rules-entry v3-card" bindtap="rules">
-    <image class="guide-icon" src="/assets/ui-v3/bc7a6.svg" aria-hidden="{{true}}" />
+    <image class="guide-icon" src="/assets/ui-v3-round2/5b292.svg" aria-hidden="{{true}}" />
     <view class="guide-copy"><view class="guide-title">怎么玩？</view><view class="guide-description">规则说明 · 角色说明 · 任务人数表</view></view>
-    <image class="guide-chevron" src="/assets/ui-v3/0b343.svg" aria-hidden="{{true}}" />
+    <image class="guide-chevron" src="/assets/ui-v3-round2/697fe.svg" aria-hidden="{{true}}" />
   </view>
   <view wx:if="{{mockLogin}}" class="local-panel">
     <view class="gold">仅本地 · 切换模拟用户</view>

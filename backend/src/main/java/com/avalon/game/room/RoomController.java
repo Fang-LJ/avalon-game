@@ -27,6 +27,9 @@ public class RoomController {
         return ApiResponse.success(service.stand(LoginUserContext.require(), roomId));
     }
     @GetMapping("/current") public ApiResponse<RoomService.RoomView> current() { return ApiResponse.success(service.current(LoginUserContext.require())); }
+    @GetMapping("/invite-preview") public ApiResponse<RoomService.InvitePreview> preview(@RequestParam String roomCode) {
+        return ApiResponse.success(service.preview(LoginUserContext.require(), roomCode));
+    }
     @PostMapping("/{roomId}/bots") public ApiResponse<RoomService.RoomView> addBot(@PathVariable long roomId) {
         return ApiResponse.success(service.addBot(LoginUserContext.require(), roomId));
     }

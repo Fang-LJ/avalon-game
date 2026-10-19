@@ -88,8 +88,8 @@ Page({
     const { room, game } = this.data;
     const code = room && invite.validRoomCode(room.roomCode);
     if (room && room.status === 'WAITING' && !game && code)
-      return { title: `邀请你加入圆桌迷境 · ${room.maxPlayers} 人局`, path: invite.joinPath(code) };
-    return { title: '圆桌迷境 · 阿瓦隆', path: '/pages/index/index' };
+      return { title: `邀请你加入圆桌秘境 · ${room.maxPlayers} 人局`, path: invite.joinPath(code), imageUrl: '/assets/ui-v3-round2/share-cover.png' };
+    return { title: '圆桌秘境 · 阿瓦隆', path: '/pages/index/index', imageUrl: '/assets/ui-v3-round2/share-cover.png' };
   },
   onShow() {
     if (!auth.requireSession()) return;

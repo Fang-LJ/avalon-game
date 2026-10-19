@@ -27,6 +27,7 @@ function fixture(name, api = {}, extra = {}) {
     '../../services/auth': { requireSession: () => true },
     '../../services/avalon': api,
     '../../utils/presentation': { historyItem: value => value },
+    '../../utils/history-presentation': { historyCard: value => value },
     '../../utils/invite': invite,
     '../../utils/guest-navigation': { readNavigationMetrics: () => ({ contentTop: 92 }) },
     ...extra.mocks,

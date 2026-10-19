@@ -45,18 +45,15 @@ test('WAITING share uses the real six-digit code; playing/closed/malformed rooms
 test('Join query accepts six-digit strings only, saves before session checks and never auto-joins',()=>{
   const f=intent();let joins=0,checks=0;
   const p=join(f,{joinRoom:()=>{joins++;}},{requireSession:()=>{checks++;assert.equal(f.invite.get(),'000123');return false;}});
-  p.onLoad({roomCode:'000123'});assert.equal(p.data.roomCode,'000123');assert.equal(p.data.valid,true);
+  p.onLoad({roomCode:'000123'});assert.equal(p.data.roomCode,'000123');assert.equal(p.data.roomCode,'000123');
   assert.equal(checks,0);p.onShow();assert.equal(checks,1);assert.equal(joins,0);
   for(const value of ['', '12345','1234567','abc123','123456&x=1',' 123456',123456,null,{}]){
-    const q=join(intent());q.onLoad({roomCode:value});assert.equal(q.data.roomCode,'');assert.equal(q.data.valid,false);
+    const q=join(intent());q.onLoad({roomCode:value});assert.equal(q.data.roomCode,'');assert.equal(q.data.roomCode,'');
   }
 });
-test('ordinary Join stays empty even if an older pending invite exists; redundant old UI is removed',()=>{
-  const f=intent();f.invite.save('123456');const p=join(f);p.onLoad({});assert.equal(p.data.roomCode,'');
-  const markup=read('pages/join/join.wxml'),css=read('pages/join/join.wxss');
-  assert.doesNotMatch(markup+css,/464349|示例房间号|join-example|example-code|扫码|暂未开放/);
-  assert.match(markup,/fromInvite \? '好友邀请你加入房间'/);
-  assert.match(css,/margin-top: 48rpx/);assert.match(css,/margin-top: 44rpx/);
+test('invitation page has no manual-search form and invalid code becomes a clear exception',async()=>{
+ const f=intent(),p=join(f);p.onLoad({});p._active=true;await p.loadPreview();assert.equal(p.data.state.kind,'missing');
+ const markup=read('pages/join/join.wxml');assert.doesNotMatch(markup,/<input|输入其他房间号/);assert.match(markup,/加入并落座/);
 });
 test('unauthenticated invitation survives login and complete or mock profiles route back to Join',()=>{
   for(const mock of [false,true]){
@@ -84,25 +81,21 @@ test('editing profile keeps navigateBack and does not hijack it with an invite',
   p.setData({mode:'edit',nickname:'玩家',avatarUrl:'https://images.invalid/a.png'});p.syncCanSave();await p.save();
   assert.equal(back,1);assert.equal(f.invite.get(),'398398');assert.equal(f.destinations.length,0);
 });
-test('successful join clears intent before redirect; manual input uses the new room, not old query',async()=>{
-  const f=intent();let sent;
-  f.wx.redirectTo=({url})=>{assert.equal(f.invite.get(),'');f.destinations.push(url);};
-  const p=join(f,{joinRoom:async data=>{sent=data;return {roomId:8};}});
-  p.onLoad({roomCode:'398398'});p.codeInput({detail:{value:'123456'}});await p.submit();
-  assert.equal(sent.roomCode,'123456');assert.deepEqual(f.destinations,['/pages/room/room?roomId=8']);
-  assert.equal(f.storage.has(f.invite.KEY),false);
+test('successful confirmed join clears intent before redirect and preserves exact code',async()=>{
+ const f=intent();let sent;f.wx.redirectTo=o=>{assert.equal(f.invite.get(),'');f.destinations.push(o.url);o.success();};
+ const p=join(f,{joinRoom:async data=>{sent=data;return {roomId:8,status:'WAITING',mySeatNo:2};}});
+ p.onLoad({roomCode:'000123'});p._active=true;p.setData({canJoin:true});await p.submit();
+ assert.equal(sent.roomCode,'000123');assert.deepEqual(f.destinations,['/pages/room/room?roomId=8']);
 });
-test('failed join retains current intent and offers editing, invalid input never calls API',async()=>{
-  const f=intent();let calls=0;
-  const p=join(f,{joinRoom:async()=>{calls++;throw new Error('房间已满');}});p.onLoad({roomCode:'398398'});await p.submit();
-  assert.equal(f.invite.get(),'398398');assert.equal(p.data.error,'房间已满');assert.equal(p.data.loading,false);
-  p.editCode();assert.equal(p.data.valid,false);await p.submit();assert.equal(calls,1);
-  assert.equal(f.invite.get(),'398398');
+test('failed confirmed join keeps invitation and updates full-room state',async()=>{
+ const f=intent(),p=join(f,{joinRoom:async()=>{throw new Error('房间已满');}});
+ p.onLoad({roomCode:'398398'});p._active=true;p.setData({canJoin:true});await p.submit();
+ assert.equal(f.invite.get(),'398398');assert.equal(p.data.state.kind,'full');assert.equal(p.data.loading,false);
 });
 test('late join success does not clear a newer invitation',async()=>{
-  const f=intent(),post=deferred(),p=join(f,{joinRoom:()=>post.promise});
-  p.onLoad({roomCode:'398398'});const operation=p.submit();f.invite.save('222222');post.resolve({roomId:8});await operation;
-  assert.equal(f.invite.get(),'222222');
+ const f=intent(),post=deferred();f.wx.redirectTo=o=>o.success();
+ const p=join(f,{joinRoom:()=>post.promise});p.onLoad({roomCode:'398398'});p._active=true;p.setData({canJoin:true});
+ const operation=p.submit();f.invite.save('222222');post.resolve({roomId:8,status:'WAITING',mySeatNo:2});await operation;assert.equal(f.invite.get(),'222222');
 });
 test('invalid stored invites are ignored and storage failures retain intent within the app',()=>{
   const f=intent();f.storage.set(f.invite.KEY,'123456&x=1');assert.equal(f.invite.destinationOrHome(),'/pages/index/index');

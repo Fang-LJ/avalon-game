@@ -1,6 +1,6 @@
 const api = require('../../services/avalon');
 const auth = require('../../services/auth');
-const ui = require('../../utils/presentation');
+const { historyCard } = require('../../utils/history-presentation');
 Page({
   data: {
     stats: null,
@@ -45,7 +45,7 @@ Page({
         recordWinPercent: stats.wins + stats.losses > 0 ? stats.wins * 100 / (stats.wins + stats.losses) : 0,
         recordLossPercent: stats.wins + stats.losses > 0 ? stats.losses * 100 / (stats.wins + stats.losses) : 0,
         items: (reset ? [] : this.data.items).concat(
-          result.items.map(ui.historyItem),
+          result.items.map(historyCard),
         ),
         total: result.total,
         page,

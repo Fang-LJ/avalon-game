@@ -1,31 +1,38 @@
 @import "../../styles/ui-v3.wxss";
-.home-page .hero-tag { display: inline-flex; align-items: center; justify-content: center; min-width: 78px; height: 26px; padding: 0 12px; border-radius: 13px; background: var(--gold); color: var(--bg); font-size: 12px; font-weight: 700; line-height: 17px; }
-.home-page .hero-title { margin-top: 13px; color: var(--text); font-size: 25px; font-weight: 700; line-height: 36px; }
-.home-page .hero-description { margin-top: 3px; color: var(--muted); font-size: 13px; line-height: 18px; }
-.home-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 23.077rpx; margin-top: 46.154rpx; }
-.home-action { display: flex; align-items: flex-start; gap: 23.077rpx; min-width: 0; min-height: 78px; margin: 0; padding: 15px 32.692rpx; border: 1.3px solid var(--gold); border-radius: 36.538rpx; background: var(--elevated); color: var(--text); text-align: left; }
-.home-action::after, .return-room::after { border: 0; }
-.join-action { border-color: var(--accent); }
-.action-icon { width: 24px; height: 24px; flex-shrink: 0; margin-top: 1px; }
+@import "../../styles/history-card.wxss";
+.home-page { position: relative; z-index: 0; }
+.home-page > view, .home-page > button { position: relative; }
+.home-scenery { position: absolute; z-index: -1; top: 0; left: 0; width: 100%; height: 1150rpx; pointer-events: none; }
+.home-greeting { padding-bottom: 46rpx; }
+.greeting-title { color: #e3c573; font-family: 'Songti SC', 'STSong', serif; font-size: 42px; font-weight: 700; line-height: 1.3; }
+.greeting-name { max-width: calc(100% - 96px); margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #f0f1e9; font-size: 21px; font-weight: 500; line-height: 30px; }
+.home-hero { padding: 16px; border: 1.1px solid var(--gold); border-radius: 40rpx; background: rgba(14, 27, 19, .48); }
+.hero-tag { display: inline-flex; align-items: center; justify-content: center; height: 28px; padding: 0 14px; border-radius: 16px; background: var(--gold); color: #102019; font-size: 13px; font-weight: 700; }
+.hero-title { margin-top: 18px; color: var(--text); font-family: 'Songti SC', 'STSong', serif; font-size: 25px; font-weight: 700; line-height: 36px; }
+.hero-ornament { position: relative; width: 43px; height: 2px; margin: 12px 0; background: var(--gold); }
+.hero-ornament image { position: absolute; left: 19px; top: -3px; width: 7px; height: 7px; }
+.hero-description { color: #bbc2b7; font-size: 12px; line-height: 18px; }
+.home-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 23rpx; margin-top: 30rpx; }
+.home-action { display: flex; align-items: center; gap: 16rpx; min-width: 0; min-height: 82px; margin: 0; padding: 14px 22rpx; border: 1px solid var(--gold); border-radius: 35rpx; background: rgba(22, 34, 27, .65); color: var(--text); text-align: left; }
+.home-action::after, .return-room::after, .all-history::after { border: 0; }
+.join-action { border-color: #79b19a; }
+.action-icon { width: 29px; height: 29px; flex-shrink: 0; }
 .action-copy { min-width: 0; }
 .action-title { font-size: 16px; font-weight: 700; line-height: 23px; white-space: nowrap; }
-.action-caption { margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 16px; }
+.action-caption { margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 16px; }
 .return-room { width: 100%; margin: 16px 0 0; padding: 12px 16px; color: var(--gold); font-size: 14px; line-height: 22px; }
-.recent { margin-top: 76.923rpx; }
+.recent { margin-top: 66rpx; }
+.recent-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.all-history { flex-shrink: 0; margin: -8px 0; padding: 8px 0 8px 8px; background: transparent; color: var(--gold); font-size: 12px; line-height: 20px; }
 .recent > .v3-card { margin-top: 8px; }
-.recent-game { min-height: 126px; padding: 14px 16px 16px; }
-.recent-role { display: inline-flex; align-items: center; justify-content: center; min-width: 98px; height: 26px; padding: 0 12px; border-radius: 13px; background: var(--gold); color: var(--bg); font-size: 12px; font-weight: 700; line-height: 17px; }
-.recent-result { margin-top: 14px; font-size: 18px; font-weight: 700; line-height: 26px; }
-.recent-meta { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-top: 5px; font-size: 12px; line-height: 17px; }
-.recent-time { flex: 1; min-width: 0; color: var(--muted); overflow-wrap: anywhere; }
-.recent-replay { flex-shrink: 0; color: var(--gold); font-weight: 700; }
-.rules-entry { display: flex; gap: 23.077rpx; min-height: 84px; margin-top: 57.692rpx; padding: 14px 16px; }
-.guide-icon { width: 24px; height: 24px; margin-top: 10px; flex-shrink: 0; }
+.rules-entry { display: flex; align-items: center; gap: 28rpx; min-height: 80px; margin-top: 50rpx; padding: 14px 16px; }
+.guide-icon { width: 28px; height: 28px; flex-shrink: 0; }
 .guide-copy { flex: 1; min-width: 0; }
-.guide-title { font-size: 16px; font-weight: 700; line-height: 23px; }
-.guide-description { margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 17px; }
-.guide-chevron { width: 18px; height: 18px; margin-top: 16px; flex-shrink: 0; }
-.join-mask { position: fixed; z-index: 100; top: 0; right: 0; left: 0; display: flex; align-items: center; justify-content: center; padding: 20px 24px max(20px, env(safe-area-inset-bottom)); background: rgba(0, 0, 0, .65); }
+.guide-title { font-size: 17px; font-weight: 700; line-height: 24px; }
+.guide-description { margin-top: 6px; color: var(--muted); font-size: 12px; line-height: 17px; }
+.guide-chevron { width: 20px; height: 20px; flex-shrink: 0; }
+@media (max-width: 350px) { .action-title { font-size: 14px; } .home-action { gap: 10rpx; padding: 14px 16rpx; } .hero-title { font-size: 22px; } }
+.home-page > .join-mask { position: fixed; z-index: 100; top: 0; right: 0; left: 0; display: flex; align-items: center; justify-content: center; padding: 20px 24px max(20px, env(safe-area-inset-bottom)); background: rgba(0, 0, 0, .65); }
 .join-dialog { width: 100%; max-width: 360px; max-height: 100%; overflow-y: auto; padding: 24px 20px; border: 1px solid var(--border); border-radius: 20px; background: var(--elevated); }
 .join-title { color: var(--gold); font-size: 22px; font-weight: 700; line-height: 32px; }
 .join-code { width: 100%; height: 52px; margin-top: 20px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text); font-size: 20px; line-height: 52px; letter-spacing: 3px; }
@@ -41,3 +48,5 @@
 .keyboard-open .join-code { margin-top: 12px; }
 .keyboard-open .join-dialog-actions { margin-top: 16px; }
 .keyboard-open .join-error { margin-top: 8px; }
+
+.home-page > .home-scenery-fade { position: absolute; z-index: -1; top: 0; left: 0; width: 100%; height: 1150rpx; pointer-events: none; background: linear-gradient(to bottom, transparent 65%, #0d1711 100%); }

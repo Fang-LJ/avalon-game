@@ -100,6 +100,9 @@ public class AvalonRepository {
     public Optional<GameRow> waitingGameByCode(String code, boolean lock) {
         return jdbc.query("select * from t_avalon_game where room_code=? and status='WAITING' order by id desc limit 1" + (lock ? " for update" : ""), GAME, code).stream().findFirst();
     }
+    public Optional<GameRow> latestGameByCode(String code) {
+        return jdbc.query("select * from t_avalon_game where room_code=? order by id desc limit 1", GAME, code).stream().findFirst();
+    }
     public Optional<GameRow> activeGameForUser(long userId) {
         return jdbc.query("select g.* from t_avalon_game g join t_avalon_game_player gp on gp.game_id=g.id where gp.user_id=? and gp.left_at is null and g.status in ('WAITING','PLAYING','FINISHED') order by g.id desc limit 1", GAME, userId).stream().findFirst();
     }

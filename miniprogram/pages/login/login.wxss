@@ -11,13 +11,13 @@
 .guest-feature::after { border: 0; }
 .feature-icon { width: 22px; height: 22px; flex-shrink: 0; }
 .login-actions { flex-shrink: 0; margin-top: auto; padding-top: 40px; }
-.agreement-area { display: flex; align-items: center; margin-top: 20px; font-size: 12px; line-height: 17px; }
+.agreement-area { display: flex; align-items: center; justify-content: center; margin-top: 20px; font-size: 12px; line-height: 17px; }
 .agreement-checkbox { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 36px; height: 44px; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; line-height: 1; }
 .agreement-checkbox::after { border: 0; }
 .agreement-circle { position: relative; display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 1px solid #819587; border-radius: 50%; color: var(--bg); font-size: 12px; font-weight: 700; }
 .agreement-checkbox.checked .agreement-circle { border: 0; }
 .consent-checked { position: absolute; width: 18px; height: 18px; left: 0; top: 0; }
 .agreement-circle text { position: relative; }
-.agreement-copy { flex: 1; min-width: 0; color: var(--muted); overflow-wrap: anywhere; }
+.agreement-copy { flex: 0 1 auto; min-width: 0; color: var(--muted); overflow-wrap: anywhere; }
 .legal-link { color: var(--gold); font-weight: 500; }
 .mock-users .chips { margin-top: 12px; }

@@ -1,4 +1,4 @@
-<view class="tab-bar {{v3 ? 'v3-tab-bar' : ''}}">
+<view class="tab-bar {{active === 'me' ? 'me-icons' : ''}} {{v3 ? 'v3-tab-bar' : ''}}">
   <view
     wx:for="{{tabs}}"
     wx:key="key"
@@ -7,7 +7,7 @@
     bindtap="open"
   >
     <view wx:if="{{v3 && active === item.key}}" class="tab-indicator"></view>
-    <image wx:if="{{v3}}" class="v3-tab-icon" src="/assets/ui-v3/{{v3Icons[active][item.key]}}.svg" aria-hidden="{{true}}" />
+    <image wx:if="{{v3}}" class="v3-tab-icon" src="/assets/{{active === 'me' ? 'ui-v3' : 'ui-v3-round2'}}/{{v3Icons[active][item.key]}}.svg" aria-hidden="{{true}}" />
     <view wx:else class="tab-icon">{{item.icon}}</view>
     <view>{{item.label}}</view>
   </view>

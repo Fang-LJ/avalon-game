@@ -14,10 +14,10 @@
     </button>
   </view>
   <view class="v3-section-title history-label">最近对局</view>
-  <view wx:for="{{items}}" wx:key="gameId" class="v3-card history-game" data-id="{{item.gameId}}" bindtap="replay">
-    <view class="history-title">{{item.roleName}} · {{item.playerCount}}人局</view>
-    <view class="history-result {{!item.winner ? 'gold' : item.winner === 'GOOD' ? 'good' : 'evil'}}">{{item.resultText}} · {{!item.winner ? '不计胜负' : item.won ? '胜' : '负'}}</view>
-    <view class="history-meta"><text>{{item.timeText}}</text><text class="history-replay">查看复盘 →</text></view>
+  <view wx:for="{{items}}" wx:key="gameId" class="outcome-card history-game outcome-{{item.outcome}}" data-id="{{item.gameId}}" bindtap="replay">
+    <view class="outcome-title"><text class="outcome-role {{item.roleTone}}">{{item.roleName}}</text><text class="outcome-size">· {{item.playerCount}}人局</text></view>
+    <view class="outcome-result">{{item.outcomeText}}</view>
+    <view class="outcome-meta"><text class="outcome-time">{{item.timeText}}</text><text class="outcome-replay">查看复盘 →</text></view>
   </view>
   <view wx:if="{{error}}" class="error" bindtap="retry">{{error}}</view>
   <view wx:elif="{{loading}}" class="empty">正在加载…</view>

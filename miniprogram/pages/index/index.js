@@ -1,6 +1,7 @@
 const auth = require('../../services/auth');
 const api = require('../../services/avalon');
 const ui = require('../../utils/presentation');
+const { historyCard } = require('../../utils/history-presentation');
 const invite = require('../../utils/invite');
 const { readNavigationMetrics } = require('../../utils/guest-navigation');
 
@@ -24,6 +25,7 @@ Page({
     mockUsers: [],
     switchingMock: false,
     greeting: '',
+    headerTop: 88,
     joinOpen: false,
     joinCode: '',
     joinValid: false,
@@ -35,7 +37,7 @@ Page({
   },
   onShow() {
     if (!auth.requireSession()) return;
-    this.setData({ greeting: localGreeting() });
+    this.setData({ greeting: localGreeting(), headerTop: readNavigationMetrics().contentTop });
     this.load();
   },
   onUnload() {
@@ -52,7 +54,7 @@ Page({
       .then(([profile, history, currentRoom]) =>
         this.setData({
           profile: { ...profile, initial: ui.initial(profile.nickname) },
-          recent: history.items[0] ? ui.historyItem(history.items[0]) : null,
+          recent: history.items[0] ? historyCard(history.items[0]) : null,
           currentRoom,
           currentMockKey: auth.currentMockUser().key,
         }),
@@ -118,6 +120,7 @@ Page({
       if (!this._unloaded) this.setData({ joining: false });
     }
   },
+  history() { wx.reLaunch({ url: '/pages/history/history' }); },
   replay() {
     if (this.data.recent)
       wx.navigateTo({

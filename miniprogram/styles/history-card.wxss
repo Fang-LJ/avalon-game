@@ -1,0 +1,11 @@
+/* Shared by home and history; keep personal result distinct from winning camp. */
+.ui-v3-page .outcome-card { min-height: 109px; padding: 12px 16px; border: 1.5px solid #354a3c; border-radius: 34.615rpx; background: #17241c; }
+.ui-v3-page .outcome-win { border-color: var(--good); }
+.ui-v3-page .outcome-loss { border-color: var(--evil); }
+.outcome-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; line-height: 24px; }
+.outcome-role { font-size: 18px; font-weight: 700; }
+.outcome-size { color: var(--text); font-size: 16px; font-weight: 500; }
+.outcome-result { margin-top: 12px; color: var(--text); font-size: 16px; font-weight: 500; line-height: 22px; }
+.outcome-meta { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-top: 12px; color: var(--muted); font-size: 11px; line-height: 16px; }
+.outcome-time { min-width: 0; overflow-wrap: anywhere; }
+.outcome-replay { flex-shrink: 0; color: var(--gold); font-weight: 500; }

@@ -15,6 +15,7 @@ module.exports = {
   timeline: (id) => request({ url: `/api/avalon/game/${id}/timeline` }),
   replay: (id) => request({ url: `/api/avalon/game/${id}/replay` }),
   currentRoom: () => request({ url: '/api/avalon/room/current' }),
+  invitePreview: (roomCode) => request({ url: `/api/avalon/room/invite-preview?roomCode=${encodeURIComponent(roomCode)}`, showError: false }),
   room: (id, showError = true) => request({ url: `/api/avalon/room/${id}`, showError }),
   createRoom: (data) =>
     request({ url: '/api/avalon/room/create', method: 'POST', data }),

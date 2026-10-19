@@ -177,6 +177,24 @@ public class RoomService {
     }
 
     @Transactional(readOnly = true)
+    public InvitePreview preview(long userId, String code) {
+        if (code == null || !code.matches("\\d{6}")) throw new BusinessException("PARAM_ERROR", "请输入 6 位房间号");
+        GameRow game = repository.waitingGameByCode(code, false)
+                .or(() -> repository.latestGameByCode(code))
+                .orElseThrow(() -> new BusinessException("NOT_FOUND", "房间不存在"));
+        List<GamePlayerRow> players = repository.players(game.id());
+        boolean member = players.stream().anyMatch(p -> p.userId() == userId);
+        Set<Integer> occupied = players.stream().map(GamePlayerRow::seatNo).filter(java.util.Objects::nonNull).collect(Collectors.toSet());
+        return new InvitePreview(code, game.status(), game.playerCount(), players.size(), occupied.size(), member,
+                member ? game.id() : null, IntStream.rangeClosed(1, game.playerCount())
+                .mapToObj(n -> new InviteSeat(n, occupied.contains(n))).toList());
+    }
+
+    public record InviteSeat(int seatNo, boolean occupied) {}
+    public record InvitePreview(String roomCode, String status, int maxPlayers, int currentPlayers, int seatedPlayers,
+                                boolean member, Long roomId, List<InviteSeat> seats) {}
+
+    @Transactional(readOnly = true)
     public RoomView get(long userId, long roomId) {
         GameRow game = requireRoom(roomId, false);
         if ("FINISHED".equals(game.status()) || "CLOSED".equals(game.status())) {
