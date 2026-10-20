@@ -1,10 +1,10 @@
 <view class="page ui-v3-page ui-v3-tabs history-page">
   <view class="v3-nav-wrap">
-  <page-head v3="{{true}}" title="历史战绩" subtitle="你的每一局阿瓦隆" />
+  <page-head v3="{{true}}" title="历史战绩" />
   </view>
   <view class="v3-card history-overview">
     <view class="overview-row overview-label"><text>对局概览</text><text>胜率</text></view>
-    <view class="overview-row overview-values"><view class="history-total">{{stats ? stats.totalGames : '—'}} 场有效对局</view><view class="history-rate">{{stats ? stats.winRate : 0}}%</view></view>
+    <view class="overview-row overview-values"><view class="history-total">{{stats ? stats.totalGames : '—'}} 场已结算</view><view class="history-rate">{{stats ? stats.winRate : 0}}%</view></view>
     <view class="record-bar"><view class="record-wins" style="width:{{recordWinPercent}}%;"></view><view class="record-losses" style="width:{{recordLossPercent}}%;"></view></view>
     <view class="record-legend"><text class="good">● {{stats ? stats.wins : 0}} 胜</text><text class="evil">{{stats ? stats.losses : 0}} 负 ●</text></view>
   </view>
@@ -13,7 +13,6 @@
       <text>{{item.label}}</text>
     </button>
   </view>
-  <view class="v3-section-title history-label">最近对局</view>
   <view wx:for="{{items}}" wx:key="gameId" class="outcome-card history-game outcome-{{item.outcome}}" data-id="{{item.gameId}}" bindtap="replay">
     <view class="outcome-title"><text class="outcome-role {{item.roleTone}}">{{item.roleName}}</text><text class="outcome-size">· {{item.playerCount}}人局</text></view>
     <view class="outcome-result">{{item.outcomeText}}</view>

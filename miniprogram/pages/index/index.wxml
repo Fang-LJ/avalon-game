@@ -1,7 +1,7 @@
 <view class="page ui-v3-page ui-v3-tabs home-page">
   <image class="home-scenery" src="/assets/ui-v3-round2/home-castle.jpg" mode="aspectFill" aria-hidden="{{true}}" />
   <view class="home-scenery-fade" aria-hidden="{{true}}"></view>
-  <view class="home-greeting" style="padding-top:{{headerTop}}px;">
+  <view class="home-greeting" style="padding-top:{{headerTop - 30}}px;">
     <view class="greeting-title">{{greeting}}</view>
     <view class="greeting-name">{{profile.nickname || ''}}</view>
   </view>
@@ -23,7 +23,7 @@
   </view>
   <button wx:if="{{currentRoom}}" class="return-room v3-card" bindtap="returnRoom">返回房间 {{currentRoom.roomCode}}</button>
   <view class="recent">
-    <view class="recent-heading"><view class="v3-section-title">最近对局</view><button class="all-history" bindtap="history">全部战绩 →</button></view>
+    <view class="recent-heading"><view class="v3-section-title">最近对局</view><button class="all-history" bindtap="history">全部战绩</button></view>
     <view wx:if="{{error}}" class="error" bindtap="load">{{error}}</view>
     <view wx:elif="{{loading}}" class="v3-card v3-state">正在加载…</view>
     <view wx:elif="{{recent}}" class="outcome-card outcome-{{recent.outcome}}" bindtap="replay">

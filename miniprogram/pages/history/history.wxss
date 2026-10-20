@@ -10,12 +10,11 @@
 .record-wins { background: var(--good); }
 .record-losses { background: var(--evil); }
 .record-legend { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; font-size: 12px; font-weight: 500; line-height: 17px; }
-.history-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30.769rpx; margin-top: 42.308rpx; }
+.history-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30.769rpx; margin-top: 28rpx; margin-bottom: 24rpx; }
 .record-filter { display: flex; align-items: center; justify-content: center; gap: 10px; min-width: 0; height: 48px; margin: 0; padding: 0 6px; border: 1px solid var(--gold); border-radius: 28.846rpx; background: var(--elevated); color: var(--gold); font-size: 16px; font-weight: 500; line-height: 18px; }
 .record-filter::after { border: 0; }
 .filter-good { border-color: var(--good); color: var(--good); }
 .filter-evil { border-color: var(--evil); color: var(--evil); }
 .filter-good.selected { background: var(--good); color: var(--bg); }
 .filter-evil.selected { background: var(--evil); color: var(--bg); }
-.history-label { margin: 48rpx 0 12px; }
 .history-game { margin-bottom: 24rpx; }
