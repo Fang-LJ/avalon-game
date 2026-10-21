@@ -150,7 +150,8 @@
   <block wx:else>
     <view
       wx:if="{{board}}"
-      class="board {{room.maxPlayers >= 9 ? 'large-table' : ''}}"
+      class="board circular-board {{room.maxPlayers >= 9 ? 'large-table' : ''}}"
+      style="height:{{circularLayout.height}}rpx;--seat-center-top:{{circularLayout.centerTop}}rpx;"
     >
       <view
         wx:for="{{displayPlayers}}"

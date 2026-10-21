@@ -70,7 +70,8 @@ function historyItem(game) {
     reasonText: FINISH[game.finishReason] || game.finishReason,
   };
 }
-function seatPosition(seatNo, maxPlayers, formal = false) {
+function seatPosition(seatNo, maxPlayers, formal = false, geometry) {
+  if (geometry) return circularSeatPosition(seatNo, maxPlayers, geometry);
   const angle = -Math.PI / 2 + ((seatNo - 1) * 2 * Math.PI) / maxPlayers;
   const x = 50 + 42 * Math.cos(angle);
   const y = formal
@@ -180,7 +181,7 @@ function actionDone(game, player) {
       ((game.missionSubmittedPlayerIds || []).includes(playerId) || (me === true && game.hasSubmittedMission === true));
   return false;
 }
-function seats(players, selected = [], leaderId, maxPlayers = players.length, phase = 'TEAM_BUILDING') {
+function seats(players, selected = [], leaderId, maxPlayers = players.length, phase = 'TEAM_BUILDING', geometry) {
   const selectionClass = phase === 'ASSASSINATION' ? 'selected-assassination'
     : phase === 'LADY_OF_LAKE' ? 'selected-lady' : 'selected-team';
   return players.filter((p) => p.seatNo != null).map((p) => {
@@ -190,7 +191,7 @@ function seats(players, selected = [], leaderId, maxPlayers = players.length, ph
       selected: selected.includes(p.playerId) && !(phase === 'ASSASSINATION' && p.revealedEvil),
       selectionClass: selected.includes(p.playerId) && !(phase === 'ASSASSINATION' && p.revealedEvil) ? selectionClass : '',
       leader: p.playerId === leaderId,
-      position: seatPosition(p.seatNo, maxPlayers, true),
+      position: seatPosition(p.seatNo, maxPlayers, true, geometry),
     };
   });
 }
@@ -202,13 +203,26 @@ function lobbyGeometry(maxPlayers) {
   return { radius, centerTop: radius + avatarSize / 2, height: radius * 2 + avatarSize + 90 };
 }
 function lobbySeatPosition(seatNo, maxPlayers) {
+  return circularSeatPosition(seatNo, maxPlayers, {
+    ...lobbyGeometry(maxPlayers), avatarSize: maxPlayers >= 9 ? 100 : 112,
+  });
+}
+function formalGeometry(maxPlayers) {
   const { radius } = lobbyGeometry(maxPlayers);
+  const avatarSize = maxPlayers >= 9 ? 84 : 96;
+  // Crown protrudes 16rpx above the seat. Below: gap + caption margin + line + clearance.
+  const topInset = 24;
+  const captionHeight = 4 + 8 + (maxPlayers >= 9 ? 30 : maxPlayers === 8 ? 32 : 34);
+  return { radius, avatarSize, centerTop: topInset + radius + avatarSize / 2,
+    height: topInset + radius * 2 + avatarSize + captionHeight + 24 };
+}
+function circularSeatPosition(seatNo, maxPlayers, { radius, centerTop, avatarSize }) {
   // Wider side gaps keep a host badge clear of the next avatar after ownership changes.
   const angles = maxPlayers === 10 ? [0, 35, 70, 110, 145, 180, 215, 250, 290, 325]
     : maxPlayers === 8 ? [0, 42, 90, 138, 180, 222, 270, 318] : null;
   const degrees = angles ? angles[seatNo - 1] : (seatNo - 1) * 360 / maxPlayers;
   const angle = (degrees - 90) * Math.PI / 180;
-  return `left:calc(50% + ${(radius * Math.cos(angle)).toFixed(3)}rpx);top:${(radius + radius * Math.sin(angle)).toFixed(3)}rpx;`;
+  return `left:calc(50% + ${(radius * Math.cos(angle)).toFixed(3)}rpx);top:${(centerTop + radius * Math.sin(angle) - avatarSize / 2).toFixed(3)}rpx;`;
 }
 function lobbySeats(players, maxPlayers, responsive = false) {
   const bySeat = Object.fromEntries(
@@ -366,6 +380,7 @@ module.exports = {
   seats,
   lobbySeats,
   lobbyGeometry,
+  formalGeometry,
   logs,
   liveLogs,
   finishedIdentities,

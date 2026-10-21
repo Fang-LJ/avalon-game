@@ -490,6 +490,7 @@ Page({
         game.leaderPlayerId,
         room.maxPlayers,
         game.phase,
+        ui.formalGeometry(room.maxPlayers),
       )
       .map((p) => ({
         ...p,
@@ -505,6 +506,7 @@ Page({
     const vote = game && game.latestVoteResult;
     this.setData({
       displayPlayers: players,
+      circularLayout: ui.formalGeometry(room.maxPlayers),
       ladyPlayers: players.filter((p) => !p.disabled),
       selectedText: selected.map((p) => p.seatNo).join(' · '),
       nominatedText: players.filter(p => (this.data.nominatedPlayerIds || []).includes(p.playerId)).map(p => p.seatNo).join(' · '),

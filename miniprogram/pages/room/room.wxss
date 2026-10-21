@@ -78,6 +78,10 @@
   letter-spacing: 1rpx;
 }
 .board-center.forced-turn { top: 44%; }
+/* Formal room only: the center follows avatar centers, not container midpoint.
+   Demo keeps its existing layout; lobby continues using its original geometry. */
+.circular-board .board-center { top: var(--seat-center-top); }
+.circular-board .positioned-seat { z-index: 1; }
 .board-center .rejection-status { display: flex; align-items: center; justify-content: center; gap: 9rpx; min-height: 32rpx; margin-top: 8rpx; }
 .rejection-label { color: var(--muted); font-size: 18rpx; margin-right: 2rpx; }
 .rejection-dot { width: 20rpx; height: 20rpx; border: 1rpx solid var(--border); border-radius: 50%; background: var(--soft); flex-shrink: 0; }
