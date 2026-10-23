@@ -1,7 +1,8 @@
 <view
-  class="page room-page {{!game || game.phase === 'ROLE_CONFIRM' ? 'preparation-page' : ''}} {{game && game.phase !== 'ROLE_CONFIRM' && game.phase !== 'FINISHED' ? 'has-phase-actions' : ''}}"
+  class="page room-page {{board ? 'night-room' : ''}} {{!game || game.phase === 'ROLE_CONFIRM' ? 'preparation-page' : ''}} {{game && game.phase !== 'ROLE_CONFIRM' && game.phase !== 'FINISHED' ? 'has-phase-actions' : ''}}"
   wx:if="{{room}}"
 >
+  <view wx:if="{{board}}" class="night-scenery" aria-hidden="{{true}}"><image src="/assets/night-table/castle.jpg" mode="aspectFill" /><view class="night-shade" /></view>
   <page-head
     compact="{{board}}"
     contained="{{!game || game.phase === 'ROLE_CONFIRM'}}"
@@ -153,6 +154,7 @@
       class="board circular-board {{room.maxPlayers >= 9 ? 'large-table' : ''}}"
       style="height:{{circularLayout.height}}rpx;--seat-center-top:{{circularLayout.centerTop}}rpx;"
     >
+      <image class="table-compass" src="/assets/night-table/compass.svg" mode="aspectFit" aria-hidden="{{true}}" style="width:{{circularLayout.radius * 2 * 640 / 600}}rpx;height:{{circularLayout.radius * 2 * 640 / 600}}rpx;" />
       <view
         wx:for="{{displayPlayers}}"
         wx:key="playerId"
@@ -235,6 +237,8 @@
       wx:if="{{board && entries.length}}"
       compact="{{true}}"
       gameId="{{game.gameId}}"
+      night="{{true}}"
+      players="{{room.players}}"
       maxMissionSlots="{{rule.maxMissionSlots}}"
       entries="{{entries}}"
     />

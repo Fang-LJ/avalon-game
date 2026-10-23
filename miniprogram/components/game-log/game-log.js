@@ -1,10 +1,12 @@
 const { CARDS } = require('../../utils/cards');
+const { proposalDisplay } = require('../../utils/proposal-display');
 const { resultCards } = require('../../utils/mission-result');
 
 Component({
   options: { styleIsolation: 'apply-shared' },
   properties: {
     entries: Array, replay: Boolean, compact: Boolean, gameId: Number,
+    night: Boolean, players: { type: Array, value: [] },
     maxMissionSlots: { type: Number, value: 5 },
   },
   data: {
@@ -12,16 +14,21 @@ Component({
     currentProposalId: null, historyGameId: null, allHistoryOpen: false,
   },
   observers: {
+    'players,night'() {
+      const decorate = entry => ({ ...entry, ...proposalDisplay(entry, this.data.players) });
+      this.setData({ liveEntries: this.data.liveEntries.map(decorate), allEntries: this.data.allEntries.map(decorate) });
+    },
     'entries,gameId,compact,replay,maxMissionSlots'(entries, gameId, compact, replay, maxMissionSlots = 5) {
       if (!compact || replay) return;
       const slotCount = [3, 4, 5].includes(maxMissionSlots) ? maxMissionSlots : 5;
       const liveEntries = (entries || []).filter(entry =>
         entry.status === 'APPROVED' || entry.status === 'REJECTED').map(entry => {
-          const missionCards = entry.status === 'APPROVED' ? resultCards(entry.mission).map(card => ({
+          const missionCards = entry.status === 'APPROVED' && entry.resolved !== false ? resultCards(entry.mission).map(card => ({
             index: card.index, src: CARDS.actions[card.type],
           })) : [];
           return {
             ...entry,
+            ...proposalDisplay(entry, this.data.players),
             missionCards,
             missionSlots: Array.from({ length: slotCount }, (_, index) => missionCards[index] || null),
             // Empty slots are null; use numeric keys so multiple empty cells retain stable identity.

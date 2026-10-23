@@ -124,8 +124,8 @@ test('live carousel and all-history reuse identical anonymous success-first thum
   assert.ok(c.data.liveEntries[0].missionCards.every(card=>Object.keys(card).join(',')==='index,src'));
   assert.equal(input.missionCards,undefined);
   const markup=read('components/game-log/game-log.wxml');
-  assert.match(markup,/is="live-proposal-record" data="\{\{item, compact: true\}\}"/);
-  assert.match(markup,/is="live-proposal-record" data="\{\{item, compact: false\}\}"/);
+  assert.match(markup,/is="\{\{night \? 'night-proposal-record' : 'live-proposal-record'\}\}" data="\{\{item, compact: true\}\}"/);
+  assert.match(markup,/is="\{\{night \? 'night-proposal-record' : 'live-proposal-record'\}\}" data="\{\{item, compact: false\}\}"/);
 });
 test('rejected executing absent and malformed missions never show thumbnail results', () => {
   const c=logComponent();

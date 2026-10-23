@@ -48,3 +48,18 @@
 .history-close::after { border: 0; }
 .history-scroll { flex: 1; min-height: 0; height: 0; }
 .history-scroll-content { padding-bottom: 12rpx; }
+
+/* Formal-room variant; replay and guest history retain their existing rendering. */
+.night-proposal { background: rgba(13,27,21,.64); border: 1.5px solid var(--border); gap: 0; }
+.night-proposal.result-rejected { border-color: var(--gold); }
+.night-proposal.result-success { border-color: var(--good); }
+.night-proposal.result-failed { border-color: var(--evil); }
+.vote-cells { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 5rpx; padding-top: 25rpx; margin-top: 4rpx; flex-shrink: 0; }
+.vote-cell { position: relative; display: flex; align-items: center; justify-content: center; height: 44rpx; min-width: 0; box-sizing: border-box; border: 2rpx solid transparent; border-radius: 7rpx; font-size: 22rpx; font-weight: 700; color: #FFFFFF; background: #35453c; }
+.vote-cell.vote-approve { background: #28785f; }
+.vote-cell.vote-reject { background: #A93447; }
+.vote-cell.vote-disabled { background: #303632; color: #7f8983; }
+.vote-cell.on-team { border-color: #E6BF59; }
+.vote-crown { position: absolute; top: -27rpx; left: 0; width: 100%; text-align: center; color: #E6BF59; font-size: 26rpx; line-height: 26rpx; }
+.night-mission { display: flex; align-items: center; justify-content: center; flex: 1; min-height: 88rpx; margin-top: 14rpx; border-top: 1px solid rgba(216,178,92,.18); padding-top: 12rpx; }
+.night-mission .mission-slots { flex: 1; max-width: 480rpx; }

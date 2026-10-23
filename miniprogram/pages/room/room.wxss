@@ -331,3 +331,18 @@ button.nomination-button[disabled] { background: #D8B25C !important; color: #101
 .lobby-footer .lobby-start.bot-add-locked[disabled] { background: var(--accent) !important; color: var(--text) !important; }
 .identity-body { padding: 12rpx 0 calc(20rpx + env(safe-area-inset-bottom)); }
 .identity-body .role-progress { margin-bottom: 0; }
+
+/* Only active formal games opt into the scenery and outlined controls. */
+.night-room { position: relative; isolation: isolate; }
+.night-scenery { position: fixed; inset: 0; z-index: -1; pointer-events: none; background: #0d1711; }
+.night-scenery > image { width: 100%; height: 100%; }
+.night-shade { position: absolute; inset: 0; background: linear-gradient(rgba(7,18,14,.38), rgba(7,18,14,.5) 45%, rgba(7,18,14,.68)); }
+.table-compass { position: absolute; left: 50%; top: var(--seat-center-top); transform: translate(-50%, -50%); pointer-events: none; opacity: .85; }
+.night-room .board-center { text-shadow: 0 1px 5px #08130e; }
+.night-room .phase-actions { background: transparent; }
+.night-room .phase-actions .btn { background: transparent; border: 1.5px solid var(--good); color: #FFFFFF; font-weight: 700; }
+.night-room .phase-actions .btn.danger { border-color: var(--evil); }
+.night-room .phase-actions .btn.nomination-button, .night-room .phase-actions .btn.ghost { border-color: var(--gold); }
+.night-room .phase-actions .btn::after { border: 0; background: transparent; }
+.night-room .phase-actions .btn[disabled] { background: transparent !important; color: #FFFFFF !important; opacity: .38; }
+.night-room .phase-actions .button-hover { background: rgba(255,255,255,.06); }

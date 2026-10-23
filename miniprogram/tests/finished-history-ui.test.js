@@ -160,7 +160,7 @@ test('all-history sheet opens only for multiple resolved entries and survives re
   const markup = read('components/game-log/game-log.wxml');
   assert.match(markup, /查看全部记录 ›/);
   assert.match(markup, /scroll-view[^>]*scroll-y="\{\{true\}\}"/);
-  assert.match(markup, /is="live-proposal-record" data="\{\{item, compact: false\}\}"/);
+  assert.match(markup, /is="\{\{night \? 'night-proposal-record' : 'live-proposal-record'\}\}" data="\{\{item, compact: false\}\}"/);
   assert.match(markup, /wx:if="\{\{replay\}\}"[^>]*wx:for="\{\{item.actions\}\}"/);
   assert.doesNotMatch(read('components/game-log/game-log.js'), /services|triggerEvent\(|wx\.|api\./);
 });

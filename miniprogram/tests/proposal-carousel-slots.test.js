@@ -121,7 +121,7 @@ test('all-history remains full-width vertical cards with no carousel transforms;
   const live = markup.split('<template name="live-proposal-record">')[1].split('</template>')[0];
   assert.match(overlay, /<scroll-view[^>]*scroll-y="\{\{true\}\}"/);
   assert.doesNotMatch(overlay + live, /proposal-slide|historyIndex|previous-margin|next-margin/);
-  assert.match(overlay, /is="live-proposal-record"/);
+  assert.match(overlay, /is="\{\{night \? 'night-proposal-record' : 'live-proposal-record'\}\}"/);
   const replay = markup.split('<template name="proposal-record">')[1].split('</template>')[0];
   assert.doesNotMatch(replay, /missionSlots|mission-slot|proposal-status|proposal-slide/);
   const c = component(); c.refresh([entry()], 4, 1, true, true);
