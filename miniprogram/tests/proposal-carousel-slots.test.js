@@ -105,8 +105,8 @@ test('status badges have restrained color background border and smaller text tha
   }
 });
 test('noncircular carousel separates wrapper from shared card with previews and real padding', () => {
-  const carousel = markup.split('<swiper class="history-swiper"')[1].split('</swiper>')[0];
-  assert.match(carousel, /previous-margin="28rpx" next-margin="28rpx"/);
+  const carousel = markup.split('<swiper class="history-swiper ')[1].split('</swiper>')[0];
+  assert.match(carousel, /previous-margin="\{\{night \? '10rpx' : '28rpx'\}\}" next-margin="\{\{night \? '10rpx' : '28rpx'\}\}"/);
   assert.match(carousel, /circular="\{\{false\}\}"/);
   assert.match(carousel, /<swiper-item[^>]*>\s*<view class="proposal-slide \{\{historyIndex === index \? 'active' : 'inactive'\}\}">/);
   assert.match(rule('.proposal-slide'), /height: 100%; box-sizing: border-box; padding: 8rpx 6rpx/);

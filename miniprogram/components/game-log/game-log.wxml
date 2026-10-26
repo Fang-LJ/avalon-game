@@ -79,7 +79,7 @@
       <text class="muted small">已结束提案</text>
       <text wx:if="{{liveEntries.length > 1}}" class="muted small">‹ {{historyIndex + 1}} / {{liveEntries.length}} ›</text>
     </view>
-    <swiper class="history-swiper" current="{{historyIndex}}" previous-margin="28rpx" next-margin="28rpx" bindchange="historyChange" circular="{{false}}">
+    <swiper class="history-swiper {{night ? 'night-history-swiper' : ''}}" current="{{historyIndex}}" previous-margin="{{night ? '10rpx' : '28rpx'}}" next-margin="{{night ? '10rpx' : '28rpx'}}" bindchange="historyChange" circular="{{false}}">
       <swiper-item wx:for="{{liveEntries}}" wx:key="proposalId">
         <view class="proposal-slide {{historyIndex === index ? 'active' : 'inactive'}}">
           <template is="{{night ? 'night-proposal-record' : 'live-proposal-record'}}" data="{{item, compact: true}}" />
