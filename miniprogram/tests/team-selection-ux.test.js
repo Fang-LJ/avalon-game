@@ -170,7 +170,7 @@ test('team selection stays blue, assassination is amber, while done and Lady col
 test('resolved pending and rejected proposals share a fixed carousel and reserved mission region', () => {
   const markup = read('components/game-log/game-log.wxml'), css = read('components/game-log/game-log.wxss');
   const live = markup.split('<template name="live-proposal-record">')[1].split('</template>')[0];
-  assert.match(markup, /<swiper class="history-swiper" current="\{\{historyIndex\}\}"/);
+  assert.match(markup, /<swiper class="history-swiper[^>]*current="\{\{swiperCurrent\}\}"/);
   assert.doesNotMatch(markup + css, /without-mission/);
   assert.match(css, /\.history-swiper \{ height: 312rpx/);
   assert.match(css, /\.live-proposal \{[^}]*height: 296rpx/);

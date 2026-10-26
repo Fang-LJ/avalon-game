@@ -937,6 +937,25 @@ Page({
   dismissLady() {
     this.setData({ ladyResult: null });
   },
+  openRoomMore() {
+    if (!this.data.board || this.data.busy || !this.data.room) return;
+    const roomId = this.data.roomId, gameId = this.data.game.gameId;
+    const actions = [];
+    if (this.data.entries.length) actions.push({ label: '全部提案', action: 'history' });
+    actions.push({ label: '退出房间', action: 'leave' });
+    if (this.data.room.host) actions.push({ label: '结束对局', action: 'end' });
+    wx.showActionSheet({
+      itemList: actions.map(item => item.label),
+      success: result => {
+        if (!this.active || this.data.busy || this.data.roomId !== roomId ||
+            this.data.game?.gameId !== gameId || !this.data.board) return;
+        const action = actions[result.tapIndex]?.action;
+        if (action === 'history') this.selectComponent('#formal-game-log')?.openAllHistory();
+        else if (action === 'leave') this.confirmLeaveRoom();
+        else if (action === 'end') this.endGame();
+      },
+    });
+  },
   openRoleOverlay() {
     if (this.data.role && !this.data.busy && !this.data.missionResultOpen)
       this.setData({ roleOverlay: true, missionOverlayOpen: false, missionDetail: null });

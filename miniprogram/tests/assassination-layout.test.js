@@ -89,7 +89,7 @@ test('public target projection never retains GOOD identity or private vision pro
 });
 test('assassination room reuses full compact history, wrapping three-layer center and existing fixed-action padding',()=>{
   const markup=read('pages/room/room.wxml');
-  assert.match(markup,/<game-log\s+wx:if="\{\{board && entries.length\}\}"\s+compact="\{\{true\}\}"/);
+  assert.match(markup,/<game-log[^>]*\s+wx:if="\{\{board && entries.length\}\}"\s+compact="\{\{true\}\}"/);
   assert.doesNotMatch(markup,/最终刺杀|请选择刺杀梅林|等待刺客选择梅林|game.phase !== 'ASSASSINATION'/);
   assert.match(markup,/<view class="assassination-title">刺杀梅林阶段<\/view>\s*<view class="assassination-rule">刺中梅林，邪恶阵营获胜；刺错则正义阵营获胜<\/view>\s*<view class="assassination-selection">\{\{assassinationText\}\}/);
   assert.match(markup,/game.phase === 'ASSASSINATION' \? 'assassination-center'/);

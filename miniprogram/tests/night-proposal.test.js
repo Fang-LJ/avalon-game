@@ -5,13 +5,13 @@ const players = n => Array.from({ length: n }, (_, i) => ({ playerId: 100 + i, s
 const entry = { status: 'APPROVED', resolved: true, leaderPlayerId: 100, teamPlayerIds: [100, 102],
   votes: [{ seatNo: 1, choice: 'REJECT' }, { seatNo: 2, choice: 'APPROVE' }],
   mission: { missionNo: 1, status: 'FAILED', successCount: 1, failCount: 1 } };
-for (let n = 5; n <= 10; n++) test(`${n} seats: ten cells, independent team border, leader, disabled slots`, () => {
-  const result = proposalDisplay(entry, players(n));
-  assert.equal(result.voteCells.length, 10);
+for (let n = 5; n <= 10; n++) test(`${n} seats: configured cells, independent team border and leader`, () => {
+  const result = proposalDisplay(entry, players(n), n);
+  assert.equal(result.voteCells.length, n);
   assert.deepEqual(result.voteCells[0], { seatNo: 1, tone: 'reject', selected: true, leader: true });
   assert.equal(result.voteCells[1].tone, 'approve');
   assert.equal(result.voteCells[2].tone, 'pending');
-  assert.equal(result.voteCells.filter(c => c.tone === 'disabled').length, 10 - n);
+  assert.ok(result.voteCells.every(c => c.tone !== 'disabled'));
 });
 test('unresolved or unpublished votes stay neutral even if input contains partial votes', () => {
   for (const change of [{status:'VOTING'}, {resolved:false}, {votes:[]}]) {
@@ -30,4 +30,11 @@ test('approval is not mission success; only validated anonymous totals produce r
 test('projection never carries private role data or per-player mission actions', () => {
   const result=proposalDisplay({...entry, actions:[{playerId:100, choice:'FAIL'}]}, players(5).map(p=>({...p,roleCode:'MERLIN'})));
   assert.doesNotMatch(JSON.stringify(result), /MERLIN|actions|playerId|choice/);
+});
+
+test('configured seat count survives offline or missing player records', () => {
+  const result = proposalDisplay(entry, players(3).map(p => ({...p, online:false})), 8);
+  assert.equal(result.voteCells.length, 8);
+  assert.equal(result.voteCells[7].seatNo, 8);
+  assert.equal(result.voteCells[7].tone, 'pending');
 });

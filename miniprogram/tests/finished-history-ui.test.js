@@ -148,7 +148,7 @@ test('zero resolved proposals leave no live history card and no empty placeholde
   const live = read('components/game-log/game-log.wxml').split('<block wx:if="{{compact && !replay}}">')[1].split('<view wx:else class="log-list">')[0];
   assert.match(live, /wx:if="\{\{liveEntries.length\}\}"/);
   assert.doesNotMatch(live, /组队与任务记录将在这里显示/);
-  assert.match(live, /current="\{\{historyIndex\}\}"[^>]*bindchange="historyChange" circular="\{\{false\}\}"/);
+  assert.match(live, /current="\{\{swiperCurrent\}\}"[^>]*bindchange="historyChange"[^>]*circular="\{\{false\}\}"/);
 });
 test('all-history sheet opens only for multiple resolved entries and survives refresh, closes explicitly', () => {
   const c = component(); c.refresh(history([1])); c.openAllHistory(); assert.equal(c.data.allHistoryOpen,false);

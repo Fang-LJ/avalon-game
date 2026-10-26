@@ -1,7 +1,14 @@
 <template name="night-proposal-record">
   <view class="card log-entry live-proposal night-proposal result-{{item.resultTone}} {{compact ? 'compact-entry' : ''}}">
-    <view class="log-title">第 {{item.missionNo}} 轮 · 第 {{item.proposalNo}} 次提案</view>
-    <view class="vote-cells">
+    <view class="night-proposal-heading">
+      <view class="log-title">第 {{item.missionNo}} 轮 · 第 {{item.proposalNo}} 次提案</view>
+      <view wx:if="{{compact && total > 1}}" class="proposal-pager">
+        <button class="pager-arrow" data-step="-1" disabled="{{item.pageNo === 1}}" catchtap="shiftHistory" aria-label="上一张提案">‹</button>
+        <text>{{item.pageNo}} / {{total}}</text>
+        <button class="pager-arrow" data-step="1" disabled="{{item.pageNo === total}}" catchtap="shiftHistory" aria-label="下一张提案">›</button>
+      </view>
+    </view>
+    <view class="vote-cells vote-count-{{item.voteCells.length}}" style="grid-template-columns:repeat({{item.voteCells.length}},minmax(0,1fr));">
       <view wx:for="{{item.voteCells}}" wx:for-item="cell" wx:key="seatNo" class="vote-cell vote-{{cell.tone}} {{cell.selected ? 'on-team' : ''}}" aria-label="{{cell.seatNo + '号，' + (cell.tone === 'approve' ? '同意' : cell.tone === 'reject' ? '反对' : cell.tone === 'disabled' ? '未使用' : '投票未公开') + (cell.selected ? '，任务队员' : '') + (cell.leader ? '，队长' : '')}}">
         <text wx:if="{{cell.leader}}" class="vote-crown" aria-hidden="{{true}}">♛</text>
         <text>{{cell.seatNo}}</text>
@@ -9,9 +16,10 @@
     </view>
     <view class="night-mission">
       <text wx:if="{{item.resultTone === 'rejected'}}" class="gold small">提案未通过</text>
-      <view wx:elif="{{item.missionCards.length}}" class="mission-slots slots-{{item.missionSlotCount}}">
-        <view wx:for="{{item.missionSlotIndexes}}" wx:for-item="slotIndex" wx:key="*this" class="mission-slot">
-          <image wx:if="{{item.missionSlots[slotIndex]}}" src="{{item.missionSlots[slotIndex].src}}" mode="aspectFit" class="mission-thumbnail" />
+      <view wx:elif="{{item.missionCards.length}}" class="night-result">
+        <view class="muted mission-summary">任务结果 · {{item.resultTone === 'success' ? '成功' : '失败'}}</view>
+        <view class="night-mission-cards">
+          <image wx:for="{{item.missionCards}}" wx:for-item="card" wx:key="index" src="{{card.src}}" mode="aspectFit" class="mission-thumbnail" />
         </view>
       </view>
       <text wx:else class="muted small">任务进行中</text>
@@ -75,18 +83,18 @@
 
 <block wx:if="{{compact && !replay}}">
   <view wx:if="{{liveEntries.length}}" class="live-history">
-    <view class="history-caption">
+    <view wx:if="{{!night}}" class="history-caption">
       <text class="muted small">已结束提案</text>
       <text wx:if="{{liveEntries.length > 1}}" class="muted small">‹ {{historyIndex + 1}} / {{liveEntries.length}} ›</text>
     </view>
-    <swiper class="history-swiper {{night ? 'night-history-swiper' : ''}}" current="{{historyIndex}}" previous-margin="{{night ? '10rpx' : '28rpx'}}" next-margin="{{night ? '10rpx' : '28rpx'}}" bindchange="historyChange" circular="{{false}}">
+    <swiper class="history-swiper {{night ? 'night-history-swiper' : ''}}" current="{{swiperCurrent}}" duration="{{300}}" previous-margin="{{night ? '0rpx' : '28rpx'}}" next-margin="{{night ? '0rpx' : '28rpx'}}" bindchange="historyChange" bindtouchstart="historyTouchStart" bindtouchend="historyTouchEnd" bindtouchcancel="historyTouchEnd" bindtransition="historyTransition" bindanimationfinish="historyAnimationFinish" circular="{{false}}">
       <swiper-item wx:for="{{liveEntries}}" wx:key="proposalId">
-        <view class="proposal-slide {{historyIndex === index ? 'active' : 'inactive'}}">
-          <template is="{{night ? 'night-proposal-record' : 'live-proposal-record'}}" data="{{item, compact: true}}" />
+        <view class="proposal-slide">
+          <template is="{{night ? 'night-proposal-record' : 'live-proposal-record'}}" data="{{item, compact: true, total: liveEntries.length}}" />
         </view>
       </swiper-item>
     </swiper>
-    <view wx:if="{{liveEntries.length > 1}}" class="link center small all-history-link" bindtap="openAllHistory">
+    <view wx:if="{{!night && liveEntries.length > 1}}" class="link center small all-history-link" bindtap="openAllHistory">
       查看全部记录 ›
     </view>
   </view>

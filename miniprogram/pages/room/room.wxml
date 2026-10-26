@@ -16,8 +16,11 @@
     <view class="room-quick-actions">
       <button wx:if="{{canEarlyAssassination}}" class="quick-action early-assassination-trigger" disabled="{{busy}}" bindtap="requestEarlyAssassination">刺杀</button>
       <button wx:if="{{board}}" class="quick-action private-role-trigger" disabled="{{busy}}" bindtap="openRoleOverlay">我的身份</button>
-      <button class="quick-action" disabled="{{busy}}" bindtap="confirmLeaveRoom">退出</button>
-      <button wx:if="{{room.host}}" class="quick-action" disabled="{{busy}}" bindtap="endGame">结束</button>
+      <button wx:if="{{board}}" class="quick-action" disabled="{{busy}}" bindtap="openRoomMore">更多</button>
+      <block wx:else>
+        <button class="quick-action" disabled="{{busy}}" bindtap="confirmLeaveRoom">退出</button>
+        <button wx:if="{{room.host}}" class="quick-action" disabled="{{busy}}" bindtap="endGame">结束</button>
+      </block>
     </view>
   </view>
   <block wx:if="{{!game}}">
@@ -233,11 +236,12 @@
         </view>
       </view>
     </block>
-    <game-log
+    <game-log id="formal-game-log"
       wx:if="{{board && entries.length}}"
       compact="{{true}}"
       gameId="{{game.gameId}}"
       night="{{true}}"
+      maxPlayers="{{room.maxPlayers}}"
       players="{{room.players}}"
       maxMissionSlots="{{rule.maxMissionSlots}}"
       entries="{{entries}}"

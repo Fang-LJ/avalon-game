@@ -104,17 +104,14 @@ test('status badges have restrained color background border and smaller text tha
     assert.match(rule(`.proposal-status.${status}`), /border-color: rgba\(/);
   }
 });
-test('noncircular carousel separates wrapper from shared card with previews and real padding', () => {
+test('formal carousel uses full width without transform or opacity animations', () => {
   const carousel = markup.split('<swiper class="history-swiper ')[1].split('</swiper>')[0];
-  assert.match(carousel, /previous-margin="\{\{night \? '10rpx' : '28rpx'\}\}" next-margin="\{\{night \? '10rpx' : '28rpx'\}\}"/);
+  assert.match(carousel, /night \? '0rpx' : '28rpx'/);
   assert.match(carousel, /circular="\{\{false\}\}"/);
-  assert.match(carousel, /<swiper-item[^>]*>\s*<view class="proposal-slide \{\{historyIndex === index \? 'active' : 'inactive'\}\}">/);
-  assert.match(rule('.proposal-slide'), /height: 100%; box-sizing: border-box; padding: 8rpx 6rpx/);
-  assert.match(rule('.proposal-slide'), /transform: scale\(\.97\); opacity: \.78/);
-  assert.match(rule('.proposal-slide.active'), /transform: scale\(1\); opacity: 1/);
-  assert.match(rule('.proposal-slide'), /transition: transform 250ms ease, opacity 250ms ease/);
-  assert.match(rule('.proposal-slide.active .live-proposal'), /box-shadow:/);
-  assert.doesNotMatch(css, /rotateY|perspective|preserve-3d/);
+  assert.match(carousel, /bindanimationfinish="historyAnimationFinish"/);
+  assert.match(carousel, /<view class="proposal-slide">/);
+  assert.doesNotMatch(rule('.proposal-slide'), /transform|opacity|transition/);
+  assert.match(rule('.night-history-swiper .proposal-slide'), /padding: 8rpx 0/);
 });
 test('all-history remains full-width vertical cards with no carousel transforms; replay is not decorated', () => {
   const overlay = markup.split('class="history-overlay"')[1].split('<view wx:else class="log-list">')[0];
@@ -128,14 +125,11 @@ test('all-history remains full-width vertical cards with no carousel transforms;
   assert.equal(c.data.liveEntries.length, 0);
 });
 for (const width of [375,390,430]) {
-  test(`${width}px carousel fits five large cards, all ten votes and separate adjacent borders`, () => {
-    const scale = width / 750, item = width - (76 + 56) * scale;
-    const inner = item - (12 + 40) * scale - 2;
-    assert.ok((inner - (116 + 12) * scale) / 5 >= 62 * scale);
-    const voteColumn = (inner - (108 + 24) * scale) * 1.25 / 2.25;
-    // 11 digit glyphs + 9 spaces at 24rpx, conservatively estimated at .6em/.3em.
-    assert.ok(voteColumn >= (11 * .6 + 9 * .3) * 24 * scale);
-    assert.ok(6 * 2 >= 12, 'two active slides always have at least 12rpx of real gap');
-    assert.ok(28 * scale - item * .03 / 2 - 6 * scale * .97 > 0, 'inactive neighbor remains visible');
+  test(`${width}px formal carousel aligns with footer and fits ten votes and five cards`, () => {
+    const scale = width / 750, cardWidth = width - 76 * scale;
+    const inner = cardWidth - 32 * scale - 3;
+    assert.ok((inner - 9 * 4 * scale) / 10 >= 50 * scale);
+    assert.ok(5 * 76 * scale + 4 * 16 * scale < inner);
+    assert.ok(Math.abs((width - cardWidth) / 2 - 38 * scale) < .001);
   });
 }
