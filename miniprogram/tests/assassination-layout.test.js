@@ -93,7 +93,7 @@ test('assassination room reuses full compact history, wrapping three-layer cente
   assert.doesNotMatch(markup,/最终刺杀|请选择刺杀梅林|等待刺客选择梅林|game.phase !== 'ASSASSINATION'/);
   assert.match(markup,/<view class="assassination-title">刺杀梅林阶段<\/view>\s*<view class="assassination-rule">刺中梅林，邪恶阵营获胜；刺错则正义阵营获胜<\/view>\s*<view class="assassination-selection">\{\{assassinationText\}\}/);
   assert.match(markup,/game.phase === 'ASSASSINATION' \? 'assassination-center'/);
-  assert.match(markup,/bindtap="requestEarlyAssassination">刺杀<\/button>/);assert.doesNotMatch(markup,/>提前刺杀<\/button>/);
+  assert.match(markup,/data-action="assassination" bindtap="selectRoomMoreAction">提前刺杀<\/button>/);
   const css=read('pages/room/room.wxss');assert.match(css,/\.game-status-row \{[^}]*flex-wrap: nowrap/);
   assert.match(css,/\.quick-action \{[^}]*min-width: 60rpx;[^}]*padding: 0 6rpx;[^}]*font-size: 21rpx/);
   assert.match(css,/\.has-phase-actions \{\s*padding-bottom: calc\(220rpx/);

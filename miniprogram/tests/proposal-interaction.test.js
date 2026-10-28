@@ -82,22 +82,7 @@ test('formal result cards use actual card count; guest fixed-slot rendering rema
   }
   const night=read('components/game-log/game-log.wxml').split('<template name="night-proposal-record">')[1].split('</template>')[0];
   assert.match(night,/wx:for="\{\{item.missionCards\}\}"/);assert.doesNotMatch(night,/missionSlots|missionSlotIndexes/);
-  assert.match(night,/任务结果 ·/);
-});
-function page() {
-  let def, sheet;
-  vm.runInNewContext(read('pages/room/room.js'), {
-    Page:value=>{def=value;},wx:{showActionSheet:value=>{sheet=value;}},
-    require:name=>['../../services/avalon','../../services/auth','../../utils/socket'].includes(name)?{}:require(path.resolve(root,'pages/room',name)),
-  });
-  const p={...def,active:true,data:{...structuredClone(def.data),board:true,roomId:1,room:{host:true},game:{gameId:2},entries:rows([1])}};
-  p.actions=[];p.confirmLeaveRoom=()=>p.actions.push('leave');p.endGame=()=>p.actions.push('end');
-  p.selectComponent=()=>({openAllHistory:()=>p.actions.push('history')});p.sheet=()=>sheet;
-  return p;
-}
-test('more menu keeps identity separate, exposes history for one card and respects host/stale callbacks', () => {
-  const p=page();p.openRoomMore();assert.deepEqual([...p.sheet().itemList],['全部提案','退出房间','结束对局']);
-  p.sheet().success({tapIndex:0});p.sheet().success({tapIndex:1});p.sheet().success({tapIndex:2});assert.deepEqual(p.actions,['history','leave','end']);
-  p.data.room.host=false;p.data.entries=[];p.openRoomMore();assert.deepEqual([...p.sheet().itemList],['退出房间']);
-  p.data.game.gameId=3;p.sheet().success({tapIndex:0});assert.equal(p.actions.length,3);
+  assert.match(night,/wx:if="\{\{compact\}\}"[^>]*compact-mission-summary/);
+  assert.match(night,/wx:else class="night-mission"/);
+  assert.doesNotMatch(night.split('wx:else class="night-mission"')[0],/<image/);
 });

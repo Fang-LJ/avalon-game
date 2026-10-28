@@ -14,7 +14,8 @@
         <text>{{cell.seatNo}}</text>
       </view>
     </view>
-    <view class="night-mission">
+    <view wx:if="{{compact}}" class="night-mission compact-mission-summary">{{item.resultText}}</view>
+    <view wx:else class="night-mission">
       <text wx:if="{{item.resultTone === 'rejected'}}" class="gold small">提案未通过</text>
       <view wx:elif="{{item.missionCards.length}}" class="night-result">
         <view class="muted mission-summary">任务结果 · {{item.resultTone === 'success' ? '成功' : '失败'}}</view>

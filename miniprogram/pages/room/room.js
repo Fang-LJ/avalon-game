@@ -73,6 +73,7 @@ Page({
     board: false,
     viewVotes: false,
     roleOverlay: false,
+    moreMenuOpen: false,
     identityRevealedGameId: null,
     roleCardFront: '',
     roleCardBack: CARDS.back.ROLE,
@@ -108,7 +109,7 @@ Page({
   stop() {
     this.active = false;
     this.closeTeamSync();
-    this.setData({ roleGuessSheet: null });
+    this.setData({ roleGuessSheet: null, moreMenuOpen: false });
     if (this.stopSocket) this.stopSocket();
     clearInterval(this.poller);
   },
@@ -119,7 +120,7 @@ Page({
       return;
     }
     if (event.type === 'TEAM_DRAFT_UPDATED' && event.roomId === this.data.roomId && this.applyTeamDraft(event.teamDraft)) return;
-    if (event.type === 'REMATCH_CREATED') this.setData({ roomId: event.roomId });
+    if (event.type === 'REMATCH_CREATED') this.setData({ roomId: event.roomId, moreMenuOpen: false });
     if (this.refreshing) this.refreshing.finally(() => { if (this.active) this.refresh(); });
     else this.refresh();
   },
@@ -181,6 +182,7 @@ Page({
     if (changed) {
       this.closeTeamSync();
       this.setData({
+        moreMenuOpen: false,
         game: null,
         role: null,
         selectedIds: [],
@@ -211,6 +213,7 @@ Page({
       });
     }
     this.setData({
+      moreMenuOpen: this.data.moreMenuOpen && room.roomId === this.data.roomId && room.status === this.data.room?.status,
       room,
       roomId: room.roomId,
       rule: ui.rules(room.maxPlayers),
@@ -226,6 +229,7 @@ Page({
       api.game(gameId).then(game => {
         // Observe the public phase immediately, without waiting for timeline/my-role.
         if (currentRead() && ['ASSASSINATION', 'FINISHED'].includes(game.phase)) {
+          if (this.data.game?.phase !== game.phase) this.closeRoomMore();
           this.clearPrivateGuesses(game.gameId, room.myPlayerId);
           this.decoratePlayers();
         }
@@ -290,6 +294,7 @@ Page({
     const selecting = ['TEAM_BUILDING', 'ASSASSINATION', 'LADY_OF_LAKE'].includes(game.phase);
     const target = ui.assassinationTarget(game);
     return {
+      moreMenuOpen: newPhase ? false : this.data.moreMenuOpen,
       game: team.teamDraftSupported ? { ...game, teamDraft: this.teamSync.draft } : game, draftKey: key,
       ...team,
       selectedIds: game.phase === 'ASSASSINATION' ? (target ? [target.playerId] : [])
@@ -390,7 +395,7 @@ Page({
     return true;
   },
   async runGameMutation(task, { waitForCurrent = false } = {}) {
-    if (this.data.busy || !this.data.game) return;
+    if (this.data.busy || this.data.moreMenuOpen || !this.data.game) return;
     const context = { roomId: this.data.roomId, gameId: this.data.game.gameId };
     this.setData({ busy: true });
     try {
@@ -420,6 +425,7 @@ Page({
     // Keep an already visible reveal stable; a newer result is shown after its confirmation.
     if (this.data.missionResultOpen) return {};
     return {
+      moreMenuOpen: false,
       missionResultOpen: true, missionResult: result, missionResultKey: key,
       missionOverlayOpen: false, missionChoice: '', roleOverlay: false, viewVotes: false, missionDetail: null,
       acknowledgedMissionResultKey: acknowledged ? `${game.gameId}-${acknowledged}` : '',
@@ -580,7 +586,7 @@ Page({
   openRoleGuess(e) {
     const { game, busy, missionResultOpen, missionOverlayOpen, roleOverlay, missionDetail, ladyResult } = this.data;
     if (this.active === false || !game || !deduction.allowedPhase(game.phase) || busy ||
-        missionResultOpen || missionOverlayOpen || roleOverlay || missionDetail || ladyResult) return;
+        missionResultOpen || missionOverlayOpen || roleOverlay || missionDetail || ladyResult || this.data.moreMenuOpen) return;
     this.syncRoleGuesses();
     const playerId = Number(e && e.detail && e.detail.playerId);
     const c = this.roleGuessContext();
@@ -657,7 +663,7 @@ Page({
   },
   togglePlayer(e) {
     const game = this.data.game;
-    if (this.active === false || !game || this.data.busy || this.data.missionResultOpen) return;
+    if (this.active === false || !game || this.data.busy || this.data.missionResultOpen || this.data.moreMenuOpen) return;
     const id = Number(e.detail.playerId);
     if (game.phase === 'TEAM_BUILDING' && this.data.isLeader) {
       if (!(this.data.room.players || []).some(p => p.playerId === id)) return;
@@ -687,7 +693,7 @@ Page({
     this.decoratePlayers();
   },
   async run(task) {
-    if (this.data.busy || this.data.botAdding || this.data.botRemoving) return;
+    if (this.data.busy || this.data.moreMenuOpen || this.data.botAdding || this.data.botRemoving) return;
     this.setData({ busy: true });
     try {
       await this.refreshing;
@@ -713,7 +719,7 @@ Page({
   },
   requestEarlyAssassination() {
     const { game, role, roomId, busy } = this.data;
-    if (busy || this.earlyAssassinationDialog || !ui.canStartEarlyAssassination(game, role)) return;
+    if (this.active === false || busy || this.earlyAssassinationDialog || !ui.canStartEarlyAssassination(game, role)) return;
     this.earlyAssassinationDialog = true;
     let handled = false;
     wx.showModal({
@@ -776,9 +782,12 @@ Page({
   },
   endGame() {
     const { room, game, busy } = this.data;
-    if (!room || !room.host || busy || this.data.botAdding || this.data.botRemoving || (game && game.phase === 'FINISHED')) return;
+    if (!room || !room.host || busy || this.roomConfirmationOpen || this.data.botAdding || this.data.botRemoving || (game && game.phase === 'FINISHED')) return;
     const roomId = room.roomId;
+    const gameId = game?.gameId;
+    this.roomConfirmationOpen = true;
     wx.showModal({
+      complete: () => { this.roomConfirmationOpen = false; },
       title: game ? '结束当前对局？' : '关闭等待房间？',
       content: room.testGame ? '结束测试局后返回首页，临时游戏数据会清理，不保留记录。' :
         game ? '所有玩家将停止当前流程。本局不计胜负，已产生的记录会保留。' : '关闭后所有玩家返回首页。',
@@ -787,8 +796,8 @@ Page({
         if (!result.confirm) return;
         this.run(async () => {
           // A rematch may have arrived while the confirmation dialog was open.
-          if (this.data.roomId !== roomId || !this.data.room.host ||
-              (this.data.game && this.data.game.phase === 'FINISHED')) return;
+          if (this.active === false || this.data.roomId !== roomId || !this.data.room?.host ||
+              this.data.game?.gameId !== gameId || (this.data.game && this.data.game.phase === 'FINISHED')) return;
           return api.endGame(roomId);
         });
       },
@@ -904,11 +913,11 @@ Page({
     }
     const key = `${game.gameId}-${game.missionNo}-${game.proposalNo}`;
     if (key !== missionOverlayKey)
-      this.setData({ missionOverlayKey: key, missionOverlayOpen: true, roleOverlay: false, viewVotes: false });
+      this.setData({ moreMenuOpen: false, missionOverlayKey: key, missionOverlayOpen: true, roleOverlay: false, viewVotes: false });
   },
   openMissionOverlay() {
     const { game, busy } = this.data;
-    if (this.data.missionResultOpen || !game || game.phase !== 'MISSION_EXECUTING' || !game.onMission || game.hasSubmittedMission || busy) return;
+    if (this.data.moreMenuOpen || this.data.missionResultOpen || !game || game.phase !== 'MISSION_EXECUTING' || !game.onMission || game.hasSubmittedMission || busy) return;
     this.setData({
       missionOverlayOpen: true,
       missionOverlayKey: `${game.gameId}-${game.missionNo}-${game.proposalNo}`,
@@ -937,32 +946,49 @@ Page({
   dismissLady() {
     this.setData({ ladyResult: null });
   },
+  roomMoreScope() {
+    const { roomId, room, game } = this.data;
+    return JSON.stringify([roomId, room?.status, game?.gameId, game?.phase, game?.missionNo, game?.proposalNo]);
+  },
+  canOpenRoomMore() {
+    const d = this.data;
+    return this.active !== false && d.board && d.room && d.game &&
+      !['ROLE_CONFIRM', 'FINISHED'].includes(d.game.phase) &&
+      !d.busy && !d.missionResultOpen && !d.missionOverlayOpen && !d.roleOverlay &&
+      !d.missionDetail && !d.roleGuessSheet && !d.ladyResult &&
+      !this.earlyAssassinationDialog && !this.roomConfirmationOpen &&
+      !this.selectComponent?.('#formal-game-log')?.data?.allHistoryOpen;
+  },
   openRoomMore() {
-    if (!this.data.board || this.data.busy || !this.data.room) return;
-    const roomId = this.data.roomId, gameId = this.data.game.gameId;
-    const actions = [];
-    if (this.data.entries.length) actions.push({ label: '全部提案', action: 'history' });
-    actions.push({ label: '退出房间', action: 'leave' });
-    if (this.data.room.host) actions.push({ label: '结束对局', action: 'end' });
-    wx.showActionSheet({
-      itemList: actions.map(item => item.label),
-      success: result => {
-        if (!this.active || this.data.busy || this.data.roomId !== roomId ||
-            this.data.game?.gameId !== gameId || !this.data.board) return;
-        const action = actions[result.tapIndex]?.action;
-        if (action === 'history') this.selectComponent('#formal-game-log')?.openAllHistory();
-        else if (action === 'leave') this.confirmLeaveRoom();
-        else if (action === 'end') this.endGame();
-      },
+    if (this.data.moreMenuOpen || this.moreMenuActionPending || !this.canOpenRoomMore()) return;
+    this.moreMenuScope = this.roomMoreScope();
+    this.setData({ moreMenuOpen: true,
+      canEarlyAssassination: ui.canStartEarlyAssassination(this.data.game, this.data.role) });
+  },
+  closeRoomMore() { this.setData({ moreMenuOpen: false }); },
+  selectRoomMoreAction(event) {
+    if (!this.data.moreMenuOpen || this.moreMenuActionPending) return;
+    const scope = this.moreMenuScope, action = event.currentTarget.dataset.action;
+    this.moreMenuActionPending = true;
+    // Wait for the mask to disappear before opening a child sheet/native confirmation.
+    this.setData({ moreMenuOpen: false }, () => {
+      this.moreMenuActionPending = false;
+      if (scope !== this.roomMoreScope() || !this.canOpenRoomMore()) return;
+      if (action === 'history' && this.data.entries.length)
+        this.selectComponent?.('#formal-game-log')?.openAllHistory();
+      else if (action === 'leave') this.confirmLeaveRoom();
+      else if (action === 'end' && this.data.room.host) this.endGame();
+      else if (action === 'assassination' && ui.canStartEarlyAssassination(this.data.game, this.data.role))
+        this.requestEarlyAssassination();
     });
   },
   openRoleOverlay() {
-    if (this.data.role && !this.data.busy && !this.data.missionResultOpen)
+    if (this.data.role && !this.data.busy && !this.data.missionResultOpen && !this.data.moreMenuOpen)
       this.setData({ roleOverlay: true, missionOverlayOpen: false, missionDetail: null });
   },
   openMissionDetail(event) {
     const { game, room, timeline, missionResultOpen } = this.data;
-    if (!game || !room || missionResultOpen ||
+    if (!game || !room || missionResultOpen || this.data.moreMenuOpen ||
       !['TEAM_BUILDING','TEAM_VOTING','MISSION_EXECUTING','LADY_OF_LAKE','ASSASSINATION'].includes(game.phase)) return;
     const detail = ui.missionDetail(timeline, room.players, Number(event.detail.missionNo));
     if (!detail) {
@@ -1019,15 +1045,17 @@ Page({
     });
   },
   confirmLeaveRoom() {
-    if (this.data.busy || !this.data.room) return;
+    if (this.data.busy || this.roomConfirmationOpen || !this.data.room) return;
     const roomId = this.data.roomId;
     const gameId = this.data.game && this.data.game.gameId;
+    this.roomConfirmationOpen = true;
     wx.showModal({
+      complete: () => { this.roomConfirmationOpen = false; },
       title: '退出当前房间？',
       content: '退出后你将暂时离线，对局仍会继续；如果有待完成的操作，可能影响其他玩家。确认退出吗？',
       confirmText: '确认退出',
       success: result => {
-        if (result.confirm && this.data.roomId === roomId &&
+        if (result.confirm && this.active !== false && this.data.roomId === roomId &&
             this.data.game && this.data.game.gameId === gameId)
           this.leaveRoom();
       },

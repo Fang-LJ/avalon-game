@@ -8,7 +8,12 @@ function proposalDisplay(entry, players = [], maxPlayers = 10) {
   const team = new Set(entry.teamPlayerIds || []);
   const leaderSeat = entry.leaderSeatNo ?? players.find(p => p.playerId === entry.leaderPlayerId)?.seatNo;
   const mission = resolved && entry.status === 'APPROVED' ? normalizeResult(entry.mission) : null;
+  const rejected = resolved && entry.status === 'REJECTED';
+  const resultText = rejected ? '提案未通过' : mission
+    ? `任务${mission.status === 'SUCCESS' ? '成功' : '失败'}${mission.failCount ? ` · ${mission.failCount} 张失败牌` : ''}`
+    : '任务进行中';
   return {
+    resultText,
     resultTone: resolved && entry.status === 'REJECTED' ? 'rejected'
       : mission ? (mission.status === 'SUCCESS' ? 'success' : 'failed') : 'pending',
     voteCells: Array.from({ length: count }, (_, index) => {

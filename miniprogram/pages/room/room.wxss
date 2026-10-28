@@ -252,7 +252,6 @@ button.bot-add[disabled] { background: var(--soft) !important; color: var(--mute
 .quick-action { min-width: 60rpx; min-height: 88rpx; padding: 0 6rpx; margin: 0; line-height: 88rpx; font-size: 21rpx; color: var(--muted); background: transparent; white-space: nowrap; }
 .quick-action::after { border: 0; }
 button.quick-action.private-role-trigger { color: var(--gold); }
-button.quick-action.early-assassination-trigger { color: var(--evil); white-space: nowrap; }
 button.quick-action[disabled] { background: transparent !important; color: var(--muted) !important; opacity: 0.45; }
 .lobby-card { padding: 24rpx; }
 .lobby-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; }
@@ -346,3 +345,20 @@ button.nomination-button[disabled] { background: #D8B25C !important; color: #101
 .night-room .phase-actions .btn::after { border: 0; background: transparent; }
 .night-room .phase-actions .btn[disabled] { background: transparent !important; color: #FFFFFF !important; opacity: .38; }
 .night-room .phase-actions .button-hover { background: rgba(255,255,255,.06); }
+
+/* Formal controls stay below page-head and its native capsule clearance. */
+.night-room .room-quick-actions { flex-shrink: 0; gap: 12rpx; }
+.night-room .quick-action { display: flex; align-items: center; justify-content: center; box-sizing: border-box; height: 56rpx; min-height: 56rpx; padding: 0 16rpx; line-height: 1; font-size: 23rpx; border: 1px solid #728078; border-radius: 18rpx; background: transparent; color: #FFFFFF; }
+.night-room .quick-action.private-role-trigger { border-color: var(--gold); color: #FFFFFF; }
+.night-room .quick-action[disabled] { color: #FFFFFF !important; }
+/* Below private/history/result layers (50/60/100), above the fixed footer (20). */
+.room-more-overlay { position: fixed; inset: 0; z-index: 45; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: calc(32rpx + env(safe-area-inset-top)) 36rpx calc(32rpx + env(safe-area-inset-bottom)); background: rgba(0,0,0,.68); }
+.room-more-dialog { position: relative; width: 100%; max-width: 560rpx; max-height: 100%; overflow-y: auto; box-sizing: border-box; padding: 36rpx 32rpx 32rpx; background: rgba(18,29,24,.96); border: 1px solid #5E6550; border-radius: 24rpx; }
+.room-more-title { color: #FFFFFF; text-align: center; font-size: 30rpx; line-height: 44rpx; margin-bottom: 28rpx; padding: 0 44rpx; }
+.room-more-close { position: absolute; top: 12rpx; right: 12rpx; width: 64rpx; height: 64rpx; margin: 0; padding: 0; font-size: 36rpx; line-height: 64rpx; background: transparent; color: #D6DDD8; }
+.room-more-actions { display: flex; flex-direction: column; gap: 18rpx; }
+.room-more-action { width: 100%; margin: 0; padding: 0 20rpx; height: 78rpx; box-sizing: border-box; line-height: 74rpx; font-size: 27rpx; border: 1px solid #728078; border-radius: 18rpx; color: #FFFFFF; background: transparent; }
+.room-more-action.history-action { border-color: #9C9365; }
+.room-more-action.danger-action { border-color: var(--evil); }
+.room-more-action::after, .room-more-close::after { border: 0; }
+.room-more-action[disabled] { color: #FFFFFF !important; background: transparent !important; opacity: .4; }

@@ -14,7 +14,6 @@
     <mission-track wx:if="{{board}}" missions="{{timeline.missions}}" current="{{game.missionNo}}" teamSizes="{{rule.teamSizes}}" bind:missiontap="openMissionDetail" />
     <text wx:else class="muted small">确认身份</text>
     <view class="room-quick-actions">
-      <button wx:if="{{canEarlyAssassination}}" class="quick-action early-assassination-trigger" disabled="{{busy}}" bindtap="requestEarlyAssassination">刺杀</button>
       <button wx:if="{{board}}" class="quick-action private-role-trigger" disabled="{{busy}}" bindtap="openRoleOverlay">我的身份</button>
       <button wx:if="{{board}}" class="quick-action" disabled="{{busy}}" bindtap="openRoomMore">更多</button>
       <block wx:else>
@@ -301,6 +300,18 @@
       </button>
     </view>
   </block>
+  <view wx:if="{{moreMenuOpen}}" class="room-more-overlay" catchtap="closeRoomMore" catchtouchmove="ignoreTap">
+    <view class="room-more-dialog" catchtap="ignoreTap" aria-role="dialog" aria-label="房间操作">
+      <view class="room-more-title">房间操作</view>
+      <button class="room-more-close" catchtap="closeRoomMore" aria-label="关闭房间操作">×</button>
+      <view class="room-more-actions">
+        <button wx:if="{{entries.length}}" class="room-more-action history-action" disabled="{{busy}}" data-action="history" bindtap="selectRoomMoreAction">全部提案</button>
+        <button class="room-more-action" disabled="{{busy}}" data-action="leave" bindtap="selectRoomMoreAction">退出房间</button>
+        <button wx:if="{{room.host}}" class="room-more-action danger-action" disabled="{{busy}}" data-action="end" bindtap="selectRoomMoreAction">结束对局</button>
+        <button wx:if="{{canEarlyAssassination}}" class="room-more-action danger-action" disabled="{{busy}}" data-action="assassination" bindtap="selectRoomMoreAction">提前刺杀</button>
+      </view>
+    </view>
+  </view>
   <role-guess-sheet wx:if="{{roleGuessSheet && canGuessRoles}}" sheet="{{roleGuessSheet}}" bind:choose="chooseRoleGuess" bind:clear="clearRoleGuess" bind:close="closeRoleGuess" />
   <mission-detail-overlay wx:if="{{missionDetail && !missionResultOpen}}" detail="{{missionDetail}}" bind:close="closeMissionDetail" />
   <mission-card-overlay

@@ -166,9 +166,9 @@ test('final assassination blocks evil target even if caller bypasses seat handle
 });
 test('UI keeps the role-gated early trigger but unifies the final assassination page copy',()=>{
   const wxml=read('pages/room/room.wxml');
-  assert.match(wxml,/wx:if="\{\{canEarlyAssassination\}\}"[^>]*bindtap="requestEarlyAssassination"/);
+  assert.match(wxml,/wx:if="\{\{canEarlyAssassination\}\}"[^>]*data-action="assassination" bindtap="selectRoomMoreAction"/);
   assert.doesNotMatch(wxml,/最终刺杀|刺中梅林，邪恶获胜；刺错则正义获胜|请选择刺杀梅林/);
   assert.match(wxml,/刺杀梅林阶段/); assert.match(wxml,/\{\{assassinationText\}\}/);
-  assert.match(read('pages/room/room.wxss'),/early-assassination-trigger[^}]+var\(--evil\)/);
+  assert.match(read('pages/room/room.wxss'),/room-more-action\.danger-action[^}]+var\(--evil\)/);
   assert.match(ui.FINISH.EARLY_MERLIN_ASSASSINATED,/邪恶获胜/); assert.match(ui.FINISH.EARLY_ASSASSINATION_MISSED,/正义获胜/);
 });

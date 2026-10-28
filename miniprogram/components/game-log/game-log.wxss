@@ -58,9 +58,10 @@
 .vote-cell.vote-reject { background: #A96532; }
 .vote-cell.on-team { border-color: #E7ECE8; }
 .vote-crown { position: absolute; top: -27rpx; left: 0; width: 100%; text-align: center; color: #E6BF59; font-size: 26rpx; line-height: 26rpx; }
-.night-history-swiper { height: 392rpx; }
+.night-history-swiper { height: 256rpx; }
 .night-history-swiper .proposal-slide { padding: 8rpx 0; }
-.night-proposal.compact-entry { height: 100%; }
+.night-proposal.compact-entry { height: 240rpx; padding: 16rpx; }
+.night-proposal .compact-mission-summary { min-height: 34rpx; margin-top: 12rpx; padding-top: 0; border-top: 0; color: #EDF1EE; font-size: 24rpx; line-height: 34rpx; white-space: nowrap; }
 .night-mission { display: flex; align-items: center; justify-content: center; flex: 1; min-height: 106rpx; margin-top: 14rpx; border-top: 1px solid rgba(216,178,92,.18); padding-top: 12rpx; }
 .vote-count-5 { width: 380rpx; max-width: 100%; align-self: center; }
 .vote-count-6 { width: 456rpx; max-width: 100%; align-self: center; }
@@ -69,7 +70,7 @@
 .mission-summary { text-align: center; font-size: 22rpx; line-height: 30rpx; margin-bottom: 8rpx; }
 .night-mission-cards { display: flex; justify-content: center; align-items: center; gap: 16rpx; width: 100%; }
 .night-proposal-heading { display: flex; align-items: center; justify-content: space-between; gap: 8rpx; min-height: 44rpx; flex-shrink: 0; }
-.night-proposal-heading .log-title { flex: 1; min-width: 0; font-size: 25rpx; }
+.night-proposal-heading .log-title { color: #FFFFFF; flex: 1; min-width: 0; font-size: 25rpx; }
 .proposal-pager { flex-shrink: 0; display: flex; align-items: center; color: var(--muted); font-size: 22rpx; white-space: nowrap; }
 .proposal-pager .pager-arrow { display: flex; align-items: center; justify-content: center; width: 40rpx; height: 44rpx; min-height: 0; margin: 0; padding: 0; background: transparent; color: var(--gold); font-size: 30rpx; line-height: 1; }
 .proposal-pager .pager-arrow::after { border: 0; }
