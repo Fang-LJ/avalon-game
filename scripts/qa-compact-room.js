@@ -2,12 +2,12 @@
 // NODE_PATH=/tmp/avalon-third-tools/node_modules node scripts/qa-compact-room.js [output-dir]
 const automator=require('miniprogram-automator'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),ui=require('../miniprogram/utils/presentation');
-const output=path.resolve(process.argv[2]||'/tmp/avalon-compact-room');
-const cases=[['REJECTED',null,'提案未通过'],['APPROVED',null,'任务进行中'],
-  ['APPROVED',{status:'SUCCESS',successCount:4,failCount:0},'任务成功'],
-  ['APPROVED',{status:'SUCCESS',successCount:3,failCount:1},'任务成功 · 1 张失败牌'],
+const output=path.resolve(process.argv[2]||'/tmp/avalon-room-fourth');
+const cases=[['REJECTED',null,'提案未通过'],['APPROVED',null,'等待任务结果'],
+  ['APPROVED',{status:'SUCCESS',successCount:3,failCount:0},'任务成功'],
+  ['APPROVED',{status:'SUCCESS',successCount:4,failCount:1},'任务成功 · 1 张失败牌'],
   ['APPROVED',{status:'FAILED',successCount:3,failCount:1},'任务失败 · 1 张失败牌'],
-  ['APPROVED',{status:'FAILED',successCount:2,failCount:2},'任务失败 · 2 张失败牌']];
+  ['APPROVED',{status:'FAILED',successCount:3,failCount:2},'任务失败 · 2 张失败牌']];
 function fixture(n,roleCode='MERLIN',host=false,phase='TEAM_VOTING'){
   const players=Array.from({length:n},(_,i)=>({playerId:i+1,seatNo:i+1,nickname:'玩家'+(i+1),me:i===0,seated:true,online:true}));
   return {room:{roomId:991027,roomCode:'991027',currentGameId:991027,maxPlayers:n,currentPlayers:n,status:'PLAYING',host,myPlayerId:1,players},
@@ -38,6 +38,7 @@ const box=async e=>({...await e.offset(),...await e.size()});
     await mini.mockWxMethod('showModal',function(o){getApp().__compactDialog={title:o.title,content:o.content};return {confirm:false,cancel:true};});
     await mini.callWxMethod('setStorageSync','AVALON_GAME_TOKEN','isolated-compact-qa');await p.callMethod('toggleAgreement');
     const system=await mini.systemInfo(),scale=system.windowWidth/750;
+    const capsule=await mini.evaluate(()=>wx.getMenuButtonBoundingClientRect());
     async function open(f){
       await mini.evaluate(f=>{getApp().__compactFixture=f;},f);
       const p=await mini.reLaunch('/pages/room/room?roomId=991027');
@@ -50,13 +51,26 @@ const box=async e=>({...await e.offset(),...await e.size()});
       assert.equal((await p.$$('.room-quick-actions button')).length,2);
       const track=await box(await p.$('mission-track')),actions=await box(await p.$('.room-quick-actions'));
       assert.ok(track.left+track.width<actions.left);assert.ok(actions.left+actions.width<=system.windowWidth);
+      assert.ok(actions.top>=capsule.bottom,'controls stay below native capsule');
+      for(const button of await p.$$('.room-quick-actions button')) {
+        assert.equal(await button.style('background-color'),'rgba(10, 20, 17, 0.82)');
+        assert.equal(await button.style('color'),'rgb(255, 255, 255)');
+      }
       for(let i=0;i<cases.length;i++){
         await sw.swipeTo(i);await p.waitFor(350);assert.equal(await log.data('historyIndex'),i);
         const cards=await log.$$('.compact-entry'),card=cards[i],b=await box(card);
-        assert.ok(Math.abs(b.height-240*scale)<1,JSON.stringify(b));assert.equal((await card.$$('image')).length,0);
+        assert.ok(Math.abs(b.height-300*scale)<1,JSON.stringify(b));
+        const mission=cases[i][1],images=await card.$$('image');
+        assert.equal(images.length,mission?mission.successCount+mission.failCount:0);
+        const sources=[];
+        for(const [j,img] of images.entries()){
+          const ib=await box(img);assert.ok(Math.abs(ib.width-(system.windowWidth<=375?50:54)*scale)<1);
+          assert.ok(Math.abs(ib.height/ib.width-524/377)<.01);assert.equal(await img.attribute('mode'),'aspectFit');
+          const src=await img.attribute('src');sources.push(src);assert.ok(src.endsWith(j<mission.successCount?'/mission-success.png':'/mission-fail.png'));
+        }
         assert.equal((await card.$$('.vote-cell')).length,n);assert.equal(await (await card.$('.compact-mission-summary')).text(),cases[i][2]);
         const summary=await box(await card.$('.compact-mission-summary'));assert.ok(summary.top+summary.height<=b.top+b.height);
-        rendered.push({n,index:i,card:await card.outerWxml(),text:cases[i][2]});
+        rendered.push({n,index:i,card:await card.outerWxml(),text:cases[i][2],sources});
       }
       // Pager interaction stays native and must not reopen an overlay during motion.
       const cards=await log.$$('.compact-entry');await (await cards[5].$('.pager-arrow')).tap();await p.waitFor(550);assert.equal(await log.data('historyIndex'),4);
@@ -64,12 +78,23 @@ const box=async e=>({...await e.offset(),...await e.size()});
       rendered[rendered.length-1].header=await (await head.$('.page-head')).outerWxml();
       rendered[rendered.length-1].track=await (await trackEl.$('.track')).outerWxml();
       rendered[rendered.length-1].actions=await (await p.$('.room-quick-actions')).outerWxml();
-      if([5,10].includes(n)){await mini.pageScrollTo(180);await mini.screenshot({path:path.join(output,n+'-compact.png')});}
+      const body=await p.$('.formal-game-content'),board=await p.$('.board'),bodyBox=await box(body),footerBox=await box(await p.$('.phase-actions'));
+      assert.ok(bodyBox.top+bodyBox.height<=footerBox.top+1,'scrolling body does not overlap footer');
+      assert.ok(footerBox.top+footerBox.height<=system.windowHeight+1,'footer fits screen');
+      rendered[rendered.length-1].layout=await p.data('circularLayout');
+      rendered[rendered.length-1].board=await board.outerWxml();
+      const seats=[];for(const seat of await p.$$('player-seat'))seats.push(await (await seat.$('.seat')).outerWxml());
+      rendered[rendered.length-1].seats=seats;
+      await body.scrollTo(0,2000);await p.waitFor(100);
+      const visibleCard=await box((await log.$$('.compact-entry'))[4]);
+      assert.ok(visibleCard.top+visibleCard.height<=footerBox.top+1,'card is fully reachable above footer');
+      if([5,10].includes(n))await mini.screenshot({path:path.join(output,n+'-compact.png')});
       await p.callMethod('openRoomMore');assert.equal(await p.data('moreMenuOpen'),true);
       await (await p.$('.room-more-dialog')).tap();assert.equal(await p.data('moreMenuOpen'),true);
       await (await p.$('.history-action')).tap();await p.waitFor(100);
       assert.equal(await p.data('moreMenuOpen'),false);assert.equal(await log.data('allHistoryOpen'),true);
-      assert.equal((await log.$$('.history-sheet .mission-thumbnail')).length,16);
+      assert.equal((await log.$$('.history-sheet .mission-thumbnail')).length,17);
+      if(n===10)await mini.screenshot({path:path.join(output,'10-full-history.png')});
       await log.callMethod('closeAllHistory');reports.push({n,cases:6,track,actions});console.log('NATIVE_COMPACT_PASS',n);
     }
     for(const [role,host,phase] of [['MERLIN',false,'TEAM_VOTING'],['MINION',false,'TEAM_VOTING'],['ASSASSIN',true,'TEAM_VOTING'],['ASSASSIN',true,'ASSASSINATION']]){

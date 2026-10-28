@@ -348,9 +348,9 @@ button.nomination-button[disabled] { background: #D8B25C !important; color: #101
 
 /* Formal controls stay below page-head and its native capsule clearance. */
 .night-room .room-quick-actions { flex-shrink: 0; gap: 12rpx; }
-.night-room .quick-action { display: flex; align-items: center; justify-content: center; box-sizing: border-box; height: 56rpx; min-height: 56rpx; padding: 0 16rpx; line-height: 1; font-size: 23rpx; border: 1px solid #728078; border-radius: 18rpx; background: transparent; color: #FFFFFF; }
+.night-room .quick-action { display: flex; align-items: center; justify-content: center; box-sizing: border-box; height: 56rpx; min-height: 56rpx; padding: 0 16rpx; line-height: 1; font-size: 23rpx; border: 2rpx solid #A4ADA7; border-radius: 18rpx; background: rgba(10,20,17,.82); color: #FFFFFF; font-weight: 600; }
 .night-room .quick-action.private-role-trigger { border-color: var(--gold); color: #FFFFFF; }
-.night-room .quick-action[disabled] { color: #FFFFFF !important; }
+.night-room .quick-action[disabled] { color: #FFFFFF !important; background: rgba(10,20,17,.82) !important; }
 /* Below private/history/result layers (50/60/100), above the fixed footer (20). */
 .room-more-overlay { position: fixed; inset: 0; z-index: 45; display: flex; align-items: center; justify-content: center; box-sizing: border-box; padding: calc(32rpx + env(safe-area-inset-top)) 36rpx calc(32rpx + env(safe-area-inset-bottom)); background: rgba(0,0,0,.68); }
 .room-more-dialog { position: relative; width: 100%; max-width: 560rpx; max-height: 100%; overflow-y: auto; box-sizing: border-box; padding: 36rpx 32rpx 32rpx; background: rgba(18,29,24,.96); border: 1px solid #5E6550; border-radius: 24rpx; }
@@ -362,3 +362,12 @@ button.nomination-button[disabled] { background: #D8B25C !important; color: #101
 .room-more-action.danger-action { border-color: var(--evil); }
 .room-more-action::after, .room-more-close::after { border: 0; }
 .room-more-action[disabled] { color: #FFFFFF !important; background: transparent !important; opacity: .4; }
+
+/* A bounded scrolling body keeps the unchanged table clear of the footer on short screens. */
+.night-room.has-phase-actions { display: flex; flex-direction: column; height: 100vh; min-height: 0; overflow: hidden; padding-bottom: 0; }
+.night-room > page-head, .night-room > .game-status-row, .night-room > .error { flex-shrink: 0; }
+.formal-game-content { flex: 1; min-height: 0; height: 0; width: 100%; }
+.formal-content-inner { display: flex; flex-direction: column; min-height: 100%; padding-bottom: 8rpx; }
+.formal-content-inner > .board, .formal-content-inner > .card, .formal-content-inner > game-log { flex-shrink: 0; }
+.formal-content-inner > game-log { margin-top: auto; }
+.night-room .phase-actions { position: relative; left: auto; right: auto; bottom: auto; flex-shrink: 0; width: 100%; }

@@ -362,12 +362,15 @@ test('375/390/430px mission overlay fits two cards plus selection glow and keeps
   assert.match(css, /choice-muted/);
 });
 
-test('page reserves more scrollable bottom space than the fixed footer including safe area', () => {
-  const css = read('pages/room/room.wxss');
-  assert.match(css, /\.has-phase-actions \{\s*padding-bottom: calc\(220rpx \+ env\(safe-area-inset-bottom\)\)/);
-  // The long-nickname footer can wrap its note to two lines.
-  const footer = 18 + 92 + 12 + 64 + 14;
-  assert.ok(220 > footer);
-  assert.match(css, /\.room-page \.phase-actions \{[^}]*position: fixed/);
-  assert.match(read('pages/room/room.wxml'), /<game-log[^>]*compact="\{\{true\}\}"/);
+test('formal room gives the unchanged table a bounded scrolling body above a safe-area footer', () => {
+  const css=read('pages/room/room.wxss'),markup=read('pages/room/room.wxml');
+  assert.match(css,/\.night-room\.has-phase-actions \{[^}]*display: flex;[^}]*height: 100vh;[^}]*padding-bottom: 0;/);
+  assert.match(css,/\.formal-game-content \{ flex: 1; min-height: 0; height: 0;/);
+  assert.match(css,/\.formal-content-inner > game-log \{ margin-top: auto;/);
+  assert.match(css,/\.night-room \.phase-actions \{ position: relative;[^}]*flex-shrink: 0;/);
+  assert.match(css,/padding: 18rpx 0 calc\(14rpx \+ env\(safe-area-inset-bottom\)\)/);
+  const body=markup.split('<scroll-view class="formal-game-content"')[1].split('</scroll-view>')[0];
+  assert.match(body,/<game-log[^>]*compact="\{\{true\}\}"/);
+  assert.match(body,/class="board circular-board/);
+  assert.doesNotMatch(body,/class="phase-actions/);
 });

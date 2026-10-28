@@ -151,6 +151,8 @@
     </view>
   </block>
   <block wx:else>
+    <scroll-view class="formal-game-content" scroll-y="{{true}}" enhanced="{{true}}" bounces="{{false}}" show-scrollbar="{{false}}">
+    <view class="formal-content-inner">
     <view
       wx:if="{{board}}"
       class="board circular-board {{room.maxPlayers >= 9 ? 'large-table' : ''}}"
@@ -245,6 +247,8 @@
       maxMissionSlots="{{rule.maxMissionSlots}}"
       entries="{{entries}}"
     />
+    </view>
+    </scroll-view>
     <view class="phase-actions actions">
       <block wx:if="{{game.phase === 'TEAM_BUILDING'}}">
         <block wx:if="{{isLeader}}">

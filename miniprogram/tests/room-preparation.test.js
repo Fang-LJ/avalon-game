@@ -15,7 +15,8 @@ for(const host of [true,false])for(const full of [true,false])test(`footer host=
 test('preparation scrolling is contained, non-bouncing and independent of refresh/reconnect',()=>{
  assert.equal(JSON.parse(read('pages/room/room.json')).enablePullDownRefresh,false);
  assert.equal((w.match(/class="preparation-scroll"/g)||[]).length,2);
- assert.equal((w.match(/bounces="\{\{false\}\}"/g)||[]).length,2);
+ const preparationScrolls=w.match(/<scroll-view class="preparation-scroll"[^>]*>/g)||[];
+ assert.ok(preparationScrolls.every(tag=>tag.includes('bounces="{{false}}"')));
  assert.match(css,/\.room-page.preparation-page \{[^}]*position: fixed;[^}]*min-height: 0;/);
  assert.match(css,/\.preparation-scroll \{ flex: 1; height: 0; min-height: 0/);
  assert.match(css,/\.lobby-footer.host-footer.room-full \{ grid-template-columns: minmax\(0, 35fr\) minmax\(0, 65fr\)/);

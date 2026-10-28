@@ -84,5 +84,26 @@ test('formal result cards use actual card count; guest fixed-slot rendering rema
   assert.match(night,/wx:for="\{\{item.missionCards\}\}"/);assert.doesNotMatch(night,/missionSlots|missionSlotIndexes/);
   assert.match(night,/wx:if="\{\{compact\}\}"[^>]*compact-mission-summary/);
   assert.match(night,/wx:else class="night-mission"/);
-  assert.doesNotMatch(night.split('wx:else class="night-mission"')[0],/<image/);
+  const [compact, detail] = night.split('wx:else class="night-mission"');
+  for (const mode of [compact, detail]) assert.match(mode,/wx:for="\{\{item.missionCards\}\}"[^>]*mode="aspectFit"/);
+});
+
+test('preview and full records share sorted anonymous cards, including five-card results and live settlement', () => {
+  const c=component(), pending={...rows([1])[0],resolved:true};c.refresh([pending]);
+  assert.equal(c.data.liveEntries[0].resultText,'等待任务结果');
+  assert.equal(c.data.liveEntries[0].missionCards.length,0);
+  c.openAllHistory();
+  for (const [successCount,failCount,status] of [[2,0,'SUCCESS'],[2,1,'FAILED'],[3,2,'FAILED'],[4,1,'SUCCESS']]) {
+    c.refresh([{...pending,mission:{missionNo:4,successCount,failCount,status},actions:[{playerId:101,choice:'FAIL'}]}]);
+    const live=c.data.liveEntries[0],full=c.data.allEntries[0];
+    assert.deepEqual(live.missionCards,full.missionCards);
+    assert.equal(live.missionCards.length,successCount+failCount);
+    assert.ok(live.missionCards.slice(0,successCount).every(card=>card.src.endsWith('/mission-success.png')));
+    assert.ok(live.missionCards.slice(successCount).every(card=>card.src.endsWith('/mission-fail.png')));
+    assert.equal(live.resultTone,status==='SUCCESS'?'success':'failed');
+    assert.equal(c.data.currentProposalId,1);assert.equal(c.data.allHistoryOpen,true);
+  }
+  c.refresh([{...pending,resolved:false,mission:{missionNo:4,successCount:3,failCount:2,status:'FAILED'}}]);
+  assert.equal(c.data.liveEntries[0].missionCards.length,0);
+  assert.ok(c.data.liveEntries[0].voteCells.every(cell=>cell.tone==='pending'));
 });

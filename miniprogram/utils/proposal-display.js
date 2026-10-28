@@ -11,7 +11,7 @@ function proposalDisplay(entry, players = [], maxPlayers = 10) {
   const rejected = resolved && entry.status === 'REJECTED';
   const resultText = rejected ? '提案未通过' : mission
     ? `任务${mission.status === 'SUCCESS' ? '成功' : '失败'}${mission.failCount ? ` · ${mission.failCount} 张失败牌` : ''}`
-    : '任务进行中';
+    : '等待任务结果';
   return {
     resultText,
     resultTone: resolved && entry.status === 'REJECTED' ? 'rejected'

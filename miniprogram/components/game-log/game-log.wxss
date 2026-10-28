@@ -58,10 +58,18 @@
 .vote-cell.vote-reject { background: #A96532; }
 .vote-cell.on-team { border-color: #E7ECE8; }
 .vote-crown { position: absolute; top: -27rpx; left: 0; width: 100%; text-align: center; color: #E6BF59; font-size: 26rpx; line-height: 26rpx; }
-.night-history-swiper { height: 256rpx; }
+.night-history-swiper { height: 316rpx; }
 .night-history-swiper .proposal-slide { padding: 8rpx 0; }
-.night-proposal.compact-entry { height: 240rpx; padding: 16rpx; }
-.night-proposal .compact-mission-summary { min-height: 34rpx; margin-top: 12rpx; padding-top: 0; border-top: 0; color: #EDF1EE; font-size: 24rpx; line-height: 34rpx; white-space: nowrap; }
+.night-proposal.compact-entry { height: 300rpx; padding: 20rpx 16rpx; }
+.night-proposal .compact-mission-summary { justify-content: space-between; gap: 12rpx; min-height: 0; margin-top: 14rpx; padding-top: 12rpx; color: #EDF1EE; font-size: 24rpx; line-height: 34rpx; }
+.compact-result-text { flex: 1; min-width: 0; white-space: nowrap; }
+.compact-mission-cards { display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0; gap: 8rpx; }
+/* Existing action art is displayed uncropped using aspectFit (377/378 × 524). */
+.compact-mission-card { display: block; flex-shrink: 0; width: 54rpx; height: 75.06rpx; }
+@media (max-width: 375px) {
+  .compact-mission-card { width: 50rpx; height: 69.5rpx; }
+  .compact-mission-cards { gap: 6rpx; }
+}
 .night-mission { display: flex; align-items: center; justify-content: center; flex: 1; min-height: 106rpx; margin-top: 14rpx; border-top: 1px solid rgba(216,178,92,.18); padding-top: 12rpx; }
 .vote-count-5 { width: 380rpx; max-width: 100%; align-self: center; }
 .vote-count-6 { width: 456rpx; max-width: 100%; align-self: center; }

@@ -41,7 +41,7 @@ test('configured seat count survives offline or missing player records', () => {
 
 for (const [status, mission, text, tone] of [
   ['REJECTED', null, '提案未通过', 'rejected'],
-  ['APPROVED', null, '任务进行中', 'pending'],
+  ['APPROVED', null, '等待任务结果', 'pending'],
   ['APPROVED', {missionNo:1,status:'SUCCESS',successCount:2,failCount:0}, '任务成功', 'success'],
   ['APPROVED', {missionNo:4,status:'SUCCESS',successCount:3,failCount:1}, '任务成功 · 1 张失败牌', 'success'],
   ['APPROVED', {missionNo:1,status:'FAILED',successCount:1,failCount:1}, '任务失败 · 1 张失败牌', 'failed'],
@@ -54,7 +54,7 @@ for (const [status, mission, text, tone] of [
 });
 test('unresolved proposal never reveals injected mission counts or actions', () => {
   const result = proposalDisplay({...entry, resolved:false, actions:[{playerId:100,choice:'FAIL'}]});
-  assert.equal(result.resultText, '任务进行中');
+  assert.equal(result.resultText, '等待任务结果');
   assert.equal(result.resultTone, 'pending');
   assert.doesNotMatch(JSON.stringify(result), /失败牌|actions|playerId|choice/);
 });

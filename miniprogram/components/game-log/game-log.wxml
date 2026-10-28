@@ -14,7 +14,12 @@
         <text>{{cell.seatNo}}</text>
       </view>
     </view>
-    <view wx:if="{{compact}}" class="night-mission compact-mission-summary">{{item.resultText}}</view>
+    <view wx:if="{{compact}}" class="night-mission compact-mission-summary">
+      <view class="compact-result-text">{{item.resultText}}</view>
+      <view wx:if="{{item.missionCards.length}}" class="compact-mission-cards" aria-label="公开任务结果牌">
+        <image wx:for="{{item.missionCards}}" wx:for-item="card" wx:key="index" src="{{card.src}}" mode="aspectFit" class="compact-mission-card" />
+      </view>
+    </view>
     <view wx:else class="night-mission">
       <text wx:if="{{item.resultTone === 'rejected'}}" class="gold small">提案未通过</text>
       <view wx:elif="{{item.missionCards.length}}" class="night-result">
